@@ -8,9 +8,13 @@ import { useToast } from '@/components/ui/use-toast';
 import { Leaf, AlertCircle } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
+// Default hardcoded credentials
+const DEFAULT_EMAIL = "admin@example.com";
+const DEFAULT_PASSWORD = "password123";
+
 export default function Login() {
-  const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
+  const [email, setEmail] = useState(DEFAULT_EMAIL);
+  const [password, setPassword] = useState(DEFAULT_PASSWORD);
   const [isLoading, setIsLoading] = useState(false);
   const [hasSupabaseError, setHasSupabaseError] = useState(false);
   const { signIn } = useAuth();
