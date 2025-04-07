@@ -32,3 +32,14 @@
   align-items: center;
   margin-bottom: 16px;
 }
+
+/* Added styles for select component */
+.select-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.select-disabled {
+  opacity: 0.5;
+  pointer-events: none;
+}

@@ -9,6 +9,7 @@ import { CalendarIcon, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
 import { ResidentGroup } from '@/lib/supabase';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EditResidentFormData {
   name: string;
@@ -46,6 +47,12 @@ export function EditResidentDialog({
   onFileChange,
   resetFileInput
 }: EditResidentDialogProps) {
+  
+  const selectedGroup = formData.group_id 
+    ? groups.find(g => g.id === formData.group_id) 
+    : null;
+    
+  const hasSubgroups = selectedGroup?.subgroups && selectedGroup.subgroups.length > 0;
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -149,52 +156,54 @@ export function EditResidentDialog({
           
           <div className="grid gap-2">
             <label>Group</label>
-            <select
-              id="resident-group"
-              className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-              value={formData.group_id || ''}
-              onChange={(e) => {
-                const groupId = e.target.value ? Number(e.target.value) : null;
+            <Select
+              value={formData.group_id?.toString() || ""}
+              onValueChange={(value) => {
+                const groupId = value ? Number(value) : null;
                 onFormChange({
                   group_id: groupId,
-                  subgroup_id: null
+                  subgroup_id: null // Reset subgroup when group changes
                 });
               }}
             >
-              <option value="">No Group</option>
-              {groups.map((group) => (
-                <option key={group.id} value={group.id}>
-                  {group.name}
-                </option>
-              ))}
-            </select>
+              <SelectTrigger>
+                <SelectValue placeholder="Select" />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="" disabled>Select</SelectItem>
+                {groups.map((group) => (
+                  <SelectItem key={group.id} value={group.id.toString()}>
+                    {group.name}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
           
-          {formData.group_id && (
+          {formData.group_id && hasSubgroups && (
             <div className="grid gap-2">
               <label htmlFor="resident-subgroup">Subgroup</label>
-              <select
-                id="resident-subgroup"
-                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
-                value={formData.subgroup_id || ''}
-                onChange={(e) => {
-                  const subgroupId = e.target.value ? Number(e.target.value) : null;
+              <Select
+                value={formData.subgroup_id?.toString() || ""}
+                onValueChange={(value) => {
+                  const subgroupId = value ? Number(value) : null;
                   onFormChange({
                     subgroup_id: subgroupId
                   });
                 }}
               >
-                <option value="">No Subgroup</option>
-                {groups
-                  .find(g => g.id === formData.group_id)
-                  ?.subgroups
-                  ?.map((subgroup) => (
-                    <option key={subgroup.id} value={subgroup.id}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Select" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="" disabled>Select</SelectItem>
+                  {selectedGroup?.subgroups?.map((subgroup) => (
+                    <SelectItem key={subgroup.id} value={subgroup.id.toString()}>
                       {subgroup.name}
-                    </option>
-                  ))
-                }
-              </select>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
           )}
         </div>
