@@ -16,7 +16,7 @@ interface ResidentDisplayProps {
 
 // Function to determine which emoji to use based on resident type
 const getResidentEmoji = (residentType: string | undefined) => {
-  if (!residentType) return '🍎';
+  if (!residentType) return '🐾';
   
   const type = residentType.toLowerCase();
   
@@ -34,7 +34,7 @@ const getResidentEmoji = (residentType: string | undefined) => {
   if (type.includes('rabbit')) return '🐰';
   if (type.includes('turtle')) return '🐢';
   
-  return '🍎'; // Default icon
+  return '🐾'; // Default is now a paw emoji
 };
 
 export function ResidentDisplay({ 

@@ -39,7 +39,7 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
     if (type.includes('rabbit')) return '🐰';
     if (type.includes('turtle')) return '🐢';
     
-    return '🍎'; // Default icon
+    return '🐾'; // Default is now a paw emoji
   };
 
   return (

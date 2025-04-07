@@ -348,7 +348,7 @@ export default function AllResidents() {
   const [isEditResidentDialogOpen, setIsEditResidentDialogOpen] = useState(false);
 
   const getResidentTypeEmoji = (typeName: string | undefined) => {
-    if (!typeName) return '🍎';
+    if (!typeName) return '🐾';
     
     const type = typeName.toLowerCase();
     
@@ -366,7 +366,7 @@ export default function AllResidents() {
     if (type.includes('rabbit')) return '🐰';
     if (type.includes('turtle')) return '🐢';
     
-    return '🍎'; // Default icon
+    return '🐾'; // Default is now a paw emoji
   };
 
   return (
