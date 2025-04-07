@@ -68,7 +68,9 @@ export default function Dashboard() {
     name: '',
     description: '',
     image_url: '',
-    arrival_date: null as Date | null
+    arrival_date: null as Date | null,
+    group_id: null as number | null,
+    subgroup_id: null as number | null
   });
 
   useEffect(() => {
@@ -163,7 +165,9 @@ export default function Dashboard() {
       name: resident.name,
       description: resident.description || '',
       image_url: resident.image_url || '',
-      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null
+      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null,
+      group_id: resident.group_id,
+      subgroup_id: resident.subgroup_id
     });
     setPreviewUrl(resident.image_url || null);
     setIsEditResidentDialogOpen(true);
@@ -228,7 +232,9 @@ export default function Dashboard() {
           name: editResidentData.name,
           description: editResidentData.description,
           image_url: updatedImageUrl,
-          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null
+          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
+          group_id: editResidentData.group_id,
+          subgroup_id: editResidentData.subgroup_id
         })
         .eq('id', selectedResident.id);
       
@@ -624,6 +630,13 @@ export default function Dashboard() {
     return Rabbit;
   };
 
+  const getGroupsCount = () => {
+    return {
+      groups: groups.length,
+      subgroups: groups.reduce((total, group) => total + (group.subgroups?.length || 0), 0)
+    };
+  };
+
   const name = user?.email?.split('@')[0] || "User";
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -678,7 +691,18 @@ export default function Dashboard() {
           </div>
         </Card>
         
-        {getTopResidentTypes(2).map(([typeName, count]) => {
+        <Card className="p-6 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg text-gray-500 font-medium mb-1">Groups</h3>
+            <p className="text-4xl font-bold">{getGroupsCount().groups}</p>
+            <p className="text-sm text-gray-500">{getGroupsCount().subgroups} subgroups</p>
+          </div>
+          <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+            <ListIcon className="h-6 w-6 text-gray-600" />
+          </div>
+        </Card>
+        
+        {getTopResidentTypes(1).map(([typeName, count]) => {
           const TypeIcon = getResidentTypeIcon(typeName);
           const percentage = residents.length > 0 ? Math.round(count / residents.length * 100) : 0;
           return (
@@ -1060,6 +1084,7 @@ export default function Dashboard() {
                 onChange={e => setEditResidentData({...editResidentData, description: e.target.value})}
               />
             </div>
+            
             <div className="grid gap-2">
               <label>Arrival Date</label>
               <Popover>
@@ -1130,6 +1155,59 @@ export default function Dashboard() {
                 </div>
               </div>
             </div>
+            
+            <div className="grid gap-2">
+              <label>Group</label>
+              <select
+                id="resident-group"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                value={editResidentData.group_id || ''}
+                onChange={(e) => {
+                  const groupId = e.target.value ? Number(e.target.value) : null;
+                  setEditResidentData({
+                    ...editResidentData, 
+                    group_id: groupId,
+                    subgroup_id: null
+                  });
+                }}
+              >
+                <option value="">No Group</option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {editResidentData.group_id && (
+              <div className="grid gap-2">
+                <label htmlFor="resident-subgroup">Subgroup</label>
+                <select
+                  id="resident-subgroup"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  value={editResidentData.subgroup_id || ''}
+                  onChange={(e) => {
+                    const subgroupId = e.target.value ? Number(e.target.value) : null;
+                    setEditResidentData({
+                      ...editResidentData, 
+                      subgroup_id: subgroupId
+                    });
+                  }}
+                >
+                  <option value="">No Subgroup</option>
+                  {groups
+                    .find(g => g.id === editResidentData.group_id)
+                    ?.subgroups
+                    ?.map((subgroup) => (
+                      <option key={subgroup.id} value={subgroup.id}>
+                        {subgroup.name}
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+            )}
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={() => setIsEditResidentDialogOpen(false)}>Cancel</Button>
