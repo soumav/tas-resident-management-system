@@ -54,10 +54,6 @@ export function EditResidentDialog({
     
   const hasSubgroups = selectedGroup?.subgroups && selectedGroup.subgroups.length > 0;
   
-  console.log('EditResidentDialog formData:', formData);
-  console.log('Selected Group:', selectedGroup);
-  console.log('Has Subgroups:', hasSubgroups);
-  
   return (
     <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
@@ -163,16 +159,13 @@ export function EditResidentDialog({
             <Select
               value={formData.group_id ? formData.group_id.toString() : ""}
               onValueChange={(value) => {
-                // Handle both selection and deselection properly
                 if (value === "placeholder" || value === "") {
-                  console.log("Clearing group selection");
                   onFormChange({
                     group_id: null,
                     subgroup_id: null
                   });
                 } else {
                   const groupId = parseInt(value, 10);
-                  console.log("Selected group ID:", groupId);
                   onFormChange({
                     group_id: groupId,
                     subgroup_id: null // Reset subgroup when group changes
@@ -200,15 +193,12 @@ export function EditResidentDialog({
               <Select
                 value={formData.subgroup_id ? formData.subgroup_id.toString() : ""}
                 onValueChange={(value) => {
-                  // Handle both selection and deselection properly
                   if (value === "placeholder" || value === "") {
-                    console.log("Clearing subgroup selection");
                     onFormChange({
                       subgroup_id: null
                     });
                   } else {
                     const subgroupId = parseInt(value, 10);
-                    console.log("Selected subgroup ID:", subgroupId);
                     onFormChange({
                       subgroup_id: subgroupId
                     });
