@@ -74,6 +74,15 @@ export default function Sidebar() {
   return (
     <div className="dashboard-sidebar bg-sanctuary-dark-green min-h-screen h-full w-[280px] flex flex-col">
       <div className="px-4 py-4">
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-bold text-white">The Alice Sanctuary</h1>
+          <p className="text-sm text-gray-300">Resident Management</p>
+        </div>
+      </div>
+      
+      <Separator className="bg-sanctuary-green/30" />
+      
+      <div className="px-4 py-2">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-2">
             <UserSquare className="h-5 w-5 text-white" />
@@ -90,16 +99,7 @@ export default function Sidebar() {
         </div>
       </div>
       
-      <Separator className="bg-sanctuary-green/30" />
-      
-      <div className="px-4 py-4 mb-2">
-        <div className="flex flex-col gap-1">
-          <h1 className="text-xl font-bold text-white">The Alice Sanctuary</h1>
-          <p className="text-sm text-gray-300">Resident Management</p>
-        </div>
-      </div>
-      
-      <div className="mb-6">
+      <div className="mb-6 mt-4">
         <div className="px-4 py-2 text-xs font-semibold text-gray-300">DASHBOARD</div>
         <nav className="mt-2">
           {dashboardLinks.map((link) => (

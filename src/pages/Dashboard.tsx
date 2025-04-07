@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -49,7 +48,6 @@ export default function Dashboard() {
   const [residentsByType, setResidentsByType] = useState<Record<string, number>>({});
   const { toast } = useToast();
   
-  // State for dialogs
   const [isAddGroupDialogOpen, setIsAddGroupDialogOpen] = useState(false);
   const [isEditGroupDialogOpen, setIsEditGroupDialogOpen] = useState(false);
   const [isDeleteGroupDialogOpen, setIsDeleteGroupDialogOpen] = useState(false);
@@ -58,7 +56,6 @@ export default function Dashboard() {
   const [isEditSubgroupDialogOpen, setIsEditSubgroupDialogOpen] = useState(false);
   const [isDeleteSubgroupDialogOpen, setIsDeleteSubgroupDialogOpen] = useState(false);
   
-  // Form states
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
   const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
@@ -74,7 +71,6 @@ export default function Dashboard() {
   }, []);
 
   useEffect(() => {
-    // Calculate residents by type when residents change
     if (residents.length) {
       const typeCount: Record<string, number> = {};
       
@@ -89,7 +85,6 @@ export default function Dashboard() {
   
   const fetchGroups = async () => {
     try {
-      // Get groups data with subgroups
       const { data: groupsData, error: groupsError } = await supabase
         .from('resident_groups')
         .select('*')
@@ -97,7 +92,6 @@ export default function Dashboard() {
         
       if (groupsError) throw groupsError;
       
-      // Get subgroups data
       const { data: subgroupsData, error: subgroupsError } = await supabase
         .from('resident_subgroups')
         .select('*')
@@ -105,7 +99,6 @@ export default function Dashboard() {
         
       if (subgroupsError) throw subgroupsError;
       
-      // Merge groups with their subgroups
       const groupsWithSubgroups = (groupsData || []).map((group: ResidentGroup) => {
         const groupSubgroups = (subgroupsData || []).filter(
           (subgroup: ResidentSubgroup) => subgroup.group_id === group.id
@@ -131,7 +124,6 @@ export default function Dashboard() {
   
   const fetchResidents = async () => {
     try {
-      // Get residents with their related data
       const { data, error } = await supabase
         .from('residents')
         .select(`
@@ -158,7 +150,6 @@ export default function Dashboard() {
     }
   };
 
-  // Toggle expanded state for a group
   const toggleGroupExpand = (groupId: number) => {
     setExpandedGroups(prev => {
       if (prev.includes(groupId)) {
@@ -169,7 +160,6 @@ export default function Dashboard() {
     });
   };
   
-  // Group management functions
   const openAddGroupDialog = () => {
     setNewGroupName('');
     setNewGroupDescription('');
@@ -234,7 +224,6 @@ export default function Dashboard() {
       
       if (error) throw error;
       
-      // Update the groups in state
       setGroups(prev => 
         prev.map(group => {
           if (group.id === selectedGroup.id) {
@@ -269,7 +258,6 @@ export default function Dashboard() {
     if (!selectedGroup) return;
     
     try {
-      // Check if there are residents associated with this group
       const { count: residentCount, error: countError } = await supabase
         .from('residents')
         .select('*', { count: 'exact', head: true })
@@ -287,7 +275,6 @@ export default function Dashboard() {
         return;
       }
       
-      // Delete associated subgroups first
       const { error: subgroupError } = await supabase
         .from('resident_subgroups')
         .delete()
@@ -295,7 +282,6 @@ export default function Dashboard() {
       
       if (subgroupError) throw subgroupError;
       
-      // Delete the group
       const { error: groupError } = await supabase
         .from('resident_groups')
         .delete()
@@ -303,7 +289,6 @@ export default function Dashboard() {
       
       if (groupError) throw groupError;
       
-      // Update the groups in state
       setGroups(prev => prev.filter(group => group.id !== selectedGroup.id));
       setIsDeleteGroupDialogOpen(false);
       
@@ -322,7 +307,6 @@ export default function Dashboard() {
     }
   };
   
-  // Subgroup management functions
   const toggleSubgroupInput = (groupId: number) => {
     if (showSubgroupInput === groupId) {
       setShowSubgroupInput(null);
@@ -366,7 +350,6 @@ export default function Dashboard() {
       
       if (error) throw error;
       
-      // Update the groups in state
       setGroups(prev => 
         prev.map(group => {
           if (group.id === selectedGroupId) {
@@ -414,7 +397,6 @@ export default function Dashboard() {
       
       if (error) throw error;
       
-      // Update the groups in state
       setGroups(prev => 
         prev.map(group => {
           if (group.id === showSubgroupInput) {
@@ -462,7 +444,6 @@ export default function Dashboard() {
       
       if (error) throw error;
       
-      // Update the groups in state
       setGroups(prev => 
         prev.map(group => {
           if (group.subgroups?.some(subgroup => subgroup.id === selectedSubgroup.id)) {
@@ -505,7 +486,6 @@ export default function Dashboard() {
     if (!selectedSubgroup) return;
     
     try {
-      // Check if there are residents associated with this subgroup
       const { count: residentCount, error: countError } = await supabase
         .from('residents')
         .select('*', { count: 'exact', head: true })
@@ -523,7 +503,6 @@ export default function Dashboard() {
         return;
       }
       
-      // Delete the subgroup
       const { error } = await supabase
         .from('resident_subgroups')
         .delete()
@@ -531,7 +510,6 @@ export default function Dashboard() {
       
       if (error) throw error;
       
-      // Update the groups in state
       setGroups(prev => 
         prev.map(group => {
           if (group.subgroups?.some(subgroup => subgroup.id === selectedSubgroup.id)) {
@@ -561,7 +539,6 @@ export default function Dashboard() {
     }
   };
   
-  // Get residents by group or subgroup
   const getResidentsByGroup = (groupId: number) => {
     return residents.filter(resident => resident.group_id === groupId && !resident.subgroup_id);
   };
@@ -570,16 +547,13 @@ export default function Dashboard() {
     return residents.filter(resident => resident.subgroup_id === subgroupId);
   };
   
-  // Get the most populous resident types for display
   const getTopResidentTypes = (limit: number = 3) => {
     return Object.entries(residentsByType)
       .sort(([, countA], [, countB]) => countB - countA)
       .slice(0, limit);
   };
   
-  // Get the icon for a resident type
   const getResidentTypeIcon = (typeName: string) => {
-    // Default to Rabbit icon, but could be expanded with more icons based on type
     return Rabbit;
   };
   
@@ -622,9 +596,7 @@ export default function Dashboard() {
         </div>
       </div>
       
-      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        {/* Total Residents Card */}
         <Card className="p-6 flex justify-between items-center">
           <div>
             <h3 className="text-lg text-gray-500 font-medium mb-1">Total Residents</h3>
@@ -636,7 +608,6 @@ export default function Dashboard() {
           </div>
         </Card>
         
-        {/* Display the most common resident type */}
         {getTopResidentTypes(1).map(([typeName, count]) => {
           const TypeIcon = getResidentTypeIcon(typeName);
           const percentage = residents.length > 0 ? Math.round((count / residents.length) * 100) : 0;
@@ -655,7 +626,6 @@ export default function Dashboard() {
           );
         })}
         
-        {/* Groups Card */}
         <Card className="p-6 flex justify-between items-center">
           <div>
             <h3 className="text-lg text-gray-500 font-medium mb-1">Groups</h3>
@@ -729,7 +699,6 @@ export default function Dashboard() {
               
               <CollapsibleContent>
                 <div className="p-6 bg-white border-t">
-                  {/* Residents in the group */}
                   <div className="resident-grid">
                     {getResidentsByGroup(group.id).map(resident => (
                       <div key={resident.id} className="resident-item">
@@ -750,7 +719,6 @@ export default function Dashboard() {
                       </div>
                     ))}
                     
-                    {/* Add Animal Button */}
                     <Link 
                       to={`/residents/new?group=${group.id}`}
                       className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors"
@@ -762,7 +730,6 @@ export default function Dashboard() {
                     </Link>
                   </div>
                   
-                  {/* Subgroups */}
                   {group.subgroups && group.subgroups.length > 0 && 
                     group.subgroups.map(subgroup => (
                       <div key={subgroup.id} className="mt-6">
@@ -814,7 +781,6 @@ export default function Dashboard() {
                             </div>
                           ))}
                           
-                          {/* Add Animal to Subgroup Button */}
                           <Link 
                             to={`/residents/new?group=${group.id}&subgroup=${subgroup.id}`}
                             className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors"
@@ -829,7 +795,6 @@ export default function Dashboard() {
                     ))
                   }
                   
-                  {/* Subgroup Input */}
                   {showSubgroupInput === group.id ? (
                     <div className="mt-6 subgroup-input">
                       <Input
@@ -881,7 +846,6 @@ export default function Dashboard() {
         )}
       </div>
       
-      {/* Add Group Dialog */}
       <Dialog open={isAddGroupDialogOpen} onOpenChange={setIsAddGroupDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -930,7 +894,6 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Group Dialog */}
       <Dialog open={isEditGroupDialogOpen} onOpenChange={setIsEditGroupDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -979,7 +942,6 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Group Dialog */}
       <AlertDialog open={isDeleteGroupDialogOpen} onOpenChange={setIsDeleteGroupDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
@@ -1001,7 +963,6 @@ export default function Dashboard() {
         </AlertDialogContent>
       </AlertDialog>
       
-      {/* Add Subgroup Dialog */}
       <Dialog open={isAddSubgroupDialogOpen} onOpenChange={setIsAddSubgroupDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1050,7 +1011,6 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
       
-      {/* Edit Subgroup Dialog */}
       <Dialog open={isEditSubgroupDialogOpen} onOpenChange={setIsEditSubgroupDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -1099,7 +1059,6 @@ export default function Dashboard() {
         </DialogContent>
       </Dialog>
       
-      {/* Delete Subgroup Dialog */}
       <AlertDialog open={isDeleteSubgroupDialogOpen} onOpenChange={setIsDeleteSubgroupDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
