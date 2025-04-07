@@ -159,6 +159,7 @@ export function EditResidentDialog({
             <Select
               value={formData.group_id?.toString() || ""}
               onValueChange={(value) => {
+                if (value === "placeholder") return;
                 const groupId = value ? Number(value) : null;
                 onFormChange({
                   group_id: groupId,
@@ -186,6 +187,7 @@ export function EditResidentDialog({
               <Select
                 value={formData.subgroup_id?.toString() || ""}
                 onValueChange={(value) => {
+                  if (value === "placeholder") return;
                   const subgroupId = value ? Number(value) : null;
                   onFormChange({
                     subgroup_id: subgroupId

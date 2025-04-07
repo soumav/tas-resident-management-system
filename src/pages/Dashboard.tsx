@@ -237,15 +237,21 @@ export default function Dashboard() {
 
       console.log('Updating resident with data:', updateData);
       
-      // First perform the update operation
+      // First, ensure the update operation completes successfully
       const { error: updateError } = await supabase
         .from('residents')
         .update(updateData)
         .eq('id', selectedResident.id);
       
-      if (updateError) throw updateError;
+      if (updateError) {
+        console.error('Error updating resident in database:', updateError);
+        throw updateError;
+      }
       
-      // Then fetch the updated data in a separate query to ensure we have the latest data
+      console.log('Database update successful for resident ID:', selectedResident.id);
+      console.log('Updated with group_id:', editResidentData.group_id);
+      
+      // Then fetch the updated data to confirm the changes
       const { data: updatedData, error: fetchError } = await supabase
         .from('residents')
         .select(`
@@ -260,7 +266,12 @@ export default function Dashboard() {
         .eq('id', selectedResident.id)
         .single();
       
-      if (fetchError) throw fetchError;
+      if (fetchError) {
+        console.error('Error fetching updated resident data:', fetchError);
+        throw fetchError;
+      }
+      
+      console.log('Fetched updated resident data:', updatedData);
       
       toast({
         title: 'Resident updated',
@@ -270,16 +281,19 @@ export default function Dashboard() {
       // Update the local residents state with the updated data
       if (updatedData) {
         // Find the selected group for accurate group info
-        const selectedGroupData = groups.find(g => g.id === editResidentData.group_id);
+        const selectedGroupData = groups.find(g => g.id === updatedData.group_id);
+        console.log('Selected group data:', selectedGroupData);
         
-        // Create a complete updated resident object
+        // Create a complete updated resident object with all necessary data
         const updatedResident: Resident = {
           ...updatedData,
           group: selectedGroupData ? {
             name: selectedGroupData.name,
             description: selectedGroupData.description
-          } : updatedData.group
+          } : null
         };
+        
+        console.log('Updating local state with resident:', updatedResident);
         
         setResidents(prev => 
           prev.map(resident => 
@@ -288,6 +302,7 @@ export default function Dashboard() {
         );
       } else {
         // If we don't get the updated data back, fetch all residents again
+        console.log('No updated data returned, fetching all residents again');
         await fetchResidents();
       }
       
