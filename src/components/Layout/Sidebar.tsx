@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Home, Users, ListIcon, UserPlus, Settings, InfoIcon, HelpCircle, LogOut, UserSquare } from 'lucide-react';
@@ -50,7 +49,7 @@ export default function Sidebar() {
   }];
   
   return (
-    <div className="dashboard-sidebar bg-sanctuary-dark-green w-[280px] flex-shrink-0">
+    <div className="dashboard-sidebar bg-sanctuary-dark-green w-[280px] flex-shrink-0 flex flex-col h-full">
       <div className="px-4 py-4">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-bold text-white">The Alice Sanctuary</h1>
@@ -114,14 +113,9 @@ export default function Sidebar() {
       </div>
       
       <div className="mt-auto px-4 py-6 border-t border-sanctuary-green/30">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="h-8 w-8 rounded-full bg-sanctuary-green/30 flex items-center justify-center text-white">
-            <span>{user?.email?.charAt(0).toUpperCase() || 'S'}</span>
-          </div>
-          <div>
-            <p className="text-white font-medium">Sanctuary Staff</p>
-            <p className="text-xs text-gray-300">Version 1.0</p>
-          </div>
+        <div className="flex flex-col">
+          <p className="text-white font-medium">Sanctuary Staff</p>
+          <p className="text-xs text-gray-300">Version 1.0</p>
         </div>
       </div>
     </div>
