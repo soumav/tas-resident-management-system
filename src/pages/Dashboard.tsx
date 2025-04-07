@@ -456,11 +456,13 @@ export default function Dashboard() {
     return Rabbit;
   };
 
+  const username = user?.email?.split('@')[0] || 'Guest';
+
   return <div>
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div>
-            <h2 className="text-2xl font-bold text-gray-800">Welcome, {user?.email?.split('@')[0] || 'Guest'}!</h2>
+            <h2 className="text-2xl font-bold text-gray-800">Welcome, {username}!</h2>
             <p className="text-gray-600">Manage your sanctuary residents and groups</p>
           </div>
           
