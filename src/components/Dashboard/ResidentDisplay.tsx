@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, Plus, Cat, Dog, Fish, Bird, Apple } from 'lucide-react';
+import { Edit, Trash2, Plus } from 'lucide-react';
 import { Resident } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -14,19 +14,27 @@ interface ResidentDisplayProps {
   onDeleteResident: (resident: Resident) => void;
 }
 
-// Function to determine which icon to use based on resident type
-const getResidentIcon = (residentType: string | undefined) => {
-  if (!residentType) return Apple;
+// Function to determine which emoji to use based on resident type
+const getResidentEmoji = (residentType: string | undefined) => {
+  if (!residentType) return '🍎';
   
   const type = residentType.toLowerCase();
   
-  if (type.includes('cat')) return Cat;
-  if (type.includes('dog')) return Dog;
-  if (type.includes('cow')) return Apple; // Changed Cow to Apple as fallback
-  if (type.includes('fish')) return Fish;
-  if (type.includes('bird') || type.includes('chicken') || type.includes('duck')) return Bird;
+  if (type.includes('cat')) return '🐱';
+  if (type.includes('dog')) return '🐶';
+  if (type.includes('cow')) return '🐮';
+  if (type.includes('goat')) return '🐐';
+  if (type.includes('sheep')) return '🐑';
+  if (type.includes('horse')) return '🐴';
+  if (type.includes('pig')) return '🐷';
+  if (type.includes('chicken')) return '🐔';
+  if (type.includes('duck')) return '🦆';
+  if (type.includes('bird')) return '🐦';
+  if (type.includes('fish')) return '🐠';
+  if (type.includes('rabbit')) return '🐰';
+  if (type.includes('turtle')) return '🐢';
   
-  return Apple; // Default icon
+  return '🍎'; // Default icon
 };
 
 export function ResidentDisplay({ 
@@ -39,7 +47,7 @@ export function ResidentDisplay({
   return (
     <div className="resident-grid">
       {residents.map(resident => {
-        const ResidentIcon = getResidentIcon(resident.type?.name);
+        const emoji = getResidentEmoji(resident.type?.name);
         
         return (
           <div key={resident.id} className="resident-item">
@@ -48,7 +56,7 @@ export function ResidentDisplay({
                 <img src={resident.image_url} alt={resident.name} className="w-full h-full object-cover" />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-100">
-                  <ResidentIcon className="h-12 w-12 text-gray-400" />
+                  <span className="text-4xl">{emoji}</span>
                 </div>
               )}
             </div>

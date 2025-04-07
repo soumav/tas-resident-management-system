@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Users, ListIcon, Cat, Dog, Fish, Bird, Apple } from 'lucide-react';
+import { Users, ListIcon } from 'lucide-react';
 import { Resident, ResidentGroup } from '@/lib/supabase';
 
 interface StatCardsProps {
@@ -22,16 +22,24 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
     return Object.entries(residentsByType).sort(([, countA], [, countB]) => countB - countA);
   };
 
-  const getResidentTypeIcon = (typeName: string) => {
+  const getResidentTypeEmoji = (typeName: string) => {
     const type = typeName.toLowerCase();
     
-    if (type.includes('cat')) return Cat;
-    if (type.includes('dog')) return Dog;
-    if (type.includes('cow')) return Apple; // Changed Cow to Apple as fallback
-    if (type.includes('fish')) return Fish;
-    if (type.includes('bird') || type.includes('chicken') || type.includes('duck')) return Bird;
+    if (type.includes('cat')) return '🐱';
+    if (type.includes('dog')) return '🐶';
+    if (type.includes('cow')) return '🐮';
+    if (type.includes('goat')) return '🐐';
+    if (type.includes('sheep')) return '🐑';
+    if (type.includes('horse')) return '🐴';
+    if (type.includes('pig')) return '🐷';
+    if (type.includes('chicken')) return '🐔';
+    if (type.includes('duck')) return '🦆';
+    if (type.includes('bird')) return '🐦';
+    if (type.includes('fish')) return '🐠';
+    if (type.includes('rabbit')) return '🐰';
+    if (type.includes('turtle')) return '🐢';
     
-    return Apple; // Default icon
+    return '🍎'; // Default icon
   };
 
   return (
@@ -59,7 +67,7 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
       </Card>
       
       {getTopResidentTypes().map(([typeName, count]) => {
-        const TypeIcon = getResidentTypeIcon(typeName);
+        const emoji = getResidentTypeEmoji(typeName);
         const percentage = residents.length > 0 ? Math.round(count / residents.length * 100) : 0;
         return (
           <Card key={typeName} className="p-6 flex justify-between items-center">
@@ -69,7 +77,7 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
               <p className="text-sm text-gray-500">{percentage}% of residents</p>
             </div>
             <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-              <TypeIcon className="h-6 w-6 text-gray-600" />
+              <span className="text-2xl">{emoji}</span>
             </div>
           </Card>
         );

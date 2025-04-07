@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload, Cat, Dog, Fish, Bird, Apple } from 'lucide-react';
+import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase, Resident, ResidentGroup } from '@/lib/supabase';
 import { format } from 'date-fns';
@@ -140,7 +139,6 @@ export default function AllResidents() {
   useEffect(() => {
     let filtered = [...residents];
     
-    // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(resident => 
@@ -148,7 +146,6 @@ export default function AllResidents() {
       );
     }
     
-    // Apply type filter
     if (typeFilter !== 'all') {
       filtered = filtered.filter(resident => 
         resident.type?.name === typeFilter
@@ -212,10 +209,8 @@ export default function AllResidents() {
     try {
       let updatedImageUrl = editResidentData.image_url;
       
-      // Handle file upload if a new file is selected
       if (selectedFile) {
         try {
-          // Check if bucket exists and create it if it doesn't
           const { data: buckets } = await supabase.storage.listBuckets();
           const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
           
@@ -232,7 +227,6 @@ export default function AllResidents() {
             console.log('Bucket created successfully');
           }
           
-          // Upload the file
           const fileExt = selectedFile.name.split('.').pop();
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
           const filePath = `${fileName}`;
@@ -243,7 +237,6 @@ export default function AllResidents() {
             
           if (uploadError) throw uploadError;
           
-          // Get the public URL
           const { data: publicUrlData } = supabase.storage
             .from('resident-images')
             .getPublicUrl(filePath);
@@ -322,7 +315,7 @@ export default function AllResidents() {
       
       setIsDialogOpen(false);
       setIsDeleteConfirmOpen(false);
-      fetchResidents(); // Refresh data
+      fetchResidents();
       
     } catch (error: any) {
       console.error('Error deleting resident:', error);
@@ -354,18 +347,26 @@ export default function AllResidents() {
   
   const [isEditResidentDialogOpen, setIsEditResidentDialogOpen] = useState(false);
 
-  const getResidentTypeIcon = (typeName: string | undefined) => {
-    if (!typeName) return Apple;
+  const getResidentTypeEmoji = (typeName: string | undefined) => {
+    if (!typeName) return '🍎';
     
     const type = typeName.toLowerCase();
     
-    if (type.includes('cat')) return Cat;
-    if (type.includes('dog')) return Dog;
-    if (type.includes('cow')) return Apple; // Fallback icon for cow
-    if (type.includes('fish')) return Fish;
-    if (type.includes('bird') || type.includes('chicken') || type.includes('duck')) return Bird;
+    if (type.includes('cat')) return '🐱';
+    if (type.includes('dog')) return '🐶';
+    if (type.includes('cow')) return '🐮';
+    if (type.includes('goat')) return '🐐';
+    if (type.includes('sheep')) return '🐑';
+    if (type.includes('horse')) return '🐴';
+    if (type.includes('pig')) return '🐷';
+    if (type.includes('chicken')) return '🐔';
+    if (type.includes('duck')) return '🦆';
+    if (type.includes('bird')) return '🐦';
+    if (type.includes('fish')) return '🐠';
+    if (type.includes('rabbit')) return '🐰';
+    if (type.includes('turtle')) return '🐢';
     
-    return Apple; // Default icon
+    return '🍎'; // Default icon
   };
 
   return (
@@ -422,7 +423,7 @@ export default function AllResidents() {
                   >
                     {!resident.image_url && (
                       <div className="text-gray-400 flex flex-col items-center">
-                        {React.createElement(getResidentTypeIcon(resident.type?.name), { size: 48 })}
+                        <span className="text-5xl">{getResidentTypeEmoji(resident.type?.name)}</span>
                       </div>
                     )}
                   </div>
@@ -529,7 +530,7 @@ export default function AllResidents() {
                   >
                     {!selectedResident.image_url && (
                       <div className="text-gray-400 flex flex-col items-center">
-                        {React.createElement(getResidentTypeIcon(selectedResident.type?.name), { size: 64 })}
+                        <span className="text-6xl">{getResidentTypeEmoji(selectedResident.type?.name)}</span>
                       </div>
                     )}
                   </div>
