@@ -129,7 +129,6 @@ export default function AllResidents() {
     name: '',
     description: '',
     image_url: '',
-    notes: '',
     arrival_date: null as Date | null
   });
   
@@ -162,7 +161,6 @@ export default function AllResidents() {
       name: resident.name,
       description: resident.description || '',
       image_url: resident.image_url || '',
-      notes: resident.notes || '',
       arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null
     });
     setPreviewUrl(resident.image_url || null);
@@ -233,7 +231,6 @@ export default function AllResidents() {
           name: editResidentData.name,
           description: editResidentData.description,
           image_url: updatedImageUrl,
-          notes: editResidentData.notes,
           arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null
         })
         .eq('id', selectedResident.id);
@@ -297,7 +294,6 @@ export default function AllResidents() {
     });
   };
   
-  // Group residents by type for display
   const residentsByType: Record<string, Resident[]> = {};
   
   filteredResidents.forEach(resident => {
@@ -432,7 +428,6 @@ export default function AllResidents() {
         </div>
       )}
       
-      {/* Confirm Delete Dialog */}
       <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
         <DialogContent>
           <DialogHeader>
@@ -455,7 +450,6 @@ export default function AllResidents() {
         </DialogContent>
       </Dialog>
       
-      {/* Resident details dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           {selectedResident && (
@@ -555,7 +549,6 @@ export default function AllResidents() {
         </DialogContent>
       </Dialog>
 
-      {/* Resident Edit Dialog */}
       <Dialog open={isEditResidentDialogOpen} onOpenChange={setIsEditResidentDialogOpen}>
         <DialogContent className="sm:max-w-[600px]">
           <DialogHeader>
@@ -662,19 +655,6 @@ export default function AllResidents() {
                   />
                 </PopoverContent>
               </Popover>
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="resident-notes" className="text-sm font-medium">
-                Notes (Optional)
-              </label>
-              <Textarea 
-                id="resident-notes" 
-                value={editResidentData.notes} 
-                onChange={e => setEditResidentData({...editResidentData, notes: e.target.value})}
-                placeholder="Enter notes" 
-                rows={3} 
-              />
             </div>
           </div>
           

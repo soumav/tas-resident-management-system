@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -69,7 +68,6 @@ export default function Dashboard() {
     name: '',
     description: '',
     image_url: '',
-    notes: '',
     arrival_date: null as Date | null
   });
 
@@ -165,7 +163,6 @@ export default function Dashboard() {
       name: resident.name,
       description: resident.description || '',
       image_url: resident.image_url || '',
-      notes: resident.notes || '',
       arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null
     });
     setPreviewUrl(resident.image_url || null);
@@ -231,7 +228,6 @@ export default function Dashboard() {
           name: editResidentData.name,
           description: editResidentData.description,
           image_url: updatedImageUrl,
-          notes: editResidentData.notes,
           arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null
         })
         .eq('id', selectedResident.id);
@@ -620,7 +616,7 @@ export default function Dashboard() {
     return residents.filter(resident => resident.subgroup_id === subgroupId);
   };
 
-  const getTopResidentTypes = (limit: number = 3) => {
+  const getTopResidentTypes = (limit: number = 5) => {
     return Object.entries(residentsByType).sort(([, countA], [, countB]) => countB - countA).slice(0, limit);
   };
 
@@ -682,7 +678,7 @@ export default function Dashboard() {
           </div>
         </Card>
         
-        {getTopResidentTypes(1).map(([typeName, count]) => {
+        {getTopResidentTypes(2).map(([typeName, count]) => {
           const TypeIcon = getResidentTypeIcon(typeName);
           const percentage = residents.length > 0 ? Math.round(count / residents.length * 100) : 0;
           return (
@@ -698,17 +694,6 @@ export default function Dashboard() {
             </Card>
           );
         })}
-        
-        <Card className="p-6 flex justify-between items-center">
-          <div>
-            <h3 className="text-lg text-gray-500 font-medium mb-1">Groups</h3>
-            <p className="text-4xl font-bold">{groups.length}</p>
-            <p className="text-sm text-gray-500">Groups of residents</p>
-          </div>
-          <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
-            <ListIcon className="h-6 w-6 text-gray-600" />
-          </div>
-        </Card>
       </div>
       
       <div className="flex justify-between items-center mb-6">
@@ -908,376 +893,4 @@ export default function Dashboard() {
       {/* Add Group Dialog */}
       <Dialog open={isAddGroupDialogOpen} onOpenChange={setIsAddGroupDialogOpen}>
         <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Group</DialogTitle>
-            <DialogDescription>
-              Create a new group for organizing residents.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid gap-2">
-              <label htmlFor="name" className="text-sm font-medium">
-                Group Name
-              </label>
-              <Input 
-                id="name" 
-                value={newGroupName} 
-                onChange={(e) => setNewGroupName(e.target.value)} 
-                placeholder="Enter group name" 
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Description (Optional)
-              </label>
-              <Textarea 
-                id="description" 
-                value={newGroupDescription} 
-                onChange={(e) => setNewGroupDescription(e.target.value)} 
-                placeholder="Enter group description" 
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddGroupDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddGroup} disabled={!newGroupName.trim()}>
-              Add Group
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Group Dialog */}
-      <Dialog open={isEditGroupDialogOpen} onOpenChange={setIsEditGroupDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Group</DialogTitle>
-            <DialogDescription>
-              Update the group information.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid gap-2">
-              <label htmlFor="editName" className="text-sm font-medium">
-                Group Name
-              </label>
-              <Input 
-                id="editName" 
-                value={newGroupName} 
-                onChange={(e) => setNewGroupName(e.target.value)} 
-                placeholder="Enter group name" 
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="editDescription" className="text-sm font-medium">
-                Description (Optional)
-              </label>
-              <Textarea 
-                id="editDescription" 
-                value={newGroupDescription} 
-                onChange={(e) => setNewGroupDescription(e.target.value)} 
-                placeholder="Enter group description" 
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditGroupDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditGroup} disabled={!newGroupName.trim()}>
-              Update Group
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Group Confirmation */}
-      <AlertDialog open={isDeleteGroupDialogOpen} onOpenChange={setIsDeleteGroupDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the group "{selectedGroup?.name}" and all its subgroups. 
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteGroup} className="bg-red-500 hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Add Subgroup Dialog */}
-      <Dialog open={isAddSubgroupDialogOpen} onOpenChange={setIsAddSubgroupDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add New Subgroup</DialogTitle>
-            <DialogDescription>
-              Create a new subgroup for further organizing residents.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid gap-2">
-              <label htmlFor="subgroupName" className="text-sm font-medium">
-                Subgroup Name
-              </label>
-              <Input 
-                id="subgroupName" 
-                value={newSubgroupName} 
-                onChange={(e) => setNewSubgroupName(e.target.value)} 
-                placeholder="Enter subgroup name" 
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="subgroupDescription" className="text-sm font-medium">
-                Description (Optional)
-              </label>
-              <Textarea 
-                id="subgroupDescription" 
-                value={newSubgroupDescription} 
-                onChange={(e) => setNewSubgroupDescription(e.target.value)} 
-                placeholder="Enter subgroup description" 
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddSubgroupDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleAddSubgroup} disabled={!newSubgroupName.trim()}>
-              Add Subgroup
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Subgroup Dialog */}
-      <Dialog open={isEditSubgroupDialogOpen} onOpenChange={setIsEditSubgroupDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Subgroup</DialogTitle>
-            <DialogDescription>
-              Update the subgroup information.
-            </DialogDescription>
-          </DialogHeader>
-          <div className="space-y-4 py-2">
-            <div className="grid gap-2">
-              <label htmlFor="editSubgroupName" className="text-sm font-medium">
-                Subgroup Name
-              </label>
-              <Input 
-                id="editSubgroupName" 
-                value={newSubgroupName} 
-                onChange={(e) => setNewSubgroupName(e.target.value)} 
-                placeholder="Enter subgroup name" 
-              />
-            </div>
-            <div className="grid gap-2">
-              <label htmlFor="editSubgroupDescription" className="text-sm font-medium">
-                Description (Optional)
-              </label>
-              <Textarea 
-                id="editSubgroupDescription" 
-                value={newSubgroupDescription} 
-                onChange={(e) => setNewSubgroupDescription(e.target.value)} 
-                placeholder="Enter subgroup description" 
-              />
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditSubgroupDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button onClick={handleEditSubgroup} disabled={!newSubgroupName.trim()}>
-              Update Subgroup
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Subgroup Confirmation */}
-      <AlertDialog open={isDeleteSubgroupDialogOpen} onOpenChange={setIsDeleteSubgroupDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the subgroup "{selectedSubgroup?.name}". 
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteSubgroup} className="bg-red-500 hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-
-      {/* Edit Resident Dialog */}
-      <Dialog open={isEditResidentDialogOpen} onOpenChange={setIsEditResidentDialogOpen}>
-        <DialogContent className="max-w-2xl">
-          <DialogHeader>
-            <DialogTitle>Edit Resident</DialogTitle>
-            <DialogDescription>
-              Update the information for {selectedResident?.name}
-            </DialogDescription>
-          </DialogHeader>
-          <div className="grid gap-6 py-4">
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <label htmlFor="residentName" className="text-sm font-medium">
-                  Name
-                </label>
-                <Input 
-                  id="residentName" 
-                  value={editResidentData.name} 
-                  onChange={(e) => setEditResidentData({...editResidentData, name: e.target.value})} 
-                />
-              </div>
-
-              <div className="space-y-2">
-                <label className="text-sm font-medium">
-                  Arrival Date
-                </label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "w-full justify-start text-left font-normal",
-                        !editResidentData.arrival_date && "text-muted-foreground"
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {editResidentData.arrival_date ? format(editResidentData.arrival_date, "PPP") : <span>Pick a date</span>}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0">
-                    <Calendar
-                      mode="single"
-                      selected={editResidentData.arrival_date || undefined}
-                      onSelect={(date) => setEditResidentData({...editResidentData, arrival_date: date})}
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="residentDescription" className="text-sm font-medium">
-                Description
-              </label>
-              <Textarea 
-                id="residentDescription" 
-                value={editResidentData.description} 
-                onChange={(e) => setEditResidentData({...editResidentData, description: e.target.value})} 
-                rows={3}
-              />
-            </div>
-
-            <div className="space-y-2">
-              <label htmlFor="residentNotes" className="text-sm font-medium">
-                Notes
-              </label>
-              <Textarea 
-                id="residentNotes" 
-                value={editResidentData.notes} 
-                onChange={(e) => setEditResidentData({...editResidentData, notes: e.target.value})} 
-                rows={3}
-              />
-            </div>
-              
-            <div className="space-y-2">
-              <label className="text-sm font-medium">
-                Photo
-              </label>
-              <div className="flex flex-col items-center justify-center border-2 border-dashed border-gray-300 rounded-lg p-6 max-w-xs mx-auto">
-                {previewUrl ? (
-                  <div className="relative w-full">
-                    <img 
-                      src={previewUrl} 
-                      alt="Preview" 
-                      className="w-full h-40 object-cover rounded-md mb-4" 
-                    />
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      size="sm" 
-                      className="absolute top-2 right-2 h-8 w-8 p-0"
-                      onClick={resetFileInput}
-                    >
-                      &times;
-                    </Button>
-                  </div>
-                ) : (
-                  <>
-                    <Upload className="h-10 w-10 text-gray-400 mb-2" />
-                    <p className="text-sm text-gray-500 mb-2">Click to upload image</p>
-                  </>
-                )}
-                <div className="w-full">
-                  <input
-                    type="file"
-                    id="image"
-                    className="hidden"
-                    accept="image/*"
-                    onChange={handleFileChange}
-                  />
-                  <Button
-                    type="button"
-                    variant="outline"
-                    className="w-full"
-                    onClick={() => document.getElementById('image')?.click()}
-                  >
-                    {previewUrl ? 'Change Photo' : 'Upload Photo'}
-                  </Button>
-                </div>
-              </div>
-            </div>
-          </div>
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsEditResidentDialogOpen(false);
-              resetFileInput();
-            }}>
-              Cancel
-            </Button>
-            <Button 
-              onClick={handleEditResidentSubmit} 
-              disabled={isLoading || !editResidentData.name.trim()}
-              className="bg-sanctuary-green hover:bg-sanctuary-light-green"
-            >
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Resident Confirmation */}
-      <AlertDialog open={isDeleteResidentDialogOpen} onOpenChange={setIsDeleteResidentDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete {selectedResident?.name} from the system.
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteResident} className="bg-red-500 hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>
-  );
-}
+          <

@@ -25,9 +25,7 @@ export type Tables = {
     description: string | null;
     image_url: string | null;
     created_at: string;
-    notes: string | null;
     year_arrived: string | null;
-    medical_notes: string | null;
   };
   resident_types: {
     id: number;
