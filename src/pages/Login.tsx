@@ -1,0 +1,106 @@
+
+import { useState } from 'react';
+import { Link } from 'react-router-dom';
+import { useAuth } from '@/context/AuthContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { useToast } from '@/components/ui/use-toast';
+import { Leaf } from 'lucide-react';
+
+export default function Login() {
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [isLoading, setIsLoading] = useState(false);
+  const { signIn } = useAuth();
+  const { toast } = useToast();
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setIsLoading(true);
+    
+    const { error } = await signIn(email, password);
+    
+    if (error) {
+      toast({
+        title: "Authentication error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+    
+    setIsLoading(false);
+  };
+
+  return (
+    <div className="auth-layout">
+      <div className="mb-8 text-center">
+        <div className="flex justify-center mb-4">
+          <div className="sanctuary-logo">
+            <Leaf className="h-6 w-6 text-white" />
+          </div>
+        </div>
+        <h1 className="text-3xl font-bold text-sanctuary-green">The Alice Sanctuary</h1>
+        <p className="text-gray-600">Resident Management System</p>
+      </div>
+      
+      <div className="auth-card">
+        <h2 className="text-2xl font-semibold mb-6">Sign In</h2>
+        <p className="text-gray-500 mb-6">Sign in to access the sanctuary management system</p>
+        
+        <form onSubmit={handleSubmit}>
+          <div className="mb-4">
+            <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
+              Email
+            </label>
+            <Input
+              id="email"
+              type="email"
+              placeholder="you@example.com"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              required
+              className="w-full"
+            />
+          </div>
+          
+          <div className="mb-6">
+            <div className="flex justify-between items-center mb-1">
+              <label htmlFor="password" className="block text-sm font-medium text-gray-700">
+                Password
+              </label>
+              <Link to="/forgot-password" className="text-sm text-sanctuary-green hover:underline">
+                Forgot password?
+              </Link>
+            </div>
+            <Input
+              id="password"
+              type="password"
+              placeholder="••••••••"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              className="w-full"
+            />
+          </div>
+          
+          <Button
+            type="submit"
+            className="w-full bg-sanctuary-green hover:bg-sanctuary-light-green"
+            disabled={isLoading}
+          >
+            {isLoading ? 'Signing in...' : 'Sign In'}
+          </Button>
+        </form>
+        
+        <div className="mt-6 text-center text-sm">
+          <p className="text-gray-600">
+            Don't have an account?{' '}
+            <Link to="/signup" className="text-sanctuary-green hover:underline font-medium">
+              Sign up
+            </Link>
+          </p>
+        </div>
+      </div>
+    </div>
+  );
+}

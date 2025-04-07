@@ -1,10 +1,23 @@
+
 import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
-import Index from "./pages/Index";
+import { AuthProvider } from "@/context/AuthContext";
+
+// Pages
+import Login from "./pages/Login";
+import Signup from "./pages/Signup";
+import Dashboard from "./pages/Dashboard";
+import AllResidents from "./pages/AllResidents";
+import AddResident from "./pages/AddResident";
+import ResidentTypeManager from "./pages/ResidentTypeManager";
+import StaffVolunteers from "./pages/StaffVolunteers";
 import NotFound from "./pages/NotFound";
+
+// Layouts
+import DashboardLayout from "./components/Layout/DashboardLayout";
 
 const queryClient = new QueryClient();
 
@@ -14,11 +27,29 @@ const App = () => (
       <Toaster />
       <Sonner />
       <BrowserRouter>
-        <Routes>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-          <Route path="*" element={<NotFound />} />
-        </Routes>
+        <AuthProvider>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            
+            {/* Protected Dashboard Routes */}
+            <Route path="/" element={<DashboardLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="residents" element={<AllResidents />} />
+              <Route path="residents/new" element={<AddResident />} />
+              <Route path="resident-types" element={<ResidentTypeManager />} />
+              <Route path="groups" element={<Dashboard />} /> 
+              <Route path="staff" element={<StaffVolunteers />} />
+              <Route path="settings" element={<Dashboard />} />
+              <Route path="about" element={<Dashboard />} />
+              <Route path="help" element={<Dashboard />} />
+            </Route>
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
   </QueryClientProvider>
