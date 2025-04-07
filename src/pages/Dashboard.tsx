@@ -9,7 +9,7 @@ import {
   Trash2,
   ListIcon,
   Users,
-  Cow
+  Rabbit
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, ResidentGroup, ResidentSubgroup, Resident } from '@/lib/supabase';
@@ -519,8 +519,8 @@ export default function Dashboard() {
   
   // Get the icon for a resident type
   const getResidentTypeIcon = (typeName: string) => {
-    // Default to Cow icon, but could be expanded with more icons based on type
-    return Cow;
+    // Default to Rabbit icon, but could be expanded with more icons based on type
+    return Rabbit;
   };
   
   return (
