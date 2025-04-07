@@ -32,7 +32,7 @@ const App = () => (
           <div className="min-h-screen flex flex-col">
             <Routes>
               {/* Auth Routes */}
-              <Route path="/login" element={<div className="flex flex-col flex-1"><Login /><Footer /></div>} />
+              <Route path="/login" element={<Login />} />
               <Route path="/signup" element={<div className="flex flex-col flex-1"><Signup /><Footer /></div>} />
               
               {/* Protected Dashboard Routes */}

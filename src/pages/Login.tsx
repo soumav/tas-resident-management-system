@@ -59,9 +59,10 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center p-4">
+    <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-between py-8 px-4">
+      <div className="w-full"></div> {/* Spacer */}
       <div className="max-w-md w-full">
-        <div className="mb-8 text-center">
+        <div className="mb-6 text-center">
           <div className="flex justify-center mb-4">
             <div className="h-12 w-12 bg-sanctuary-green rounded-full flex items-center justify-center">
               <Leaf className="h-6 w-6 text-white" />

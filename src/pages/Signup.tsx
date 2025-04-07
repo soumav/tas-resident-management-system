@@ -7,6 +7,7 @@ import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Leaf, User, Mail, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
+import Footer from '@/components/Layout/Footer';
 
 export default function Signup() {
   const [name, setName] = useState('');
@@ -81,10 +82,10 @@ export default function Signup() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <div className="flex flex-col items-center justify-center w-full p-4">
+    <div className="min-h-screen flex flex-col bg-gray-50">
+      <div className="flex flex-col items-center justify-center w-full flex-grow p-4 py-8">
         <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
+          <div className="mb-6 text-center">
             <div className="flex justify-center mb-4">
               <div className="sanctuary-logo w-14 h-14 flex items-center justify-center">
                 <Leaf className="h-7 w-7 text-white" />
@@ -191,6 +192,7 @@ export default function Signup() {
           </div>
         </div>
       </div>
+      <Footer />
     </div>
   );
 }
