@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -155,6 +156,39 @@ export default function AddResident() {
   
   useEffect(() => {
     fetchOptions();
+
+    // Ensure the bucket exists when the component mounts
+    const createBucketIfNotExists = async () => {
+      try {
+        // First check if the bucket exists
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
+        
+        if (!bucketExists) {
+          console.log('Creating resident-images bucket...');
+          const { error } = await supabase.storage.createBucket('resident-images', {
+            public: true
+          });
+          
+          if (error) {
+            console.error('Error creating bucket:', error);
+            toast({
+              title: 'Error',
+              description: 'Failed to create storage bucket. Please try again.',
+              variant: 'destructive',
+            });
+          } else {
+            console.log('Bucket created successfully');
+          }
+        } else {
+          console.log('Bucket already exists');
+        }
+      } catch (error) {
+        console.error('Error checking/creating bucket:', error);
+      }
+    };
+    
+    createBucketIfNotExists();
   }, [toast]);
   
   useEffect(() => {
@@ -202,8 +236,24 @@ export default function AddResident() {
         console.log('Uploading image:', image.name);
         
         try {
-          // Skip bucket creation since we've now set up policies in the schema
-          // Instead, directly attempt to upload the file
+          // Check if bucket exists and create it if it doesn't
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
+          
+          if (!bucketExists) {
+            console.log('Bucket does not exist. Creating...');
+            const { error: createError } = await supabase.storage.createBucket('resident-images', {
+              public: true
+            });
+            
+            if (createError) {
+              console.error('Error creating bucket:', createError);
+              throw createError;
+            }
+            console.log('Bucket created successfully');
+          }
+          
+          // Now upload the file
           const fileExt = image.name.split('.').pop();
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
           const filePath = `${fileName}`;
@@ -228,18 +278,19 @@ export default function AddResident() {
         } catch (uploadError: any) {
           console.error('Upload error:', uploadError);
           
-          // If we get a bucket not found error, inform the user they need to run the schema
+          // More specific error message
           if (uploadError.message && uploadError.message.includes('bucket not found')) {
             toast({
-              title: 'Bucket not found',
-              description: 'The resident-images bucket does not exist. Please ensure the schema has been properly applied to your database.',
+              title: 'Storage Error',
+              description: 'The storage system is not properly set up. Please contact an administrator.',
               variant: 'destructive',
             });
-            setIsLoading(false);
-            return;
           } else {
             throw uploadError;
           }
+          
+          // We'll continue without the image
+          console.log('Continuing without image');
         }
       }
       
