@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -6,7 +5,6 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
 import { Leaf, User, Mail, Lock } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
 import Footer from '@/components/Layout/Footer';
 
 export default function Signup() {
@@ -41,8 +39,8 @@ export default function Signup() {
     
     setIsLoading(true);
     
-    // Using Supabase auth for signup
-    const { data, error } = await signUp(email, password);
+    // Using updated signUp function with name parameter
+    const { data, error } = await signUp(email, password, name);
     
     if (error) {
       toast({
@@ -51,31 +49,10 @@ export default function Signup() {
         variant: "destructive"
       });
     } else {
-      // Add the name to the user metadata
-      try {
-        // If auth signup was successful, store the user name
-        if (data?.user?.id) {
-          await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              name: name,
-              email: email
-            });
-        }
-        
-        toast({
-          title: "Account created",
-          description: "Please check your email to confirm your account",
-        });
-      } catch (metadataError) {
-        console.error("Error saving user name:", metadataError);
-        toast({
-          title: "Warning",
-          description: "Account created but we couldn't save your name. You can update it later.",
-          variant: "destructive"
-        });
-      }
+      toast({
+        title: "Account created",
+        description: "Please check your email to confirm your account",
+      });
     }
     
     setIsLoading(false);

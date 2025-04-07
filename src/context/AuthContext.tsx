@@ -10,7 +10,7 @@ type AuthContextType = {
   session: Session | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any, data: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any, data: any }>;
   signOut: () => Promise<void>;
 };
 
@@ -54,17 +54,65 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    
-    if (!error) {
-      navigate('/');
+  const signUp = async (email: string, password: string, name: string) => {
+    try {
+      // Step 1: Create the auth user
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      if (error) {
+        return { data: null, error };
+      }
+      
+      // Step 2: Insert into public.users table
+      if (data?.user?.id) {
+        // Insert into users table
+        const { error: usersError } = await supabase
+          .from('users')
+          .insert({
+            id: data.user.id,
+            email: email,
+            role: 'user'
+          });
+          
+        if (usersError) {
+          console.error("Error creating user record:", usersError);
+        }
+        
+        // Insert into profiles table
+        const { error: profilesError } = await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            name: name,
+            email: email
+          });
+          
+        if (profilesError) {
+          console.error("Error creating profile record:", profilesError);
+        }
+        
+        // If successful, navigate to home
+        if (!usersError && !profilesError) {
+          navigate('/');
+        }
+        
+        return { 
+          data, 
+          error: usersError || profilesError || null
+        };
+      }
+      
+      return { data, error: null };
+    } catch (error) {
+      console.error("Signup process failed:", error);
+      return {
+        data: null,
+        error: error || { message: "An unknown error occurred during signup" }
+      };
     }
-    
-    return { data, error };
   };
 
   const signOut = async () => {
