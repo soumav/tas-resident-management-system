@@ -58,6 +58,37 @@ export default function Login() {
     setIsLoading(false);
   };
 
+  const handleDemoLogin = async () => {
+    if (hasSupabaseError) {
+      toast({
+        title: "Connection Error",
+        description: "Cannot connect to Supabase. Please connect the project to Supabase first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
+    setIsLoading(true);
+    
+    // Use default demo credentials
+    const { error } = await signIn("demo@example.com", "demo123");
+    
+    if (error) {
+      toast({
+        title: "Demo login failed",
+        description: "Please ensure the demo account exists in your Supabase Auth.",
+        variant: "destructive"
+      });
+    } else {
+      toast({
+        title: "Demo login successful",
+        description: "You are now logged in with the demo account.",
+      });
+    }
+    
+    setIsLoading(false);
+  };
+
   return (
     <div className="auth-layout">
       <div className="mb-8 text-center">
@@ -127,6 +158,25 @@ export default function Login() {
             disabled={isLoading || hasSupabaseError}
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
+          </Button>
+          
+          <div className="mt-4 relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t border-gray-300" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-white px-2 text-gray-500">Or</span>
+            </div>
+          </div>
+          
+          <Button
+            type="button"
+            variant="outline"
+            onClick={handleDemoLogin}
+            className="w-full mt-4"
+            disabled={isLoading || hasSupabaseError}
+          >
+            Demo Login
           </Button>
         </form>
         
