@@ -9,12 +9,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
+  SelectGroup,
+  SelectLabel,
 } from '@/components/ui/select';
 import { Textarea } from '@/components/ui/textarea';
 import { Calendar } from '@/components/ui/calendar';
 import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover';
 import { format } from 'date-fns';
-import { Calendar as CalendarIcon, Upload } from 'lucide-react';
+import { Calendar as CalendarIcon, Upload, RefreshCw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 
@@ -40,6 +42,12 @@ type ResidentSubgroup = {
   group_id: number;
 };
 
+type ResidentCategory = {
+  id: number;
+  name: string;
+  types: ResidentType[];
+};
+
 export default function AddResident() {
   const [name, setName] = useState('');
   const [typeId, setTypeId] = useState<string>('');
@@ -49,71 +57,84 @@ export default function AddResident() {
   const [description, setDescription] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [types, setTypes] = useState<ResidentType[]>([]);
+  const [categories, setCategories] = useState<ResidentCategory[]>([]);
   const [groups, setGroups] = useState<ResidentGroup[]>([]);
   const [subgroups, setSubgroups] = useState<ResidentSubgroup[]>([]);
   const [availableSubgroups, setAvailableSubgroups] = useState<ResidentSubgroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [isRefreshing, setIsRefreshing] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
   
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        // Fetch resident types
+  const fetchOptions = async () => {
+    try {
+      setIsRefreshing(true);
+      
+      // Fetch resident categories
+      const { data: categoriesData, error: categoriesError } = await supabase
+        .from('resident_categories')
+        .select('id, name');
+        
+      if (categoriesError) throw categoriesError;
+      
+      const formattedCategories: ResidentCategory[] = [];
+      
+      // For each category, fetch its types
+      for (const category of categoriesData || []) {
         const { data: typesData, error: typesError } = await supabase
           .from('resident_types')
-          .select(`
-            id,
-            name,
-            category_id,
-            resident_categories (name)
-          `);
+          .select('id, name, category_id')
+          .eq('category_id', category.id);
           
         if (typesError) throw typesError;
         
-        // Transform the data to match our ResidentType interface
-        const formattedTypes: ResidentType[] = (typesData || []).map((type: any) => ({
-          id: type.id,
-          name: type.name,
-          category_id: type.category_id,
-          category_name: type.resident_categories?.name,
-          resident_categories: type.resident_categories
-        }));
-        
-        setTypes(formattedTypes);
-        
-        // Fetch resident groups
-        const { data: groupsData, error: groupsError } = await supabase
-          .from('resident_groups')
-          .select('id, name');
-          
-        if (groupsError) throw groupsError;
-        
-        // Fetch resident subgroups
-        const { data: subgroupsData, error: subgroupsError } = await supabase
-          .from('resident_subgroups')
-          .select('id, name, group_id');
-          
-        if (subgroupsError) throw subgroupsError;
-        
-        // Properly type the data before setting state
-        const typedGroupsData = (groupsData || []) as ResidentGroup[];
-        const typedSubgroupsData = (subgroupsData || []) as ResidentSubgroup[];
-        
-        setGroups(typedGroupsData);
-        setSubgroups(typedSubgroupsData);
-        
-      } catch (error) {
-        console.error('Error fetching options:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load form options',
-          variant: 'destructive',
+        formattedCategories.push({
+          id: category.id,
+          name: category.name,
+          types: typesData || []
         });
+        
+        // Add all types to the flat types array
+        setTypes(prev => [...prev, ...(typesData || [])]);
       }
-    };
-    
+      
+      setCategories(formattedCategories);
+      
+      // Fetch resident groups
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('resident_groups')
+        .select('id, name');
+        
+      if (groupsError) throw groupsError;
+      
+      // Fetch resident subgroups
+      const { data: subgroupsData, error: subgroupsError } = await supabase
+        .from('resident_subgroups')
+        .select('id, name, group_id');
+        
+      if (subgroupsError) throw subgroupsError;
+      
+      // Properly type the data before setting state
+      const typedGroupsData = (groupsData || []) as ResidentGroup[];
+      const typedSubgroupsData = (subgroupsData || []) as ResidentSubgroup[];
+      
+      setGroups(typedGroupsData);
+      setSubgroups(typedSubgroupsData);
+      
+    } catch (error) {
+      console.error('Error fetching options:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to load form options',
+        variant: 'destructive',
+      });
+    } finally {
+      setIsRefreshing(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchOptions();
   }, [toast]);
   
@@ -200,11 +221,31 @@ export default function AddResident() {
     setIsLoading(false);
   };
   
+  const handleRefresh = () => {
+    // Clear the types array before fetching new data
+    setTypes([]);
+    fetchOptions();
+    toast({
+      title: 'Refreshed',
+      description: 'Resident types and groups have been refreshed',
+    });
+  };
+  
   return (
     <div>
-      <div className="mb-6">
-        <h2 className="text-2xl font-semibold">Add New Resident</h2>
-        <p className="text-gray-600">Register a new animal to the sanctuary</p>
+      <div className="mb-6 flex justify-between items-center">
+        <div>
+          <h2 className="text-2xl font-semibold">Add New Resident</h2>
+          <p className="text-gray-600">Register a new animal to the sanctuary</p>
+        </div>
+        <Button 
+          variant="outline"
+          onClick={handleRefresh}
+          disabled={isRefreshing}
+        >
+          <RefreshCw className={`h-4 w-4 mr-2 ${isRefreshing ? 'animate-spin' : ''}`} />
+          Refresh Options
+        </Button>
       </div>
       
       <div className="bg-white rounded-lg shadow-sm p-6">
@@ -241,11 +282,21 @@ export default function AddResident() {
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
                 <SelectContent>
-                  {types.map((type) => (
-                    <SelectItem key={type.id} value={type.id.toString()}>
-                      {type.name}
-                    </SelectItem>
+                  {categories.map((category) => (
+                    <SelectGroup key={category.id}>
+                      <SelectLabel>{category.name}</SelectLabel>
+                      {category.types.map((type) => (
+                        <SelectItem key={type.id} value={type.id.toString()}>
+                          {type.name}
+                        </SelectItem>
+                      ))}
+                    </SelectGroup>
                   ))}
+                  {categories.length === 0 && (
+                    <SelectItem value="no-types" disabled>
+                      No resident types available
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
@@ -293,6 +344,11 @@ export default function AddResident() {
                       {group.name}
                     </SelectItem>
                   ))}
+                  {groups.length === 0 && (
+                    <SelectItem value="no-groups" disabled>
+                      No groups available
+                    </SelectItem>
+                  )}
                 </SelectContent>
               </Select>
             </div>
