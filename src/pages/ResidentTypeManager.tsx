@@ -9,6 +9,7 @@ import {
   DialogTitle,
   DialogTrigger,
   DialogFooter,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import {
   Table,
@@ -36,7 +37,7 @@ export default function ResidentTypeManager() {
   const [newCategoryName, setNewCategoryName] = useState('');
   const [newTypeName, setNewTypeName] = useState('');
   const [selectedCategory, setSelectedCategory] = useState<number | null>(null);
-  const [isOpen, setIsOpen] = useState(false);
+  const [dialogOpen, setDialogOpen] = useState(false);
   const { toast } = useToast();
   
   const fetchCategories = async () => {
@@ -124,6 +125,7 @@ export default function ResidentTypeManager() {
       if (error) throw error;
       
       setNewTypeName('');
+      setDialogOpen(false); // Close dialog after successful addition
       await fetchCategories(); // Refresh data
       
       toast({
@@ -255,13 +257,21 @@ export default function ResidentTypeManager() {
                         </button>
                       </div>
                     ))}
-                    <Dialog>
+                    <Dialog open={dialogOpen && selectedCategory === category.id} onOpenChange={(open) => {
+                      setDialogOpen(open);
+                      if (!open) {
+                        setNewTypeName('');
+                      }
+                    }}>
                       <DialogTrigger asChild>
                         <Button 
                           variant="outline" 
                           size="sm"
                           className="h-7"
-                          onClick={() => setSelectedCategory(category.id)}
+                          onClick={() => {
+                            setSelectedCategory(category.id);
+                            setDialogOpen(true);
+                          }}
                         >
                           <Plus className="h-3 w-3 mr-1" /> Add Type
                         </Button>
@@ -269,12 +279,16 @@ export default function ResidentTypeManager() {
                       <DialogContent>
                         <DialogHeader>
                           <DialogTitle>Add New Type to {category.name}</DialogTitle>
+                          <DialogDescription>
+                            Enter a name for the new resident type.
+                          </DialogDescription>
                         </DialogHeader>
                         <div className="py-4">
                           <Input
                             placeholder="New type name"
                             value={newTypeName}
                             onChange={(e) => setNewTypeName(e.target.value)}
+                            autoFocus
                           />
                         </div>
                         <DialogFooter>
