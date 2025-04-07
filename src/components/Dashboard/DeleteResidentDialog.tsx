@@ -1,19 +1,23 @@
 
 import React from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
+import { Button } from '@/components/ui/button';
+import { Loader2 } from 'lucide-react';
 
 interface DeleteResidentDialogProps {
   open: boolean;
   residentName: string;
   onClose: () => void;
   onDelete: () => void;
+  isDeleting?: boolean;
 }
 
 export function DeleteResidentDialog({
   open,
   residentName,
   onClose,
-  onDelete
+  onDelete,
+  isDeleting = false
 }: DeleteResidentDialogProps) {
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
@@ -25,10 +29,21 @@ export function DeleteResidentDialog({
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
-          <AlertDialogAction onClick={onDelete} className="bg-red-600 hover:bg-red-700">
-            Delete
-          </AlertDialogAction>
+          <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
+          <Button 
+            onClick={onDelete} 
+            className="bg-red-600 hover:bg-red-700 text-white" 
+            disabled={isDeleting}
+          >
+            {isDeleting ? (
+              <>
+                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                Deleting...
+              </>
+            ) : (
+              'Delete'
+            )}
+          </Button>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>

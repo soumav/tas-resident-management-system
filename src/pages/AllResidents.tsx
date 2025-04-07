@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,12 +28,13 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload } from 'lucide-react';
+import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase, Resident, ResidentGroup } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { EditResidentDialog } from '@/components/Dashboard/EditResidentDialog';
+import { DeleteResidentDialog } from '@/components/Dashboard/DeleteResidentDialog';
 
 export default function AllResidents() {
   
@@ -51,6 +51,7 @@ export default function AllResidents() {
   const [isLoading, setIsLoading] = useState(false);
   const [groups, setGroups] = useState<ResidentGroup[]>([]);
   const [refreshKey, setRefreshKey] = useState(0);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -312,6 +313,7 @@ export default function AllResidents() {
   };
   
   const handleDeleteResident = async (id: string) => {
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from('residents')
@@ -329,7 +331,7 @@ export default function AllResidents() {
       setIsDeleteConfirmOpen(false);
       
       // Force a refresh of the residents data
-      setRefreshKey(prevKey => prevKey + 1);
+      await fetchResidents();
       
     } catch (error: any) {
       console.error('Error deleting resident:', error);
@@ -338,6 +340,8 @@ export default function AllResidents() {
         description: error.message || 'Failed to delete resident',
         variant: 'destructive',
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
   
@@ -513,14 +517,22 @@ export default function AllResidents() {
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>
-            <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)}>
+            <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)} disabled={isDeleting}>
               Cancel
             </Button>
             <Button 
               variant="destructive" 
               onClick={() => selectedResident && handleDeleteResident(selectedResident.id)}
+              disabled={isDeleting}
             >
-              Delete
+              {isDeleting ? (
+                <>
+                  <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                  Deleting...
+                </>
+              ) : (
+                'Delete'
+              )}
             </Button>
           </DialogFooter>
         </DialogContent>
@@ -636,6 +648,14 @@ export default function AllResidents() {
         onFormChange={(data) => setEditResidentData({...editResidentData, ...data})}
         onFileChange={handleFileChange}
         resetFileInput={resetFileInput}
+      />
+      
+      <DeleteResidentDialog 
+        open={isDeleteConfirmOpen} 
+        residentName={selectedResident?.name || ''}
+        onClose={() => setIsDeleteConfirmOpen(false)}
+        onDelete={() => selectedResident && handleDeleteResident(selectedResident.id)}
+        isDeleting={isDeleting}
       />
     </div>
   );

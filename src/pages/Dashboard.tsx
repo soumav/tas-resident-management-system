@@ -22,6 +22,7 @@ export default function Dashboard() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
   
   const { toast } = useToast();
   
@@ -282,6 +283,7 @@ export default function Dashboard() {
   const handleDeleteResident = async () => {
     if (!selectedResident) return;
     
+    setIsDeleting(true);
     try {
       const { error } = await supabase
         .from('residents')
@@ -305,6 +307,8 @@ export default function Dashboard() {
         description: error.message || 'Failed to delete resident',
         variant: 'destructive'
       });
+    } finally {
+      setIsDeleting(false);
     }
   };
 
@@ -719,6 +723,7 @@ export default function Dashboard() {
         residentName={selectedResident?.name || ''}
         onClose={() => setIsDeleteResidentDialogOpen(false)}
         onDelete={handleDeleteResident}
+        isDeleting={isDeleting}
       />
       
       <GroupDialogs 
