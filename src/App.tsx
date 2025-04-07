@@ -5,6 +5,7 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
+import Footer from "./components/Layout/Footer";
 
 // Pages
 import Login from "./pages/Login";
@@ -28,27 +29,29 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <Routes>
-            {/* Auth Routes */}
-            <Route path="/login" element={<Login />} />
-            <Route path="/signup" element={<Signup />} />
-            
-            {/* Protected Dashboard Routes */}
-            <Route path="/" element={<DashboardLayout />}>
-              <Route index element={<Dashboard />} />
-              <Route path="residents" element={<AllResidents />} />
-              <Route path="residents/new" element={<AddResident />} />
-              <Route path="resident-types" element={<ResidentTypeManager />} />
-              <Route path="groups" element={<Dashboard />} /> 
-              <Route path="staff" element={<StaffVolunteers />} />
-              <Route path="settings" element={<Dashboard />} />
-              <Route path="about" element={<Dashboard />} />
-              <Route path="help" element={<Dashboard />} />
-            </Route>
-            
-            {/* Catch-all route */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="min-h-screen flex flex-col">
+            <Routes>
+              {/* Auth Routes */}
+              <Route path="/login" element={<><Login /><Footer /></>} />
+              <Route path="/signup" element={<><Signup /><Footer /></>} />
+              
+              {/* Protected Dashboard Routes */}
+              <Route path="/" element={<DashboardLayout />}>
+                <Route index element={<Dashboard />} />
+                <Route path="residents" element={<AllResidents />} />
+                <Route path="residents/new" element={<AddResident />} />
+                <Route path="resident-types" element={<ResidentTypeManager />} />
+                <Route path="groups" element={<Dashboard />} /> 
+                <Route path="staff" element={<StaffVolunteers />} />
+                <Route path="settings" element={<Dashboard />} />
+                <Route path="about" element={<Dashboard />} />
+                <Route path="help" element={<Dashboard />} />
+              </Route>
+              
+              {/* Catch-all route */}
+              <Route path="*" element={<><NotFound /><Footer /></>} />
+            </Routes>
+          </div>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
