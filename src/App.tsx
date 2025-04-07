@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 
 // Pages
@@ -37,14 +37,9 @@ const App = () => (
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
             
-            {/* Home route - redirect to dashboard */}
-            <Route path="/" element={<Navigate to="/dashboard" replace />} />
-            
             {/* Protected Dashboard Routes */}
-            <Route path="/dashboard" element={<DashboardLayout />}>
-              <Route index element={<Dashboard />} />
-            </Route>
             <Route path="/" element={<DashboardLayout />}>
+              <Route index element={<Dashboard />} />
               <Route path="residents" element={<AllResidents />} />
               <Route path="residents/new" element={<AddResident />} />
               <Route path="residents/edit/:id" element={<AddResident />} />

@@ -1,5 +1,5 @@
 
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -10,28 +10,6 @@ import { LogOut } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, isLoading, signOut } = useAuth();
-  const [displayName, setDisplayName] = useState('User');
-  
-  useEffect(() => {
-    const fetchUserProfile = async () => {
-      if (user?.id) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('name')
-          .eq('id', user.id)
-          .single();
-          
-        if (data?.name && !error) {
-          setDisplayName(data.name);
-        } else {
-          // Fallback to email username if no profile name found
-          setDisplayName(user?.email?.split('@')[0] || 'User');
-        }
-      }
-    };
-    
-    fetchUserProfile();
-  }, [user]);
 
   // If still loading, return null
   if (isLoading) return null;
@@ -44,6 +22,8 @@ export default function DashboardLayout() {
   const handleSignOut = async () => {
     await signOut();
   };
+  
+  const username = user?.email?.split('@')[0] || 'User';
   
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -61,7 +41,7 @@ export default function DashboardLayout() {
           
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="font-medium">{displayName}</p>
+              <p className="font-medium">{username}</p>
               <p className="text-xs text-gray-500">Staff</p>
             </div>
             <Button 
