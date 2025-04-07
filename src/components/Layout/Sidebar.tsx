@@ -4,11 +4,10 @@ import { useAuth } from '@/context/AuthContext';
 import { 
   Home, 
   Users, 
-  List, 
-  PlusCircle, 
+  ListIcon, 
   UserPlus, 
   Settings,
-  Info,
+  InfoIcon,
   HelpCircle,
   LogOut,
   Leaf
@@ -17,7 +16,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 
 export default function Sidebar() {
-  const { signOut } = useAuth();
+  const { signOut, user } = useAuth();
   const location = useLocation();
   
   const isActive = (path: string) => location.pathname === path;
@@ -36,7 +35,7 @@ export default function Sidebar() {
     { 
       name: 'Groups', 
       path: '/groups', 
-      icon: List 
+      icon: ListIcon 
     }
   ];
   
@@ -44,12 +43,12 @@ export default function Sidebar() {
     { 
       name: 'Add Resident', 
       path: '/residents/new', 
-      icon: PlusCircle 
+      icon: UserPlus 
     },
     { 
       name: 'Staff & Volunteers', 
       path: '/staff', 
-      icon: UserPlus 
+      icon: Users 
     },
     { 
       name: 'Settings', 
@@ -62,7 +61,7 @@ export default function Sidebar() {
     { 
       name: 'About', 
       path: '/about', 
-      icon: Info 
+      icon: InfoIcon 
     },
     { 
       name: 'Help & Support', 
@@ -72,16 +71,11 @@ export default function Sidebar() {
   ];
   
   return (
-    <div className="dashboard-sidebar">
+    <div className="dashboard-sidebar bg-sanctuary-dark-green h-full w-[280px] flex flex-col">
       <div className="px-4 py-6 mb-6">
-        <div className="flex items-center gap-3">
-          <div className="sanctuary-logo">
-            <Leaf className="h-6 w-6 text-white" />
-          </div>
-          <div>
-            <h1 className="text-xl font-bold text-white">The Alice Sanctuary</h1>
-            <p className="text-sm text-gray-300">Resident Management</p>
-          </div>
+        <div className="flex flex-col gap-1">
+          <h1 className="text-xl font-bold text-white">The Alice Sanctuary</h1>
+          <p className="text-sm text-gray-300">Resident Management</p>
         </div>
       </div>
       
@@ -93,8 +87,8 @@ export default function Sidebar() {
               key={link.path}
               to={link.path}
               className={cn(
-                'sidebar-link',
-                isActive(link.path) && 'active'
+                'flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-sanctuary-green/20',
+                isActive(link.path) && 'bg-sanctuary-green/20 text-white font-medium'
               )}
             >
               <link.icon className="h-5 w-5" />
@@ -112,8 +106,8 @@ export default function Sidebar() {
               key={link.path}
               to={link.path}
               className={cn(
-                'sidebar-link',
-                isActive(link.path) && 'active'
+                'flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-sanctuary-green/20',
+                isActive(link.path) && 'bg-sanctuary-green/20 text-white font-medium'
               )}
             >
               <link.icon className="h-5 w-5" />
@@ -131,8 +125,8 @@ export default function Sidebar() {
               key={link.path}
               to={link.path}
               className={cn(
-                'sidebar-link',
-                isActive(link.path) && 'active'
+                'flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-sanctuary-green/20',
+                isActive(link.path) && 'bg-sanctuary-green/20 text-white font-medium'
               )}
             >
               <link.icon className="h-5 w-5" />
@@ -142,7 +136,17 @@ export default function Sidebar() {
         </nav>
       </div>
       
-      <div className="mt-auto px-4 py-6">
+      <div className="mt-auto px-4 py-6 border-t border-sanctuary-green/30">
+        <div className="flex items-center gap-3 mb-4">
+          <div className="h-8 w-8 rounded-full bg-sanctuary-green/30 flex items-center justify-center text-white">
+            <span>{user?.email?.charAt(0).toUpperCase() || 'S'}</span>
+          </div>
+          <div>
+            <p className="text-white font-medium">Sanctuary Staff</p>
+            <p className="text-xs text-gray-300">Version 1.0</p>
+          </div>
+        </div>
+        
         <Button 
           variant="outline" 
           onClick={signOut}
@@ -151,10 +155,6 @@ export default function Sidebar() {
           <LogOut className="h-4 w-4 mr-2" />
           Sign Out
         </Button>
-        <div className="mt-4 text-xs text-center text-gray-300">
-          <div>Sanctuary Staff</div>
-          <div>Version 1.0</div>
-        </div>
       </div>
     </div>
   );

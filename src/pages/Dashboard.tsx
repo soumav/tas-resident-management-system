@@ -1,15 +1,15 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
 import { Card } from '@/components/ui/card';
-import { Input } from '@/components/ui/input';
 import { 
   Plus,
   ChevronDown,
   ChevronUp,
   Edit,
-  Trash2
+  Trash2,
+  ListIcon,
+  Users,
+  Cow
 } from 'lucide-react';
 import { Link } from 'react-router-dom';
 import { supabase, ResidentGroup, ResidentSubgroup, Resident } from '@/lib/supabase';
@@ -26,6 +26,8 @@ import {
   CollapsibleContent,
   CollapsibleTrigger
 } from '@/components/ui/collapsible';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import {
   AlertDialog,
@@ -43,6 +45,7 @@ export default function Dashboard() {
   const [groups, setGroups] = useState<ResidentGroup[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<number[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
+  const [residentsByType, setResidentsByType] = useState<Record<string, number>>({});
   const { toast } = useToast();
   
   // State for dialogs
@@ -67,6 +70,20 @@ export default function Dashboard() {
     fetchGroups();
     fetchResidents();
   }, []);
+
+  useEffect(() => {
+    // Calculate residents by type when residents change
+    if (residents.length) {
+      const typeCount: Record<string, number> = {};
+      
+      residents.forEach(resident => {
+        const typeName = resident.type?.name || 'Unknown';
+        typeCount[typeName] = (typeCount[typeName] || 0) + 1;
+      });
+      
+      setResidentsByType(typeCount);
+    }
+  }, [residents]);
   
   const fetchGroups = async () => {
     try {
@@ -493,33 +510,113 @@ export default function Dashboard() {
     return residents.filter(resident => resident.subgroup_id === subgroupId);
   };
   
+  // Get the most populous resident types for display
+  const getTopResidentTypes = (limit: number = 3) => {
+    return Object.entries(residentsByType)
+      .sort(([, countA], [, countB]) => countB - countA)
+      .slice(0, limit);
+  };
+  
+  // Get the icon for a resident type
+  const getResidentTypeIcon = (typeName: string) => {
+    // Default to Cow icon, but could be expanded with more icons based on type
+    return Cow;
+  };
+  
   return (
     <div>
-      <div className="flex justify-between items-center mb-8">
-        <div>
-          <h2 className="text-3xl font-bold mb-2 text-gray-800">TAS Resident Directory</h2>
-          <p className="text-gray-600">Manage your sanctuary residents and groups</p>
-        </div>
-        
-        <div className="flex gap-4">
-          <Button 
-            className="flex items-center gap-2 bg-sanctuary-green hover:bg-sanctuary-light-green"
-            onClick={openAddGroupDialog}
-          >
-            <Plus className="h-4 w-4" />
-            <span>Add New Group</span>
-          </Button>
+      <div className="mb-8">
+        <h1 className="text-3xl font-bold text-sanctuary-green">
+          The Alice Sanctuary Directory
+        </h1>
+      </div>
+
+      <div className="mb-8">
+        <div className="flex justify-between items-center">
+          <div>
+            <h2 className="text-2xl font-bold text-gray-800">Welcome, {user?.email?.split('@')[0] || 'Guest'}!</h2>
+            <p className="text-gray-600">Manage your sanctuary residents and groups</p>
+          </div>
           
-          <Button 
-            className="flex items-center gap-2 bg-sanctuary-green hover:bg-sanctuary-light-green"
-            asChild
-          >
-            <Link to="/residents/new">
-              <Plus className="h-4 w-4" />
-              <span>Add New Resident</span>
-            </Link>
-          </Button>
+          <div className="flex gap-4">
+            <Button 
+              className="flex items-center gap-2"
+              variant="outline"
+              asChild
+            >
+              <Link to="/resident-types">
+                <span>Manage Types of Residents</span>
+              </Link>
+            </Button>
+            
+            <Button 
+              className="flex items-center gap-2 bg-sanctuary-green hover:bg-sanctuary-light-green"
+              asChild
+            >
+              <Link to="/residents/new">
+                <Plus className="h-4 w-4" />
+                <span>Add New Resident</span>
+              </Link>
+            </Button>
+          </div>
         </div>
+      </div>
+      
+      {/* Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+        {/* Total Residents Card */}
+        <Card className="p-6 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg text-gray-500 font-medium mb-1">Total Residents</h3>
+            <p className="text-4xl font-bold">{residents.length}</p>
+            <p className="text-sm text-gray-500">Animals in the sanctuary</p>
+          </div>
+          <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+            <Users className="h-6 w-6 text-gray-600" />
+          </div>
+        </Card>
+        
+        {/* Display the most common resident type */}
+        {getTopResidentTypes(1).map(([typeName, count]) => {
+          const TypeIcon = getResidentTypeIcon(typeName);
+          const percentage = residents.length > 0 ? Math.round((count / residents.length) * 100) : 0;
+          
+          return (
+            <Card key={typeName} className="p-6 flex justify-between items-center">
+              <div>
+                <h3 className="text-lg text-gray-500 font-medium mb-1">{typeName}</h3>
+                <p className="text-4xl font-bold">{count}</p>
+                <p className="text-sm text-gray-500">{percentage}% of residents</p>
+              </div>
+              <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+                <TypeIcon className="h-6 w-6 text-gray-600" />
+              </div>
+            </Card>
+          );
+        })}
+        
+        {/* Groups Card */}
+        <Card className="p-6 flex justify-between items-center">
+          <div>
+            <h3 className="text-lg text-gray-500 font-medium mb-1">Groups</h3>
+            <p className="text-4xl font-bold">{groups.length}</p>
+            <p className="text-sm text-gray-500">Groups of residents</p>
+          </div>
+          <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
+            <ListIcon className="h-6 w-6 text-gray-600" />
+          </div>
+        </Card>
+      </div>
+      
+      <div className="flex justify-between items-center mb-6">
+        <h3 className="text-xl font-bold text-gray-800">Resident Groups</h3>
+        <Button 
+          className="flex items-center gap-2 bg-sanctuary-green hover:bg-sanctuary-light-green"
+          onClick={openAddGroupDialog}
+        >
+          <Plus className="h-4 w-4" />
+          <span>Add New Group</span>
+        </Button>
       </div>
       
       <div className="space-y-4 mb-8">
