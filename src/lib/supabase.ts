@@ -18,6 +18,24 @@ export const logSupabaseOperation = async (operation: string, data: any) => {
 export const deleteResident = async (id: string): Promise<void> => {
   console.log(`Attempting to delete resident with ID: ${id}`);
   
+  // First check if the resident exists
+  const { data: checkData, error: checkError } = await supabase
+    .from('residents')
+    .select('id')
+    .eq('id', id)
+    .single();
+    
+  if (checkError) {
+    console.error('Error checking if resident exists:', checkError);
+    throw checkError;
+  }
+  
+  if (!checkData) {
+    console.error(`No resident found with ID: ${id}`);
+    throw new Error(`Resident with ID ${id} not found`);
+  }
+  
+  // Then delete the resident
   const { error, data } = await supabase
     .from('residents')
     .delete()
@@ -30,6 +48,21 @@ export const deleteResident = async (id: string): Promise<void> => {
   }
   
   console.log('Resident deletion successful:', data);
+  
+  // Validate deletion
+  const { data: verifyData, error: verifyError } = await supabase
+    .from('residents')
+    .select('id')
+    .eq('id', id);
+    
+  if (verifyError) {
+    console.error('Error verifying deletion:', verifyError);
+  } else if (verifyData && verifyData.length > 0) {
+    console.error('Deletion verification failed: Resident still exists in database');
+    throw new Error('Failed to delete resident: Record still exists in database');
+  } else {
+    console.log('Deletion verification successful: Resident no longer exists in database');
+  }
 };
 
 // Type definitions

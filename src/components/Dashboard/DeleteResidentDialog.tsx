@@ -1,7 +1,6 @@
 
 import React from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
-import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -22,10 +21,12 @@ export function DeleteResidentDialog({
 }: DeleteResidentDialogProps) {
   const { toast } = useToast();
   
-  const handleDelete = async () => {
+  const handleDelete = async (event: React.MouseEvent) => {
+    event.preventDefault(); // Prevent default to ensure proper handling
     try {
       // Call the parent component's delete handler
       await onDelete();
+      // Don't close here - let the parent component handle closing after successful deletion
     } catch (error: any) {
       console.error('Error in DeleteResidentDialog delete handler:', error);
       toast({

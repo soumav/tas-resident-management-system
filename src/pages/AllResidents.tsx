@@ -327,6 +327,9 @@ export default function AllResidents() {
       
       await fetchResidents();
       
+      setResidents(prevResidents => prevResidents.filter(resident => resident.id !== id));
+      setFilteredResidents(prevFiltered => prevFiltered.filter(resident => resident.id !== id));
+      
     } catch (error: any) {
       console.error('Error deleting resident:', error);
       toast({

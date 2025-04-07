@@ -293,6 +293,9 @@ export default function Dashboard() {
       });
       
       await fetchResidents();
+      
+      setResidents(prev => prev.filter(resident => resident.id !== selectedResident.id));
+      
       setIsDeleteResidentDialogOpen(false);
       
     } catch (error: any) {
@@ -300,7 +303,7 @@ export default function Dashboard() {
       toast({
         title: 'Error',
         description: error.message || 'Failed to delete resident',
-        variant: 'destructive'
+        variant: 'destructive',
       });
     } finally {
       setIsDeleting(false);
