@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
@@ -52,12 +52,11 @@ export default function DashboardLayout() {
         </header>
         
         <div className="dashboard-content flex-1 overflow-auto">
-          <div className="py-4 px-6">
+          <div className="py-4 px-6 flex flex-col min-h-[calc(100vh-4rem)]">
             <Outlet />
+            <Footer />
           </div>
         </div>
-        
-        <Footer />
       </div>
     </div>
   );
