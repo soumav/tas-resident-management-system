@@ -119,7 +119,7 @@ export default function Sidebar() {
       
       <div className="mt-auto px-4 py-6 border-t border-sanctuary-green/30">
         <div className="flex items-center gap-3">
-          <Avatar className="h-10 w-10 bg-sanctuary-green/30 text-white">
+          <Avatar className="h-10 w-10 bg-[#8B5CF6] text-white">
             <AvatarFallback>{userInitial}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
