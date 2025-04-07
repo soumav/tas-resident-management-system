@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -225,7 +224,6 @@ export default function Dashboard() {
         }
       }
       
-      // Update the resident record with new data
       const updateData = {
         name: editResidentData.name,
         description: editResidentData.description,
@@ -237,7 +235,6 @@ export default function Dashboard() {
 
       console.log('Updating resident with data:', updateData);
       
-      // First, ensure the update operation completes successfully
       const { error: updateError } = await supabase
         .from('residents')
         .update(updateData)
@@ -251,60 +248,12 @@ export default function Dashboard() {
       console.log('Database update successful for resident ID:', selectedResident.id);
       console.log('Updated with group_id:', editResidentData.group_id);
       
-      // Then fetch the updated data to confirm the changes
-      const { data: updatedData, error: fetchError } = await supabase
-        .from('residents')
-        .select(`
-          *,
-          type:resident_types(
-            name,
-            category:resident_categories(name)
-          ),
-          group:resident_groups(name, description),
-          subgroup:resident_subgroups(name, description, group:resident_groups(name))
-        `)
-        .eq('id', selectedResident.id)
-        .single();
-      
-      if (fetchError) {
-        console.error('Error fetching updated resident data:', fetchError);
-        throw fetchError;
-      }
-      
-      console.log('Fetched updated resident data:', updatedData);
+      await fetchResidents();
       
       toast({
         title: 'Resident updated',
         description: `${editResidentData.name} has been updated successfully`
       });
-      
-      // Update the local residents state with the updated data
-      if (updatedData) {
-        // Find the selected group for accurate group info
-        const selectedGroupData = groups.find(g => g.id === updatedData.group_id);
-        console.log('Selected group data:', selectedGroupData);
-        
-        // Create a complete updated resident object with all necessary data
-        const updatedResident: Resident = {
-          ...updatedData,
-          group: selectedGroupData ? {
-            name: selectedGroupData.name,
-            description: selectedGroupData.description
-          } : null
-        };
-        
-        console.log('Updating local state with resident:', updatedResident);
-        
-        setResidents(prev => 
-          prev.map(resident => 
-            resident.id === selectedResident.id ? updatedResident : resident
-          )
-        );
-      } else {
-        // If we don't get the updated data back, fetch all residents again
-        console.log('No updated data returned, fetching all residents again');
-        await fetchResidents();
-      }
       
       setIsEditResidentDialogOpen(false);
       resetFileInput();
