@@ -44,6 +44,13 @@ export function ResidentDisplay({
   onEditResident, 
   onDeleteResident 
 }: ResidentDisplayProps) {
+  // Force image refresh by appending a cache-busting parameter
+  const getImageUrl = (url: string | null) => {
+    if (!url) return null;
+    // Add a cache-busting timestamp to prevent browser caching
+    return `${url}?t=${new Date().getTime()}`;
+  };
+
   return (
     <div className="resident-grid">
       {residents.map(resident => {
@@ -53,7 +60,12 @@ export function ResidentDisplay({
           <div key={resident.id} className="resident-item">
             <div className="resident-image">
               {resident.image_url ? (
-                <img src={resident.image_url} alt={resident.name} className="w-full h-full object-cover" />
+                <img 
+                  src={getImageUrl(resident.image_url)} 
+                  alt={resident.name} 
+                  className="w-full h-full object-cover"
+                  key={`img-${resident.id}-${new Date().getTime()}`} 
+                />
               ) : (
                 <div className="w-full h-full flex items-center justify-center bg-gray-100">
                   <span className="text-4xl">{emoji}</span>

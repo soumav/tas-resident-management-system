@@ -74,6 +74,7 @@ export default function AllResidents() {
         
       if (error) throw error;
       
+      console.log('Fetched residents:', data);
       setResidents(data || []);
       setFilteredResidents(data || []);
       
@@ -265,6 +266,7 @@ export default function AllResidents() {
       };
       
       console.log('Updating resident with data:', residentData);
+      console.log('Selected resident ID:', selectedResident.id);
       
       const { error, data: updatedResident } = await supabase
         .from('residents')
@@ -277,22 +279,18 @@ export default function AllResidents() {
         throw error;
       }
       
-      console.log('Update successful, response:', updatedResident);
+      console.log('Database update successful:', updatedResident);
       
       toast({
         title: 'Resident updated',
         description: `${editResidentData.name} has been updated successfully`
       });
       
-      if (updatedResident && updatedResident.length > 0) {
-        setResidents(prev => 
-          prev.map(resident => 
-            resident.id === selectedResident.id ? {...resident, ...updatedResident[0]} : resident
-          )
-        );
-      }
+      fetchResidents();
       
-      setRefreshKey(prevKey => prevKey + 1);
+      if (updatedResident && updatedResident.length > 0) {
+        setRefreshKey(prevKey => prevKey + 1);
+      }
       
       setIsEditResidentDialogOpen(false);
       setIsDialogOpen(false);
