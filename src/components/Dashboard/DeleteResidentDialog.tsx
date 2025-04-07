@@ -3,12 +3,14 @@ import React from 'react';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
+import { supabase } from '@/lib/supabase';
 
 interface DeleteResidentDialogProps {
   open: boolean;
   residentName: string;
   onClose: () => void;
-  onDelete: () => void;
+  onDelete: () => Promise<void>;
   isDeleting?: boolean;
 }
 
@@ -19,6 +21,22 @@ export function DeleteResidentDialog({
   onDelete,
   isDeleting = false
 }: DeleteResidentDialogProps) {
+  const { toast } = useToast();
+  
+  const handleDelete = async () => {
+    try {
+      // Call the parent component's delete handler
+      await onDelete();
+    } catch (error: any) {
+      console.error('Error in DeleteResidentDialog delete handler:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete resident',
+        variant: 'destructive',
+      });
+    }
+  };
+
   return (
     <AlertDialog open={open} onOpenChange={onClose}>
       <AlertDialogContent>
@@ -31,7 +49,7 @@ export function DeleteResidentDialog({
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
           <Button 
-            onClick={onDelete} 
+            onClick={handleDelete} 
             className="bg-red-600 hover:bg-red-700 text-white" 
             disabled={isDeleting}
           >

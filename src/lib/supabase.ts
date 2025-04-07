@@ -14,6 +14,24 @@ export const logSupabaseOperation = async (operation: string, data: any) => {
   return data;
 };
 
+// Helper function for deleting residents with proper logging
+export const deleteResident = async (id: string): Promise<void> => {
+  console.log(`Attempting to delete resident with ID: ${id}`);
+  
+  const { error, data } = await supabase
+    .from('residents')
+    .delete()
+    .eq('id', id)
+    .select();
+    
+  if (error) {
+    console.error('Error deleting resident:', error);
+    throw error;
+  }
+  
+  console.log('Resident deletion successful:', data);
+};
+
 // Type definitions
 export type Tables = {
   users: {
