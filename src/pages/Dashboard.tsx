@@ -73,7 +73,6 @@ export default function Dashboard() {
     }
   }, [residents]);
 
-  // Fetching functions
   const fetchGroups = async () => {
     try {
       const {
@@ -121,7 +120,13 @@ export default function Dashboard() {
           group:resident_groups(name, description),
           subgroup:resident_subgroups(name, description, group:resident_groups(name))
         `).order('name');
-      if (error) throw error;
+      
+      if (error) {
+        console.error('Error in fetchResidents:', error);
+        throw error;
+      }
+      
+      console.log('Fetched residents:', data);
       setResidents(data || []);
     } catch (error) {
       console.error('Error fetching residents:', error);
@@ -133,7 +138,6 @@ export default function Dashboard() {
     }
   };
 
-  // Group/Subgroup helpers
   const toggleGroupExpand = (groupId: number) => {
     setExpandedGroups(prev => {
       if (prev.includes(groupId)) {
@@ -152,7 +156,6 @@ export default function Dashboard() {
     return residents.filter(resident => resident.subgroup_id === subgroupId);
   };
 
-  // Resident handling functions
   const handleEditResident = (resident: Resident) => {
     openEditResidentDialog(resident);
   };
@@ -234,19 +237,20 @@ export default function Dashboard() {
       };
 
       console.log('Updating resident with data:', updateData);
+      console.log('Selected resident ID:', selectedResident.id);
       
-      const { error: updateError } = await supabase
+      const { error: updateError, data: updateData } = await supabase
         .from('residents')
         .update(updateData)
-        .eq('id', selectedResident.id);
+        .eq('id', selectedResident.id)
+        .select();
       
       if (updateError) {
         console.error('Error updating resident in database:', updateError);
         throw updateError;
       }
       
-      console.log('Database update successful for resident ID:', selectedResident.id);
-      console.log('Updated with group_id:', editResidentData.group_id);
+      console.log('Database update successful:', updateData);
       
       await fetchResidents();
       
@@ -304,7 +308,6 @@ export default function Dashboard() {
     }
   };
 
-  // Group dialog handlers
   const openAddGroupDialog = () => {
     setNewGroupName('');
     setNewGroupDescription('');
@@ -323,7 +326,6 @@ export default function Dashboard() {
     setIsDeleteGroupDialogOpen(true);
   };
 
-  // Subgroup dialog handlers
   const toggleSubgroupInput = (groupId: number) => {
     if (showSubgroupInput === groupId) {
       setShowSubgroupInput(null);
@@ -352,7 +354,6 @@ export default function Dashboard() {
     setIsDeleteSubgroupDialogOpen(true);
   };
 
-  // Group CRUD operations
   const handleAddGroup = async () => {
     if (!newGroupName.trim()) return;
     try {
@@ -471,7 +472,6 @@ export default function Dashboard() {
     }
   };
 
-  // Subgroup CRUD operations
   const handleAddSubgroup = async () => {
     if (!selectedGroupId || !newSubgroupName.trim()) return;
     try {
@@ -643,7 +643,6 @@ export default function Dashboard() {
     }
   };
 
-  // File handling
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {

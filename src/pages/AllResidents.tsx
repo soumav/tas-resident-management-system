@@ -129,7 +129,9 @@ export default function AllResidents() {
     name: '',
     description: '',
     image_url: '',
-    arrival_date: null as Date | null
+    arrival_date: null as Date | null,
+    group_id: null as number | null,
+    subgroup_id: null as number | null
   });
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -161,7 +163,9 @@ export default function AllResidents() {
       name: resident.name,
       description: resident.description || '',
       image_url: resident.image_url || '',
-      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null
+      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null,
+      group_id: resident.group_id,
+      subgroup_id: resident.subgroup_id
     });
     setPreviewUrl(resident.image_url || null);
     setIsEditResidentDialogOpen(true);
@@ -224,18 +228,34 @@ export default function AllResidents() {
         }
       }
       
-      // Update the resident record
-      const { error } = await supabase
+      console.log('Updating resident with data:', {
+        name: editResidentData.name,
+        description: editResidentData.description,
+        image_url: updatedImageUrl,
+        arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
+        group_id: editResidentData.group_id,
+        subgroup_id: editResidentData.subgroup_id
+      });
+      
+      const { error, data } = await supabase
         .from('residents')
         .update({
           name: editResidentData.name,
           description: editResidentData.description,
           image_url: updatedImageUrl,
-          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null
+          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
+          group_id: editResidentData.group_id,
+          subgroup_id: editResidentData.subgroup_id
         })
-        .eq('id', selectedResident.id);
+        .eq('id', selectedResident.id)
+        .select();
       
-      if (error) throw error;
+      if (error) {
+        console.error('Update error:', error);
+        throw error;
+      }
+      
+      console.log('Update successful, response:', data);
       
       toast({
         title: 'Resident updated',

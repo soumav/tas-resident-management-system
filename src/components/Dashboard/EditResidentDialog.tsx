@@ -157,14 +157,22 @@ export function EditResidentDialog({
           <div className="grid gap-2">
             <label>Group</label>
             <Select
-              value={formData.group_id?.toString() || ""}
+              value={formData.group_id ? formData.group_id.toString() : ""}
               onValueChange={(value) => {
-                if (value === "placeholder") return;
-                const groupId = Number(value);
-                onFormChange({
-                  group_id: groupId,
-                  subgroup_id: null // Reset subgroup when group changes
-                });
+                // Handle both selection and deselection properly
+                if (value === "placeholder" || value === "") {
+                  onFormChange({
+                    group_id: null,
+                    subgroup_id: null
+                  });
+                } else {
+                  const groupId = parseInt(value, 10);
+                  console.log("Selected group ID:", groupId);
+                  onFormChange({
+                    group_id: groupId,
+                    subgroup_id: null // Reset subgroup when group changes
+                  });
+                }
               }}
             >
               <SelectTrigger>
@@ -185,13 +193,20 @@ export function EditResidentDialog({
             <div className="grid gap-2">
               <label htmlFor="resident-subgroup">Subgroup</label>
               <Select
-                value={formData.subgroup_id?.toString() || ""}
+                value={formData.subgroup_id ? formData.subgroup_id.toString() : ""}
                 onValueChange={(value) => {
-                  if (value === "placeholder") return;
-                  const subgroupId = Number(value);
-                  onFormChange({
-                    subgroup_id: subgroupId
-                  });
+                  // Handle both selection and deselection properly
+                  if (value === "placeholder" || value === "") {
+                    onFormChange({
+                      subgroup_id: null
+                    });
+                  } else {
+                    const subgroupId = parseInt(value, 10);
+                    console.log("Selected subgroup ID:", subgroupId);
+                    onFormChange({
+                      subgroup_id: subgroupId
+                    });
+                  }
                 }}
               >
                 <SelectTrigger>
