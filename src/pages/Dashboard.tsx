@@ -622,8 +622,8 @@ export default function Dashboard() {
     return residents.filter(resident => resident.subgroup_id === subgroupId);
   };
 
-  const getTopResidentTypes = (limit: number = 5) => {
-    return Object.entries(residentsByType).sort(([, countA], [, countB]) => countB - countA).slice(0, limit);
+  const getTopResidentTypes = () => {
+    return Object.entries(residentsByType).sort(([, countA], [, countB]) => countB - countA);
   };
 
   const getResidentTypeIcon = (typeName: string) => {
@@ -702,7 +702,7 @@ export default function Dashboard() {
           </div>
         </Card>
         
-        {getTopResidentTypes(1).map(([typeName, count]) => {
+        {getTopResidentTypes().map(([typeName, count]) => {
           const TypeIcon = getResidentTypeIcon(typeName);
           const percentage = residents.length > 0 ? Math.round(count / residents.length * 100) : 0;
           return (
