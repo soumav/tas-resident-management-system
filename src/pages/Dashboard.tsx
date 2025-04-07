@@ -71,7 +71,7 @@ export default function Dashboard() {
           
         if (groupsError) throw groupsError;
         setTotalGroups(groupsCount || 0);
-        setGroups(groupsData || []);
+        setGroups(groupsData as ResidentGroup[] || []);
         
       } catch (error) {
         console.error('Error fetching dashboard data:', error);

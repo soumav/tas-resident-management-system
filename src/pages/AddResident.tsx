@@ -23,6 +23,9 @@ type ResidentType = {
   name: string;
   category_id: number;
   category_name?: string;
+  resident_categories?: {
+    name: string;
+  };
 };
 
 type ResidentGroup = {
@@ -59,12 +62,13 @@ export default function AddResident() {
           
         if (typesError) throw typesError;
         
-        const formattedTypes = typesData?.map(type => ({
+        const formattedTypes = (typesData || []).map(type => ({
           id: type.id,
           name: type.name,
           category_id: type.category_id,
-          category_name: type.resident_categories?.name
-        })) || [];
+          category_name: type.resident_categories?.name,
+          resident_categories: type.resident_categories
+        }));
         
         setTypes(formattedTypes);
         
@@ -74,7 +78,7 @@ export default function AddResident() {
           .select('id, name');
           
         if (groupsError) throw groupsError;
-        setGroups(groupsData || []);
+        setGroups(groupsData as ResidentGroup[] || []);
         
       } catch (error) {
         console.error('Error fetching options:', error);
