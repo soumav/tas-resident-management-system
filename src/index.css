@@ -78,13 +78,28 @@
   }
 }
 
+/* Add XS breakpoint for very small mobile devices */
+@layer utilities {
+  @variants responsive {
+    .xs\:inline {
+      display: inline;
+    }
+  }
+}
+
 .dashboard-sidebar {
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
 }
 
 .dashboard-content {
-  max-height: calc(100vh - 64px); /* Adjust for header height */
+  max-height: calc(100vh - 3.5rem); /* Adjust for header height */
   overflow-y: auto;
+}
+
+@media (min-width: 640px) {
+  .dashboard-content {
+    max-height: calc(100vh - 4rem); /* Adjust for larger header on bigger screens */
+  }
 }
 
 .sanctuary-logo {
@@ -100,8 +115,15 @@
 
 .resident-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+  gap: 12px;
+}
+
+@media (min-width: 640px) {
+  .resident-grid {
+    grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+    gap: 16px;
+  }
 }
 
 .resident-item {
@@ -137,4 +159,3 @@
   gap: 8px;
   padding: 16px 0;
 }
-

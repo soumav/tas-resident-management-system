@@ -59,9 +59,9 @@ export default function Login() {
   };
 
   return (
-    <div className="flex flex-col justify-between min-h-screen bg-gray-50">
-      <div className="flex-1 flex flex-col items-center justify-center p-4 pt-0 pb-10">
-        <div className="max-w-md w-full">
+    <div className="min-h-[calc(100vh-40px)] flex flex-col justify-center bg-gray-50">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 pb-8">
+        <div className="w-full max-w-md">
           <div className="mb-6 text-center">
             <div className="flex justify-center mb-4">
               <div className="h-12 w-12 bg-sanctuary-green rounded-full flex items-center justify-center">
