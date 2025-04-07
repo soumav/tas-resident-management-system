@@ -4,6 +4,7 @@ import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
 import { supabase, ResidentGroup, ResidentSubgroup, Resident } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { useDashboardContext } from '@/components/Layout/DashboardLayout';
 
 // Component imports
 import { DashboardHeader } from '@/components/Dashboard/DashboardHeader';
@@ -15,6 +16,8 @@ import { GroupDialogs } from '@/components/Dashboard/GroupDialogs';
 
 export default function Dashboard() {
   const { user } = useAuth();
+  const { displayName } = useDashboardContext();
+  
   const [groups, setGroups] = useState<ResidentGroup[]>([]);
   const [expandedGroups, setExpandedGroups] = useState<number[]>([]);
   const [residents, setResidents] = useState<Resident[]>([]);
@@ -670,7 +673,7 @@ export default function Dashboard() {
 
   return (
     <div>
-      <DashboardHeader username={username} />
+      <DashboardHeader displayName={displayName} />
       
       <StatCards 
         residents={residents} 
