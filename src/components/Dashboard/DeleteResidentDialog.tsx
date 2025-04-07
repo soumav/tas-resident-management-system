@@ -23,9 +23,9 @@ export function DeleteResidentDialog({
   
   const handleDelete = async () => {
     try {
-      // Call the parent component's delete handler
+      // Call the parent component's delete handler and await it
       await onDelete();
-      // Don't close here - let the parent component handle closing after successful deletion
+      // Success will be handled by the parent component
     } catch (error: any) {
       console.error('Error in DeleteResidentDialog delete handler:', error);
       toast({
@@ -37,7 +37,11 @@ export function DeleteResidentDialog({
   };
 
   return (
-    <AlertDialog open={open} onOpenChange={onClose}>
+    <AlertDialog open={open} onOpenChange={(isOpen) => {
+      if (!isOpen && !isDeleting) {
+        onClose();
+      }
+    }}>
       <AlertDialogContent>
         <AlertDialogHeader>
           <AlertDialogTitle>Delete Resident</AlertDialogTitle>
