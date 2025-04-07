@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -236,10 +237,17 @@ export default function Dashboard() {
 
       console.log('Updating resident with data:', updateData);
       
-      const { error, data } = await supabase
+      // First perform the update operation
+      const { error: updateError } = await supabase
         .from('residents')
         .update(updateData)
-        .eq('id', selectedResident.id)
+        .eq('id', selectedResident.id);
+      
+      if (updateError) throw updateError;
+      
+      // Then fetch the updated data in a separate query to ensure we have the latest data
+      const { data: updatedData, error: fetchError } = await supabase
+        .from('residents')
         .select(`
           *,
           type:resident_types(
@@ -248,9 +256,11 @@ export default function Dashboard() {
           ),
           group:resident_groups(name, description),
           subgroup:resident_subgroups(name, description, group:resident_groups(name))
-        `);
+        `)
+        .eq('id', selectedResident.id)
+        .single();
       
-      if (error) throw error;
+      if (fetchError) throw fetchError;
       
       toast({
         title: 'Resident updated',
@@ -258,17 +268,17 @@ export default function Dashboard() {
       });
       
       // Update the local residents state with the updated data
-      if (data && data.length > 0) {
-        // Find the selected group
+      if (updatedData) {
+        // Find the selected group for accurate group info
         const selectedGroupData = groups.find(g => g.id === editResidentData.group_id);
         
-        // Update the resident with complete data including group info
-        const updatedResident = {
-          ...data[0],
+        // Create a complete updated resident object
+        const updatedResident: Resident = {
+          ...updatedData,
           group: selectedGroupData ? {
             name: selectedGroupData.name,
             description: selectedGroupData.description
-          } : data[0].group
+          } : updatedData.group
         };
         
         setResidents(prev => 
