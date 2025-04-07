@@ -194,7 +194,7 @@ export function EditResidentDialog({
           
           {formData.group_id && hasSubgroups && (
             <div className="grid gap-2">
-              <label htmlFor="resident-subgroup">Subgroup</label>
+              <label htmlFor="resident-subgroup">Subgroup (optional)</label>
               <Select
                 value={formData.subgroup_id ? formData.subgroup_id.toString() : ""}
                 onValueChange={(value) => {
@@ -211,10 +211,10 @@ export function EditResidentDialog({
                 }}
               >
                 <SelectTrigger>
-                  <SelectValue placeholder="Select" />
+                  <SelectValue placeholder="Select subgroup (optional)" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="placeholder" disabled>Select</SelectItem>
+                  <SelectItem value="placeholder">None - Main group only</SelectItem>
                   {selectedGroup?.subgroups?.map((subgroup) => (
                     <SelectItem key={subgroup.id} value={subgroup.id.toString()}>
                       {subgroup.name}
