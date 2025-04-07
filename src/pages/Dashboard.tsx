@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
@@ -258,11 +257,23 @@ export default function Dashboard() {
         description: `${editResidentData.name} has been updated successfully`
       });
       
-      // Update the local resident data with the new data
+      // Update the local residents state with the updated data
       if (data && data.length > 0) {
+        // Find the selected group
+        const selectedGroupData = groups.find(g => g.id === editResidentData.group_id);
+        
+        // Update the resident with complete data including group info
+        const updatedResident = {
+          ...data[0],
+          group: selectedGroupData ? {
+            name: selectedGroupData.name,
+            description: selectedGroupData.description
+          } : data[0].group
+        };
+        
         setResidents(prev => 
           prev.map(resident => 
-            resident.id === selectedResident.id ? data[0] : resident
+            resident.id === selectedResident.id ? updatedResident : resident
           )
         );
       } else {
