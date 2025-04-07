@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
@@ -360,7 +361,7 @@ export default function AllResidents() {
     
     if (type.includes('cat')) return Cat;
     if (type.includes('dog')) return Dog;
-    if (type.includes('cow')) return Apple;
+    if (type.includes('cow')) return Apple; // Fallback icon for cow
     if (type.includes('fish')) return Fish;
     if (type.includes('bird') || type.includes('chicken') || type.includes('duck')) return Bird;
     
