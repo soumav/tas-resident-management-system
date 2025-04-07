@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -67,6 +66,7 @@ export default function AddResident() {
   const navigate = useNavigate();
   
   const handleTypeChange = useCallback((value: string) => {
+    console.log('Type selected:', value);
     setTypeId(value);
   }, []);
   
@@ -280,7 +280,7 @@ export default function AddResident() {
                 <SelectTrigger id="type" className="w-full">
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
-                <SelectContent className="w-full bg-white z-[100]">
+                <SelectContent className="w-full bg-white z-[150]">
                   {categories.map((category) => (
                     <SelectGroup key={category.id}>
                       <SelectLabel>{category.name}</SelectLabel>
@@ -288,7 +288,7 @@ export default function AddResident() {
                         <SelectItem 
                           key={type.id} 
                           value={type.id.toString()}
-                          className="cursor-pointer hover:bg-accent"
+                          className="cursor-pointer hover:bg-accent active:bg-accent-foreground"
                         >
                           {type.name}
                         </SelectItem>
