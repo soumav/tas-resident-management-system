@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -30,10 +31,10 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
-import { Resident } from '@/lib/supabase';
+import { supabase, Resident, ResidentGroup } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
+import { EditResidentDialog } from '@/components/Dashboard/EditResidentDialog';
 
 export default function AllResidents() {
   
@@ -48,6 +49,7 @@ export default function AllResidents() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [groups, setGroups] = useState<ResidentGroup[]>([]);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -98,10 +100,41 @@ export default function AllResidents() {
       console.error('Error fetching types:', error);
     }
   };
+
+  const fetchGroups = async () => {
+    try {
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('resident_groups')
+        .select('*');
+      
+      if (groupsError) throw groupsError;
+
+      const { data: subgroupsData, error: subgroupsError } = await supabase
+        .from('resident_subgroups')
+        .select('*');
+      
+      if (subgroupsError) throw subgroupsError;
+
+      const groupsWithSubgroups = (groupsData || []).map((group: ResidentGroup) => {
+        const groupSubgroups = (subgroupsData || []).filter(
+          (subgroup: any) => subgroup.group_id === group.id
+        );
+        return {
+          ...group,
+          subgroups: groupSubgroups,
+        };
+      });
+      
+      setGroups(groupsWithSubgroups);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+    }
+  };
   
   useEffect(() => {
     fetchResidents();
     fetchTypes();
+    fetchGroups();
   }, [toast]);
   
   useEffect(() => {
@@ -564,132 +597,19 @@ export default function AllResidents() {
         </DialogContent>
       </Dialog>
 
-      <Dialog open={isEditResidentDialogOpen} onOpenChange={setIsEditResidentDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
-          <DialogHeader>
-            <DialogTitle>Edit Resident</DialogTitle>
-            <DialogDescription>
-              Make changes to {selectedResident?.name}'s information
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="resident-name" className="text-sm font-medium">
-                Name
-              </label>
-              <Input 
-                id="resident-name" 
-                value={editResidentData.name} 
-                onChange={e => setEditResidentData({...editResidentData, name: e.target.value})}
-                placeholder="Enter resident name" 
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label className="text-sm font-medium">
-                Image
-              </label>
-              <div className="flex flex-col space-y-3">
-                {previewUrl && (
-                  <div className="relative w-full h-40 bg-gray-100 rounded-md overflow-hidden">
-                    <img 
-                      src={previewUrl} 
-                      alt="Preview" 
-                      className="w-full h-full object-contain" 
-                    />
-                  </div>
-                )}
-                <div className="flex items-center">
-                  <label 
-                    htmlFor="image-upload" 
-                    className={`flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer bg-white text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
-                  >
-                    <Upload className="h-4 w-4 mr-2" />
-                    {selectedFile ? 'Change Image' : 'Upload Image'}
-                    <Input 
-                      id="image-upload"
-                      type="file" 
-                      accept="image/*" 
-                      className="hidden"
-                      onChange={handleFileChange}
-                      disabled={isLoading}
-                    />
-                  </label>
-                  {selectedFile && (
-                    <Button 
-                      type="button" 
-                      variant="outline" 
-                      className="ml-2"
-                      onClick={resetFileInput}
-                      disabled={isLoading}
-                    >
-                      Remove
-                    </Button>
-                  )}
-                </div>
-              </div>
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="resident-description" className="text-sm font-medium">
-                Description (Optional)
-              </label>
-              <Textarea 
-                id="resident-description" 
-                value={editResidentData.description} 
-                onChange={e => setEditResidentData({...editResidentData, description: e.target.value})}
-                placeholder="Enter description" 
-                rows={3} 
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="resident-arrival" className="text-sm font-medium">
-                Arrival Date
-              </label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !editResidentData.arrival_date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editResidentData.arrival_date ? format(editResidentData.arrival_date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={editResidentData.arrival_date || undefined}
-                    onSelect={(date) => setEditResidentData({...editResidentData, arrival_date: date})}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => {
-              setIsEditResidentDialogOpen(false);
-              resetFileInput();
-            }} disabled={isLoading}>
-              Cancel
-            </Button>
-            <Button 
-              className="bg-sanctuary-green hover:bg-sanctuary-light-green" 
-              onClick={handleEditResidentSubmit} 
-              disabled={!editResidentData.name.trim() || isLoading}
-            >
-              {isLoading ? 'Saving...' : 'Save Changes'}
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <EditResidentDialog 
+        open={isEditResidentDialogOpen}
+        groups={groups}
+        isLoading={isLoading}
+        formData={editResidentData}
+        previewUrl={previewUrl}
+        selectedFile={selectedFile}
+        onClose={() => setIsEditResidentDialogOpen(false)}
+        onSubmit={handleEditResidentSubmit}
+        onFormChange={(data) => setEditResidentData({...editResidentData, ...data})}
+        onFileChange={handleFileChange}
+        resetFileInput={resetFileInput}
+      />
     </div>
   );
 }
