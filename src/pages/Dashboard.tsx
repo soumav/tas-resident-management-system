@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { supabase, ResidentGroup, ResidentSubgroup, Resident } from '@/lib/supabase';
+import { supabase, ResidentGroup, ResidentSubgroup, Resident, deleteResident } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 
 // Component imports
@@ -285,12 +285,7 @@ export default function Dashboard() {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('residents')
-        .delete()
-        .eq('id', selectedResident.id);
-      
-      if (error) throw error;
+      await deleteResident(selectedResident.id);
       
       toast({
         title: 'Resident deleted',

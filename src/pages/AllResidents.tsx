@@ -30,7 +30,7 @@ import {
 import { Calendar } from "@/components/ui/calendar";
 import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload, Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase, Resident, ResidentGroup } from '@/lib/supabase';
+import { supabase, Resident, ResidentGroup, deleteResident } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
 import { EditResidentDialog } from '@/components/Dashboard/EditResidentDialog';
@@ -315,12 +315,7 @@ export default function AllResidents() {
   const handleDeleteResident = async (id: string) => {
     setIsDeleting(true);
     try {
-      const { error } = await supabase
-        .from('residents')
-        .delete()
-        .eq('id', id);
-        
-      if (error) throw error;
+      await deleteResident(id);
       
       toast({
         title: 'Resident deleted',
@@ -330,7 +325,6 @@ export default function AllResidents() {
       setIsDialogOpen(false);
       setIsDeleteConfirmOpen(false);
       
-      // Force a refresh of the residents data
       await fetchResidents();
       
     } catch (error: any) {

@@ -4,7 +4,6 @@ import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, 
 import { Button } from '@/components/ui/button';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase } from '@/lib/supabase';
 
 interface DeleteResidentDialogProps {
   open: boolean;
@@ -48,7 +47,7 @@ export function DeleteResidentDialog({
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel disabled={isDeleting}>Cancel</AlertDialogCancel>
-          <Button 
+          <AlertDialogAction
             onClick={handleDelete} 
             className="bg-red-600 hover:bg-red-700 text-white" 
             disabled={isDeleting}
@@ -61,7 +60,7 @@ export function DeleteResidentDialog({
             ) : (
               'Delete'
             )}
-          </Button>
+          </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
