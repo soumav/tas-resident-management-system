@@ -21,7 +21,7 @@ import {
   DialogHeader,
   DialogTitle,
 } from '@/components/ui/dialog';
-import { PlusCircle, Search, Info, Edit, Trash2, X } from 'lucide-react';
+import { PlusCircle, Search, Info, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { Resident } from '@/lib/supabase';
@@ -51,7 +51,8 @@ export default function AllResidents() {
               name
             )
           ),
-          group:resident_groups (id, name)
+          group:resident_groups (id, name, description),
+          subgroup:resident_subgroups (id, name, description)
         `);
         
       if (error) throw error;
@@ -225,7 +226,8 @@ export default function AllResidents() {
                         <h4 className="font-semibold text-lg">{resident.name}</h4>
                         <p className="text-sm text-gray-500">
                           {resident.type?.name}
-                          {resident.group && ` • ${resident.group.name} Group`}
+                          {resident.group && ` • ${resident.group.name}`}
+                          {resident.subgroup && ` > ${resident.subgroup.name}`}
                         </p>
                       </div>
                       <Button
@@ -313,6 +315,11 @@ export default function AllResidents() {
                     <div>
                       <h4 className="font-medium text-gray-500">Group</h4>
                       <p>{selectedResident.group?.name || 'No group assigned'}</p>
+                    </div>
+                    
+                    <div>
+                      <h4 className="font-medium text-gray-500">Subgroup</h4>
+                      <p>{selectedResident.subgroup?.name || 'No subgroup assigned'}</p>
                     </div>
                     
                     <div>

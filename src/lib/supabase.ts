@@ -27,6 +27,7 @@ export type Tables = {
     name: string;
     type_id: number;
     group_id: number | null;
+    subgroup_id: number | null;
     arrival_date: string;
     description: string | null;
     image_url: string | null;
@@ -44,6 +45,13 @@ export type Tables = {
   resident_groups: {
     id: number;
     name: string;
+    description: string | null;
+  };
+  resident_subgroups: {
+    id: number;
+    name: string;
+    description: string | null;
+    group_id: number;
   };
   staff: {
     id: string;
@@ -78,5 +86,18 @@ export type Resident = Tables['residents'] & {
   };
   group?: {
     name: string;
+    description?: string;
+  };
+  subgroup?: {
+    name: string;
+    description?: string;
   };
 };
+
+export type ResidentGroup = Tables['resident_groups'];
+export type ResidentSubgroup = Tables['resident_subgroups'] & {
+  group?: {
+    name: string;
+  }
+};
+

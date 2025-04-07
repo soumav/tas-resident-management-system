@@ -4,6 +4,7 @@ drop table if exists messages;
 drop table if exists volunteers;
 drop table if exists staff;
 drop table if exists residents;
+drop table if exists resident_subgroups;
 drop table if exists resident_groups;
 drop table if exists resident_types;
 drop table if exists resident_categories;
@@ -33,7 +34,16 @@ create table resident_types (
 -- Create resident groups table
 create table resident_groups (
   id serial primary key,
-  name text not null
+  name text not null,
+  description text
+);
+
+-- Create resident subgroups table
+create table resident_subgroups (
+  id serial primary key,
+  name text not null,
+  description text,
+  group_id integer not null references resident_groups(id)
 );
 
 -- Create residents table
@@ -42,6 +52,7 @@ create table residents (
   name text not null,
   type_id integer not null references resident_types(id),
   group_id integer references resident_groups(id),
+  subgroup_id integer references resident_subgroups(id),
   arrival_date timestamp with time zone default now() not null,
   description text,
   image_url text,
@@ -92,10 +103,17 @@ insert into resident_types (name, category_id) values
   ('Frog', 4);
 
 -- Insert sample resident groups
-insert into resident_groups (name) values 
-  ('Group A'),
-  ('Group B'),
-  ('Special Care');
+insert into resident_groups (name, description) values 
+  ('Group A', 'Primary animal group'),
+  ('Group B', 'Secondary animal group'),
+  ('Special Care', 'Animals requiring special attention');
+
+-- Insert sample resident subgroups
+insert into resident_subgroups (name, description, group_id) values 
+  ('Puppies', 'Young dogs under 1 year', 1),
+  ('Senior Dogs', 'Dogs over 7 years', 1),
+  ('Kittens', 'Young cats under 1 year', 2),
+  ('Rehabilitation', 'Animals in rehabilitation process', 3);
 
 -- Enable Row Level Security (RLS)
 alter table users enable row level security;
@@ -103,6 +121,7 @@ alter table residents enable row level security;
 alter table resident_types enable row level security;
 alter table resident_categories enable row level security;
 alter table resident_groups enable row level security;
+alter table resident_subgroups enable row level security;
 alter table staff enable row level security;
 alter table volunteers enable row level security;
 alter table messages enable row level security;
@@ -117,6 +136,7 @@ create policy "Anyone can read residents" on residents for select using (true);
 create policy "Anyone can read resident types" on resident_types for select using (true);
 create policy "Anyone can read resident categories" on resident_categories for select using (true);
 create policy "Anyone can read resident groups" on resident_groups for select using (true);
+create policy "Anyone can read resident subgroups" on resident_subgroups for select using (true);
 
 -- Staff and admin can create/update/delete residents
 create policy "Staff can manage residents" on residents 
@@ -153,3 +173,19 @@ create policy "Staff can read all messages" on messages
 -- Messages can be created by authenticated users
 create policy "Authenticated users can create messages" on messages 
   for insert with check (auth.uid() = user_id);
+
+-- Staff and admin can manage groups and subgroups
+create policy "Staff can manage groups" on resident_groups
+  for all using (exists (
+    select 1 from users 
+    where users.id = auth.uid() 
+    and (users.role = 'staff' or users.role = 'admin')
+  ));
+
+create policy "Staff can manage subgroups" on resident_subgroups
+  for all using (exists (
+    select 1 from users 
+    where users.id = auth.uid() 
+    and (users.role = 'staff' or users.role = 'admin')
+  ));
+

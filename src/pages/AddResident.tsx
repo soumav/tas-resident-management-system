@@ -34,15 +34,24 @@ type ResidentGroup = {
   name: string;
 };
 
+type ResidentSubgroup = {
+  id: number;
+  name: string;
+  group_id: number;
+};
+
 export default function AddResident() {
   const [name, setName] = useState('');
   const [typeId, setTypeId] = useState<string>('');
   const [groupId, setGroupId] = useState<string>('');
+  const [subgroupId, setSubgroupId] = useState<string>('');
   const [arrivalDate, setArrivalDate] = useState<Date | undefined>(new Date());
   const [description, setDescription] = useState('');
   const [image, setImage] = useState<File | null>(null);
   const [types, setTypes] = useState<ResidentType[]>([]);
   const [groups, setGroups] = useState<ResidentGroup[]>([]);
+  const [subgroups, setSubgroups] = useState<ResidentSubgroup[]>([]);
+  const [availableSubgroups, setAvailableSubgroups] = useState<ResidentSubgroup[]>([]);
   const [isLoading, setIsLoading] = useState(false);
   
   const { toast } = useToast();
@@ -81,9 +90,19 @@ export default function AddResident() {
           
         if (groupsError) throw groupsError;
         
-        // Properly type the groupsData before setting state
+        // Fetch resident subgroups
+        const { data: subgroupsData, error: subgroupsError } = await supabase
+          .from('resident_subgroups')
+          .select('id, name, group_id');
+          
+        if (subgroupsError) throw subgroupsError;
+        
+        // Properly type the data before setting state
         const typedGroupsData = (groupsData || []) as ResidentGroup[];
+        const typedSubgroupsData = (subgroupsData || []) as ResidentSubgroup[];
+        
         setGroups(typedGroupsData);
+        setSubgroups(typedSubgroupsData);
         
       } catch (error) {
         console.error('Error fetching options:', error);
@@ -97,6 +116,24 @@ export default function AddResident() {
     
     fetchOptions();
   }, [toast]);
+  
+  // Update available subgroups when group changes
+  useEffect(() => {
+    if (groupId) {
+      const filteredSubgroups = subgroups.filter(subgroup => 
+        subgroup.group_id === parseInt(groupId)
+      );
+      setAvailableSubgroups(filteredSubgroups);
+      
+      // Reset subgroup selection if the current selection is not in the new group
+      if (subgroupId && !filteredSubgroups.some(sg => sg.id.toString() === subgroupId)) {
+        setSubgroupId('');
+      }
+    } else {
+      setAvailableSubgroups([]);
+      setSubgroupId('');
+    }
+  }, [groupId, subgroups, subgroupId]);
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files[0]) {
@@ -136,6 +173,7 @@ export default function AddResident() {
         name,
         type_id: parseInt(typeId),
         group_id: groupId ? parseInt(groupId) : null,
+        subgroup_id: subgroupId ? parseInt(subgroupId) : null,
         arrival_date: arrivalDate?.toISOString(),
         description,
         image_url: imageUrl,
@@ -240,7 +278,7 @@ export default function AddResident() {
             
             <div>
               <label htmlFor="group" className="block text-sm font-medium text-gray-700 mb-1">
-                Group <span className="text-red-500">*</span>
+                Group
               </label>
               <Select 
                 value={groupId} 
@@ -258,6 +296,30 @@ export default function AddResident() {
                 </SelectContent>
               </Select>
             </div>
+            
+            {groupId && (
+              <div>
+                <label htmlFor="subgroup" className="block text-sm font-medium text-gray-700 mb-1">
+                  Subgroup
+                </label>
+                <Select 
+                  value={subgroupId} 
+                  onValueChange={setSubgroupId}
+                  disabled={availableSubgroups.length === 0}
+                >
+                  <SelectTrigger id="subgroup">
+                    <SelectValue placeholder={availableSubgroups.length > 0 ? "Select a subgroup" : "No subgroups available"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {availableSubgroups.map((subgroup) => (
+                      <SelectItem key={subgroup.id} value={subgroup.id.toString()}>
+                        {subgroup.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+              </div>
+            )}
           </div>
           
           <div className="mb-6">
