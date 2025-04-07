@@ -717,7 +717,6 @@ export default function Dashboard() {
       <DeleteResidentDialog 
         open={isDeleteResidentDialogOpen}
         residentName={selectedResident?.name || ''}
-        residentId={selectedResident?.id || ''}
         onClose={() => setIsDeleteResidentDialogOpen(false)}
         onDelete={handleDeleteResident}
       />
