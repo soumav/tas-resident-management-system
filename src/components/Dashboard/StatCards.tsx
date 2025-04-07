@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Users, ListIcon, Cat, Dog, Fish, Bird, Apple, Cow } from 'lucide-react';
+import { Users, ListIcon, Cat, Dog, Fish, Bird, Apple } from 'lucide-react';
 import { Resident, ResidentGroup } from '@/lib/supabase';
 
 interface StatCardsProps {
@@ -27,7 +27,7 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
     
     if (type.includes('cat')) return Cat;
     if (type.includes('dog')) return Dog;
-    if (type.includes('cow')) return Cow;
+    if (type.includes('cow')) return Apple; // Changed Cow to Apple as fallback
     if (type.includes('fish')) return Fish;
     if (type.includes('bird') || type.includes('chicken') || type.includes('duck')) return Bird;
     

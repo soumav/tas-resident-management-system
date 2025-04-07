@@ -2,7 +2,7 @@
 import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Link } from 'react-router-dom';
-import { Edit, Trash2, Plus, Cat, Dog, Fish, Bird, Apple, Cow } from 'lucide-react';
+import { Edit, Trash2, Plus, Cat, Dog, Fish, Bird, Apple } from 'lucide-react';
 import { Resident } from '@/lib/supabase';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 
@@ -22,7 +22,7 @@ const getResidentIcon = (residentType: string | undefined) => {
   
   if (type.includes('cat')) return Cat;
   if (type.includes('dog')) return Dog;
-  if (type.includes('cow')) return Cow;
+  if (type.includes('cow')) return Apple; // Changed Cow to Apple as fallback
   if (type.includes('fish')) return Fish;
   if (type.includes('bird') || type.includes('chicken') || type.includes('duck')) return Bird;
   

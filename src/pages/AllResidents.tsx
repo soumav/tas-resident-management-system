@@ -28,7 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload, Cat, Dog, Fish, Bird, Apple, Cow } from 'lucide-react';
+import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload, Cat, Dog, Fish, Bird, Apple } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase, Resident, ResidentGroup } from '@/lib/supabase';
 import { format } from 'date-fns';
@@ -360,7 +360,7 @@ export default function AllResidents() {
     
     if (type.includes('cat')) return Cat;
     if (type.includes('dog')) return Dog;
-    if (type.includes('cow')) return Cow;
+    if (type.includes('cow')) return Apple;
     if (type.includes('fish')) return Fish;
     if (type.includes('bird') || type.includes('chicken') || type.includes('duck')) return Bird;
     
