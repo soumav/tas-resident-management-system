@@ -81,24 +81,24 @@ export default function Signup() {
   };
 
   return (
-    <div className="flex min-h-screen bg-gray-50">
-      <div className="flex flex-col items-center justify-center w-full p-4">
+    <div className="flex flex-col justify-between min-h-screen bg-gray-50">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 pt-0 pb-10">
         <div className="w-full max-w-md">
-          <div className="mb-8 text-center">
+          <div className="mb-6 text-center">
             <div className="flex justify-center mb-4">
-              <div className="sanctuary-logo w-14 h-14 flex items-center justify-center">
-                <Leaf className="h-7 w-7 text-white" />
+              <div className="h-12 w-12 bg-sanctuary-green rounded-full flex items-center justify-center">
+                <Leaf className="h-6 w-6 text-white" />
               </div>
             </div>
-            <h1 className="text-3xl font-bold text-sanctuary-green">The Alice Sanctuary</h1>
+            <h1 className="text-2xl md:text-3xl font-bold text-sanctuary-green">The Alice Sanctuary</h1>
             <p className="text-gray-600 mt-1">Resident Management System</p>
           </div>
           
-          <div className="bg-white rounded-lg shadow-md p-8 border border-gray-100">
-            <h2 className="text-2xl font-semibold mb-2">Create Account</h2>
+          <div className="bg-white rounded-lg shadow-md p-6 md:p-8 border border-gray-100">
+            <h2 className="text-xl md:text-2xl font-semibold mb-2">Create Account</h2>
             <p className="text-gray-500 mb-6">Sign up to access the sanctuary management system</p>
             
-            <form onSubmit={handleSubmit} className="space-y-5">
+            <form onSubmit={handleSubmit} className="space-y-4">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
