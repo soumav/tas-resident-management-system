@@ -8,6 +8,7 @@ drop table if exists resident_subgroups;
 drop table if exists resident_groups;
 drop table if exists resident_types;
 drop table if exists resident_categories;
+drop table if exists profiles;
 drop table if exists users;
 
 -- Create users table
@@ -15,6 +16,14 @@ create table users (
   id uuid primary key default uuid_generate_v4(),
   email text not null unique,
   role text not null default 'user',
+  created_at timestamp with time zone default now() not null
+);
+
+-- Create profiles table
+create table profiles (
+  id uuid primary key references users(id),
+  name text,
+  email text,
   created_at timestamp with time zone default now() not null
 );
 
@@ -87,36 +96,9 @@ create table messages (
   created_at timestamp with time zone default now() not null
 );
 
--- Insert sample data for resident categories
-insert into resident_categories (name) values 
-  ('Mammals'),
-  ('Birds'),
-  ('Reptiles'),
-  ('Amphibians');
-
--- Insert sample resident types
-insert into resident_types (name, category_id) values 
-  ('Dog', 1),
-  ('Cat', 1),
-  ('Parrot', 2),
-  ('Turtle', 3),
-  ('Frog', 4);
-
--- Insert sample resident groups
-insert into resident_groups (name, description) values 
-  ('Group A', 'Primary animal group'),
-  ('Group B', 'Secondary animal group'),
-  ('Special Care', 'Animals requiring special attention');
-
--- Insert sample resident subgroups
-insert into resident_subgroups (name, description, group_id) values 
-  ('Puppies', 'Young dogs under 1 year', 1),
-  ('Senior Dogs', 'Dogs over 7 years', 1),
-  ('Kittens', 'Young cats under 1 year', 2),
-  ('Rehabilitation', 'Animals in rehabilitation process', 3);
-
 -- Enable Row Level Security (RLS)
 alter table users enable row level security;
+alter table profiles enable row level security;
 alter table residents enable row level security;
 alter table resident_types enable row level security;
 alter table resident_categories enable row level security;
@@ -130,6 +112,11 @@ alter table messages enable row level security;
 -- Users can read all users but only update themselves
 create policy "Users can read all users" on users for select using (true);
 create policy "Users can update own profile" on users for update using (auth.uid() = id);
+
+-- Profiles policies
+create policy "Users can read all profiles" on profiles for select using (true);
+create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
+create policy "Users can insert own profile" on profiles for insert with check (auth.uid() = id);
 
 -- Everyone can read residents and related tables
 create policy "Anyone can read residents" on residents for select using (true);
@@ -188,4 +175,3 @@ create policy "Staff can manage subgroups" on resident_subgroups
     where users.id = auth.uid() 
     and (users.role = 'staff' or users.role = 'admin')
   ));
-
