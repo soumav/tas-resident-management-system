@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -22,12 +21,21 @@ import {
   DialogTitle,
   DialogDescription,
 } from '@/components/ui/dialog';
-import { PlusCircle, Search, Info, Edit, Trash2 } from 'lucide-react';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import { Calendar } from "@/components/ui/calendar";
+import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 import { Resident } from '@/lib/supabase';
+import { format } from 'date-fns';
+import { cn } from "@/lib/utils";
 
 export default function AllResidents() {
+  
   const [residents, setResidents] = useState<Resident[]>([]);
   const [filteredResidents, setFilteredResidents] = useState<Resident[]>([]);
   const [searchQuery, setSearchQuery] = useState('');
@@ -36,6 +44,9 @@ export default function AllResidents() {
   const [isDialogOpen, setIsDialogOpen] = useState(false);
   const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [types, setTypes] = useState<{id: number, name: string}[]>([]);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -113,13 +124,143 @@ export default function AllResidents() {
     setFilteredResidents(filtered);
   }, [searchQuery, typeFilter, residents]);
   
+  const [editResidentData, setEditResidentData] = useState({
+    name: '',
+    description: '',
+    image_url: '',
+    notes: '',
+    arrival_date: null as Date | null,
+    medical_notes: ''
+  });
+  
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+      const fileUrl = URL.createObjectURL(file);
+      setPreviewUrl(fileUrl);
+    }
+  };
+
+  const resetFileInput = () => {
+    setSelectedFile(null);
+    setPreviewUrl(null);
+  };
+  
   const handleViewResident = (resident: Resident) => {
     setSelectedResident(resident);
     setIsDialogOpen(true);
   };
   
   const handleEditResident = (resident: Resident) => {
-    navigate(`/residents/edit/${resident.id}`);
+    openEditResidentDialog(resident);
+  };
+
+  const openEditResidentDialog = (resident: Resident) => {
+    setSelectedResident(resident);
+    setEditResidentData({
+      name: resident.name,
+      description: resident.description || '',
+      image_url: resident.image_url || '',
+      notes: resident.notes || '',
+      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null,
+      medical_notes: resident.medical_notes || ''
+    });
+    setPreviewUrl(resident.image_url || null);
+    setIsEditResidentDialogOpen(true);
+  };
+
+  const handleEditResidentSubmit = async () => {
+    if (!selectedResident) return;
+    
+    setIsLoading(true);
+    
+    try {
+      let updatedImageUrl = editResidentData.image_url;
+      
+      // Handle file upload if a new file is selected
+      if (selectedFile) {
+        try {
+          // Check if bucket exists and create it if it doesn't
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
+          
+          if (!bucketExists) {
+            console.log('Bucket does not exist. Creating...');
+            const { error: createError } = await supabase.storage.createBucket('resident-images', {
+              public: true
+            });
+            
+            if (createError) {
+              console.error('Error creating bucket:', createError);
+              throw createError;
+            }
+            console.log('Bucket created successfully');
+          }
+          
+          // Upload the file
+          const fileExt = selectedFile.name.split('.').pop();
+          const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+          const filePath = `${fileName}`;
+          
+          const { error: uploadError } = await supabase.storage
+            .from('resident-images')
+            .upload(filePath, selectedFile);
+            
+          if (uploadError) throw uploadError;
+          
+          // Get the public URL
+          const { data: publicUrlData } = supabase.storage
+            .from('resident-images')
+            .getPublicUrl(filePath);
+            
+          updatedImageUrl = publicUrlData.publicUrl;
+          console.log('File uploaded successfully:', updatedImageUrl);
+          
+        } catch (uploadError: any) {
+          console.error('Upload error:', uploadError);
+          toast({
+            title: 'Upload Failed',
+            description: 'Failed to upload image. Please try again.',
+            variant: 'destructive',
+          });
+        }
+      }
+      
+      // Update the resident record
+      const { error } = await supabase
+        .from('residents')
+        .update({
+          name: editResidentData.name,
+          description: editResidentData.description,
+          image_url: updatedImageUrl,
+          notes: editResidentData.notes,
+          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
+          medical_notes: editResidentData.medical_notes
+        })
+        .eq('id', selectedResident.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Resident updated',
+        description: `${editResidentData.name} has been updated successfully`
+      });
+      
+      fetchResidents();
+      setIsEditResidentDialogOpen(false);
+      resetFileInput();
+      
+    } catch (error: any) {
+      console.error('Error updating resident:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update resident',
+        variant: 'destructive'
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
   
   const handleDeleteResident = async (id: string) => {
@@ -169,6 +310,8 @@ export default function AllResidents() {
     residentsByType[typeName].push(resident);
   });
   
+  const [isEditResidentDialogOpen, setIsEditResidentDialogOpen] = useState(false);
+
   return (
     <div>
       <div className="mb-6 flex justify-between items-center">
@@ -411,6 +554,160 @@ export default function AllResidents() {
               </DialogFooter>
             </>
           )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Resident Edit Dialog */}
+      <Dialog open={isEditResidentDialogOpen} onOpenChange={setIsEditResidentDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Resident</DialogTitle>
+            <DialogDescription>
+              Make changes to {selectedResident?.name}'s information
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="resident-name" className="text-sm font-medium">
+                Name
+              </label>
+              <Input 
+                id="resident-name" 
+                value={editResidentData.name} 
+                onChange={e => setEditResidentData({...editResidentData, name: e.target.value})}
+                placeholder="Enter resident name" 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label className="text-sm font-medium">
+                Image
+              </label>
+              <div className="flex flex-col space-y-3">
+                {previewUrl && (
+                  <div className="relative w-full h-40 bg-gray-100 rounded-md overflow-hidden">
+                    <img 
+                      src={previewUrl} 
+                      alt="Preview" 
+                      className="w-full h-full object-contain" 
+                    />
+                  </div>
+                )}
+                <div className="flex items-center">
+                  <label 
+                    htmlFor="image-upload" 
+                    className={`flex items-center justify-center px-4 py-2 border border-gray-300 rounded-md cursor-pointer bg-white text-sm ${isLoading ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50'}`}
+                  >
+                    <Upload className="h-4 w-4 mr-2" />
+                    {selectedFile ? 'Change Image' : 'Upload Image'}
+                    <Input 
+                      id="image-upload"
+                      type="file" 
+                      accept="image/*" 
+                      className="hidden"
+                      onChange={handleFileChange}
+                      disabled={isLoading}
+                    />
+                  </label>
+                  {selectedFile && (
+                    <Button 
+                      type="button" 
+                      variant="outline" 
+                      className="ml-2"
+                      onClick={resetFileInput}
+                      disabled={isLoading}
+                    >
+                      Remove
+                    </Button>
+                  )}
+                </div>
+              </div>
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-description" className="text-sm font-medium">
+                Description (Optional)
+              </label>
+              <Textarea 
+                id="resident-description" 
+                value={editResidentData.description} 
+                onChange={e => setEditResidentData({...editResidentData, description: e.target.value})}
+                placeholder="Enter description" 
+                rows={3} 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-arrival" className="text-sm font-medium">
+                Arrival Date
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !editResidentData.arrival_date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {editResidentData.arrival_date ? format(editResidentData.arrival_date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={editResidentData.arrival_date || undefined}
+                    onSelect={(date) => setEditResidentData({...editResidentData, arrival_date: date})}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-notes" className="text-sm font-medium">
+                Notes (Optional)
+              </label>
+              <Textarea 
+                id="resident-notes" 
+                value={editResidentData.notes} 
+                onChange={e => setEditResidentData({...editResidentData, notes: e.target.value})}
+                placeholder="Enter notes" 
+                rows={3} 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-medical" className="text-sm font-medium">
+                Medical Notes (Optional)
+              </label>
+              <Textarea 
+                id="resident-medical" 
+                value={editResidentData.medical_notes} 
+                onChange={e => setEditResidentData({...editResidentData, medical_notes: e.target.value})}
+                placeholder="Enter medical notes" 
+                rows={3} 
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => {
+              setIsEditResidentDialogOpen(false);
+              resetFileInput();
+            }} disabled={isLoading}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-sanctuary-green hover:bg-sanctuary-light-green" 
+              onClick={handleEditResidentSubmit} 
+              disabled={!editResidentData.name.trim() || isLoading}
+            >
+              {isLoading ? 'Saving...' : 'Save Changes'}
+            </Button>
+          </DialogFooter>
         </DialogContent>
       </Dialog>
     </div>
