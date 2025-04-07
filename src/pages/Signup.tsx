@@ -81,30 +81,30 @@ export default function Signup() {
   };
 
   return (
-    <div className="min-h-screen flex flex-col justify-center bg-gray-50">
-      <div className="flex-1 flex flex-col items-center justify-center p-4 pb-0 pt-10">
+    <div className="flex min-h-screen bg-gray-50">
+      <div className="flex flex-col items-center justify-center w-full p-4">
         <div className="w-full max-w-md">
-          <div className="mb-4 sm:mb-6 text-center">
-            <div className="flex justify-center mb-3 sm:mb-4">
-              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-sanctuary-green rounded-full flex items-center justify-center">
-                <Leaf className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+          <div className="mb-8 text-center">
+            <div className="flex justify-center mb-4">
+              <div className="sanctuary-logo w-14 h-14 flex items-center justify-center">
+                <Leaf className="h-7 w-7 text-white" />
               </div>
             </div>
-            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-sanctuary-green">The Alice Sanctuary</h1>
-            <p className="text-gray-600 mt-1 text-sm sm:text-base">Resident Management System</p>
+            <h1 className="text-3xl font-bold text-sanctuary-green">The Alice Sanctuary</h1>
+            <p className="text-gray-600 mt-1">Resident Management System</p>
           </div>
           
-          <div className="bg-white rounded-lg shadow-md p-5 md:p-6 lg:p-8 border border-gray-100">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2">Create Account</h2>
-            <p className="text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base">Sign up to access the sanctuary management system</p>
+          <div className="bg-white rounded-lg shadow-md p-8 border border-gray-100">
+            <h2 className="text-2xl font-semibold mb-2">Create Account</h2>
+            <p className="text-gray-500 mb-6">Sign up to access the sanctuary management system</p>
             
-            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-5">
               <div>
                 <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">
                   Full Name
                 </label>
                 <div className="relative">
-                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="name"
                     type="text"
@@ -112,7 +112,7 @@ export default function Signup() {
                     value={name}
                     onChange={(e) => setName(e.target.value)}
                     required
-                    className="pl-9 sm:pl-10"
+                    className="pl-10"
                   />
                 </div>
               </div>
@@ -122,7 +122,7 @@ export default function Signup() {
                   Email
                 </label>
                 <div className="relative">
-                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+                  <Mail className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="email"
                     type="email"
@@ -130,7 +130,7 @@ export default function Signup() {
                     value={email}
                     onChange={(e) => setEmail(e.target.value)}
                     required
-                    className="pl-9 sm:pl-10"
+                    className="pl-10"
                   />
                 </div>
               </div>
@@ -140,7 +140,7 @@ export default function Signup() {
                   Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="password"
                     type="password"
@@ -148,7 +148,7 @@ export default function Signup() {
                     value={password}
                     onChange={(e) => setPassword(e.target.value)}
                     required
-                    className="pl-9 sm:pl-10"
+                    className="pl-10"
                   />
                 </div>
               </div>
@@ -158,7 +158,7 @@ export default function Signup() {
                   Confirm Password
                 </label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-3.5 w-3.5 sm:h-4 sm:w-4 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400" />
                   <Input
                     id="confirm-password"
                     type="password"
@@ -166,21 +166,21 @@ export default function Signup() {
                     value={confirmPassword}
                     onChange={(e) => setConfirmPassword(e.target.value)}
                     required
-                    className="pl-9 sm:pl-10"
+                    className="pl-10"
                   />
                 </div>
               </div>
               
               <Button
                 type="submit"
-                className="w-full bg-sanctuary-green hover:bg-sanctuary-light-green h-9 sm:h-10"
+                className="w-full bg-sanctuary-green hover:bg-sanctuary-light-green h-11"
                 disabled={isLoading}
               >
                 {isLoading ? 'Creating Account...' : 'Create Account'}
               </Button>
             </form>
             
-            <div className="mt-5 sm:mt-6 text-center text-xs sm:text-sm">
+            <div className="mt-6 text-center text-sm">
               <p className="text-gray-600">
                 Already have an account?{' '}
                 <Link to="/login" className="text-sanctuary-green hover:underline font-medium">

@@ -6,7 +6,6 @@ import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 import Footer from "./components/Layout/Footer";
-import { SidebarProvider } from "@/components/ui/sidebar";
 
 // Pages
 import Login from "./pages/Login";
@@ -30,11 +29,11 @@ const App = () => (
       <Sonner />
       <BrowserRouter>
         <AuthProvider>
-          <SidebarProvider>
+          <div className="min-h-screen flex flex-col">
             <Routes>
               {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+              <Route path="/login" element={<div className="flex flex-col flex-1"><Login /><Footer /></div>} />
+              <Route path="/signup" element={<div className="flex flex-col flex-1"><Signup /><Footer /></div>} />
               
               {/* Protected Dashboard Routes */}
               <Route path="/" element={<DashboardLayout />}>
@@ -50,9 +49,9 @@ const App = () => (
               </Route>
               
               {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
+              <Route path="*" element={<div className="flex flex-col flex-1"><NotFound /><Footer /></div>} />
             </Routes>
-          </SidebarProvider>
+          </div>
         </AuthProvider>
       </BrowserRouter>
     </TooltipProvider>
