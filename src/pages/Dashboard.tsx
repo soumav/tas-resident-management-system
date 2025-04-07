@@ -55,7 +55,8 @@ export default function Dashboard() {
         
         // Count occurrences of each type
         const typeCounter: {[key: string]: number} = {};
-        typesData?.forEach(item => {
+        typesData?.forEach((item: any) => {
+          // Ensure we check if type exists and has a name property
           const typeName = item.type?.name;
           if (typeName) {
             typeCounter[typeName] = (typeCounter[typeName] || 0) + 1;
