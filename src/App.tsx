@@ -33,7 +33,7 @@ const App = () => (
             <Routes>
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<div className="flex flex-col flex-1"><Signup /><Footer /></div>} />
+              <Route path="/signup" element={<Signup />} />
               
               {/* Protected Dashboard Routes */}
               <Route path="/" element={<DashboardLayout />}>
@@ -49,7 +49,7 @@ const App = () => (
               </Route>
               
               {/* Catch-all route */}
-              <Route path="*" element={<div className="flex flex-col flex-1"><NotFound /><Footer /></div>} />
+              <Route path="*" element={<NotFound />} />
             </Routes>
           </div>
         </AuthProvider>
