@@ -107,7 +107,6 @@ export default function AllResidents() {
   useEffect(() => {
     let filtered = [...residents];
     
-    // Apply search filter
     if (searchQuery) {
       const query = searchQuery.toLowerCase();
       filtered = filtered.filter(resident => 
@@ -115,7 +114,6 @@ export default function AllResidents() {
       );
     }
     
-    // Apply type filter
     if (typeFilter !== 'all') {
       filtered = filtered.filter(resident => 
         resident.type?.name === typeFilter
@@ -175,10 +173,8 @@ export default function AllResidents() {
     try {
       let updatedImageUrl = editResidentData.image_url;
       
-      // Handle file upload if a new file is selected
       if (selectedFile) {
         try {
-          // Check if bucket exists and create it if it doesn't
           const { data: buckets } = await supabase.storage.listBuckets();
           const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
           
@@ -195,7 +191,6 @@ export default function AllResidents() {
             console.log('Bucket created successfully');
           }
           
-          // Upload the file
           const fileExt = selectedFile.name.split('.').pop();
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
           const filePath = `${fileName}`;
@@ -206,7 +201,6 @@ export default function AllResidents() {
             
           if (uploadError) throw uploadError;
           
-          // Get the public URL
           const { data: publicUrlData } = supabase.storage
             .from('resident-images')
             .getPublicUrl(filePath);
@@ -224,8 +218,7 @@ export default function AllResidents() {
         }
       }
       
-      // Update the resident record
-      const { error } = await supabase
+      const { error, data } = await supabase
         .from('residents')
         .update({
           name: editResidentData.name,
@@ -233,7 +226,20 @@ export default function AllResidents() {
           image_url: updatedImageUrl,
           arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null
         })
-        .eq('id', selectedResident.id);
+        .eq('id', selectedResident.id)
+        .select(`
+          *,
+          type:resident_types (
+            id, 
+            name,
+            category:resident_categories (
+              id,
+              name
+            )
+          ),
+          group:resident_groups (id, name, description),
+          subgroup:resident_subgroups (id, name, description)
+        `);
       
       if (error) throw error;
       
@@ -242,7 +248,16 @@ export default function AllResidents() {
         description: `${editResidentData.name} has been updated successfully`
       });
       
-      fetchResidents();
+      if (data && data.length > 0) {
+        setResidents(prev => 
+          prev.map(resident => 
+            resident.id === selectedResident.id ? data[0] : resident
+          )
+        );
+      } else {
+        await fetchResidents();
+      }
+      
       setIsEditResidentDialogOpen(false);
       resetFileInput();
       

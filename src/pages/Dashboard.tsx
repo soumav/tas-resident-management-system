@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -226,17 +227,31 @@ export default function Dashboard() {
         }
       }
       
-      const { error } = await supabase
+      // Update the resident record with new data including group_id and subgroup_id
+      const updateData = {
+        name: editResidentData.name,
+        description: editResidentData.description,
+        image_url: updatedImageUrl,
+        arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
+        group_id: editResidentData.group_id,
+        subgroup_id: editResidentData.subgroup_id
+      };
+
+      console.log('Updating resident with data:', updateData);
+      
+      const { error, data } = await supabase
         .from('residents')
-        .update({
-          name: editResidentData.name,
-          description: editResidentData.description,
-          image_url: updatedImageUrl,
-          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
-          group_id: editResidentData.group_id,
-          subgroup_id: editResidentData.subgroup_id
-        })
-        .eq('id', selectedResident.id);
+        .update(updateData)
+        .eq('id', selectedResident.id)
+        .select(`
+          *,
+          type:resident_types(
+            name,
+            category:resident_categories(name)
+          ),
+          group:resident_groups(name, description),
+          subgroup:resident_subgroups(name, description, group:resident_groups(name))
+        `);
       
       if (error) throw error;
       
@@ -245,7 +260,18 @@ export default function Dashboard() {
         description: `${editResidentData.name} has been updated successfully`
       });
       
-      fetchResidents();
+      // Update the local resident data with the new data
+      if (data && data.length > 0) {
+        setResidents(prev => 
+          prev.map(resident => 
+            resident.id === selectedResident.id ? data[0] : resident
+          )
+        );
+      } else {
+        // If we don't get the updated data back, fetch all residents again
+        await fetchResidents();
+      }
+      
       setIsEditResidentDialogOpen(false);
       resetFileInput();
       
