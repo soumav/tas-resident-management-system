@@ -49,6 +49,7 @@ export default function AllResidents() {
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
   const [groups, setGroups] = useState<ResidentGroup[]>([]);
+  const [refreshKey, setRefreshKey] = useState(0);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -134,7 +135,7 @@ export default function AllResidents() {
     fetchResidents();
     fetchTypes();
     fetchGroups();
-  }, [toast]);
+  }, [toast, refreshKey]);
   
   useEffect(() => {
     let filtered = [...residents];
@@ -283,8 +284,18 @@ export default function AllResidents() {
         description: `${editResidentData.name} has been updated successfully`
       });
       
-      fetchResidents();
+      if (updatedResident && updatedResident.length > 0) {
+        setResidents(prev => 
+          prev.map(resident => 
+            resident.id === selectedResident.id ? {...resident, ...updatedResident[0]} : resident
+          )
+        );
+      }
+      
+      setRefreshKey(prevKey => prevKey + 1);
+      
       setIsEditResidentDialogOpen(false);
+      setIsDialogOpen(false);
       resetFileInput();
       
     } catch (error: any) {
