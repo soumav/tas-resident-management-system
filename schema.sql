@@ -125,7 +125,7 @@ create policy "Anyone can read resident categories" on resident_categories for s
 create policy "Anyone can read resident groups" on resident_groups for select using (true);
 create policy "Anyone can read resident subgroups" on resident_subgroups for select using (true);
 
--- Staff and admin can create/update/delete residents
+-- Staff and admin can manage residents
 create policy "Staff can manage residents" on residents 
   for all using (exists (
     select 1 from users 
@@ -195,4 +195,30 @@ create policy "Authenticated users can delete groups" on resident_groups
   for delete using (auth.role() = 'authenticated');
 
 create policy "Authenticated users can delete subgroups" on resident_subgroups
+  for delete using (auth.role() = 'authenticated');
+
+-- NEW: Allow authenticated users to manage resident categories
+create policy "Authenticated users can read categories" on resident_categories
+  for select using (true);
+  
+create policy "Authenticated users can create categories" on resident_categories
+  for insert with check (auth.role() = 'authenticated');
+  
+create policy "Authenticated users can update categories" on resident_categories
+  for update using (auth.role() = 'authenticated');
+  
+create policy "Authenticated users can delete categories" on resident_categories
+  for delete using (auth.role() = 'authenticated');
+
+-- NEW: Allow authenticated users to manage resident types
+create policy "Authenticated users can read types" on resident_types
+  for select using (true);
+  
+create policy "Authenticated users can create types" on resident_types
+  for insert with check (auth.role() = 'authenticated');
+  
+create policy "Authenticated users can update types" on resident_types
+  for update using (auth.role() = 'authenticated');
+  
+create policy "Authenticated users can delete types" on resident_types
   for delete using (auth.role() = 'authenticated');
