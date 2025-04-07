@@ -33,13 +33,13 @@ export default function DashboardLayout() {
       <Sidebar />
         
       <div className="flex-1 flex flex-col">
-        <header className="bg-white border-b border-gray-200 shadow-sm h-14 sm:h-16 flex items-center px-3 sm:px-6">
+        <header className="bg-white border-b border-gray-200 shadow-sm h-12 sm:h-14 md:h-16 flex items-center px-3 sm:px-6">
           <div className="flex items-center md:hidden mr-2">
             <SidebarTrigger />
           </div>
           
           <div className="flex-1 flex justify-center">
-            <h1 className="text-md sm:text-lg md:text-xl font-semibold tracking-wider text-sanctuary-dark-green truncate">
+            <h1 className="text-sm sm:text-md md:text-xl font-semibold tracking-wider text-sanctuary-dark-green truncate">
               The Alice Sanctuary Resident Directory
             </h1>
           </div>
@@ -60,8 +60,8 @@ export default function DashboardLayout() {
           </div>
         </header>
         
-        <div className="dashboard-content flex-1 overflow-auto">
-          <div className="py-3 px-3 sm:py-4 sm:px-6 flex flex-col min-h-[calc(100vh-3.5rem)]">
+        <div className="flex-1 overflow-auto">
+          <div className="py-2 px-2 sm:py-4 sm:px-6 flex flex-col min-h-[calc(100vh-3rem)]">
             <Outlet />
           </div>
         </div>

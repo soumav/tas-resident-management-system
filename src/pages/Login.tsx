@@ -59,21 +59,21 @@ export default function Login() {
   };
 
   return (
-    <div className="min-h-[calc(100vh-40px)] flex flex-col justify-center bg-gray-50">
-      <div className="flex-1 flex flex-col items-center justify-center p-4 pb-8">
+    <div className="min-h-screen flex flex-col justify-center bg-gray-50">
+      <div className="flex-1 flex flex-col items-center justify-center p-4 pb-0 pt-10">
         <div className="w-full max-w-md">
-          <div className="mb-6 text-center">
-            <div className="flex justify-center mb-4">
-              <div className="h-12 w-12 bg-sanctuary-green rounded-full flex items-center justify-center">
-                <Leaf className="h-6 w-6 text-white" />
+          <div className="mb-4 sm:mb-6 text-center">
+            <div className="flex justify-center mb-3 sm:mb-4">
+              <div className="h-10 w-10 sm:h-12 sm:w-12 bg-sanctuary-green rounded-full flex items-center justify-center">
+                <Leaf className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
               </div>
             </div>
-            <h1 className="text-2xl md:text-3xl font-bold text-sanctuary-green">The Alice Sanctuary</h1>
-            <p className="text-gray-600 mt-1">Resident Management System</p>
+            <h1 className="text-xl sm:text-2xl md:text-3xl font-bold text-sanctuary-green">The Alice Sanctuary</h1>
+            <p className="text-gray-600 mt-1 text-sm sm:text-base">Resident Management System</p>
           </div>
           
           {hasSupabaseError && (
-            <Alert variant="destructive" className="mb-6">
+            <Alert variant="destructive" className="mb-4 sm:mb-6">
               <AlertCircle className="h-4 w-4" />
               <AlertTitle>Supabase Connection Error</AlertTitle>
               <AlertDescription>
@@ -83,11 +83,11 @@ export default function Login() {
             </Alert>
           )}
           
-          <div className="bg-white shadow-md rounded-lg p-6 md:p-8 border border-gray-200">
-            <h2 className="text-xl md:text-2xl font-semibold mb-2">Sign In</h2>
-            <p className="text-gray-500 mb-6">Sign in to access the sanctuary management system</p>
+          <div className="bg-white shadow-md rounded-lg p-5 md:p-6 lg:p-8 border border-gray-200">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold mb-2">Sign In</h2>
+            <p className="text-gray-500 mb-4 sm:mb-6 text-sm sm:text-base">Sign in to access the sanctuary management system</p>
             
-            <form onSubmit={handleSubmit} className="space-y-4">
+            <form onSubmit={handleSubmit} className="space-y-3 sm:space-y-4">
               <div>
                 <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">
                   Email
@@ -108,7 +108,7 @@ export default function Login() {
                   <label htmlFor="password" className="block text-sm font-medium text-gray-700">
                     Password
                   </label>
-                  <Link to="/forgot-password" className="text-sm text-sanctuary-green hover:underline">
+                  <Link to="/forgot-password" className="text-xs sm:text-sm text-sanctuary-green hover:underline">
                     Forgot password?
                   </Link>
                 </div>
@@ -125,14 +125,14 @@ export default function Login() {
               
               <Button
                 type="submit"
-                className="w-full bg-sanctuary-green hover:bg-sanctuary-light-green"
+                className="w-full bg-sanctuary-green hover:bg-sanctuary-light-green h-9 sm:h-10"
                 disabled={isLoading || hasSupabaseError}
               >
                 {isLoading ? 'Signing in...' : 'Sign In'}
               </Button>
             </form>
             
-            <div className="mt-6 text-center text-sm">
+            <div className="mt-5 sm:mt-6 text-center text-xs sm:text-sm">
               <p className="text-gray-600">
                 Don't have an account?{' '}
                 <Link to="/signup" className="text-sanctuary-green hover:underline font-medium">
