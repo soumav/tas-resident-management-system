@@ -550,7 +550,8 @@ export default function Dashboard() {
 
   const name = user?.email?.split('@')[0] || "User";
 
-  return <div>
+  return (
+    <div>
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div>
@@ -588,9 +589,10 @@ export default function Dashboard() {
         </Card>
         
         {getTopResidentTypes(1).map(([typeName, count]) => {
-        const TypeIcon = getResidentTypeIcon(typeName);
-        const percentage = residents.length > 0 ? Math.round(count / residents.length * 100) : 0;
-        return <Card key={typeName} className="p-6 flex justify-between items-center">
+          const TypeIcon = getResidentTypeIcon(typeName);
+          const percentage = residents.length > 0 ? Math.round(count / residents.length * 100) : 0;
+          return (
+            <Card key={typeName} className="p-6 flex justify-between items-center">
               <div>
                 <h3 className="text-lg text-gray-500 font-medium mb-1">{typeName}</h3>
                 <p className="text-4xl font-bold">{count}</p>
@@ -599,8 +601,9 @@ export default function Dashboard() {
               <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
                 <TypeIcon className="h-6 w-6 text-gray-600" />
               </div>
-            </Card>;
-      })}
+            </Card>
+          );
+        })}
         
         <Card className="p-6 flex justify-between items-center">
           <div>
@@ -623,159 +626,192 @@ export default function Dashboard() {
       </div>
       
       <div className="space-y-4 mb-8">
-        {groups.length > 0 ? groups.map(group => <Collapsible key={group.id} open={expandedGroups.includes(group.id)} onOpenChange={() => toggleGroupExpand(group.id)} className="border rounded-lg overflow-hidden">
-              <div className="flex justify-between items-center p-4 bg-white">
-                <CollapsibleTrigger className="flex items-center gap-2 text-left w-full">
-                  {expandedGroups.includes(group.id) ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
-                  <span className="font-medium text-lg">{group.name}</span>
-                  {group.description && <span className="text-sm text-gray-500 ml-2">- {group.description}</span>}
-                </CollapsibleTrigger>
-                
-                <div className="flex items-center">
-                  <Button variant="ghost" size="icon" onClick={e => {
-              e.stopPropagation();
-              openEditGroupDialog(group);
-            }} className="h-8 w-8 text-gray-500">
-                    <Edit className="h-4 w-4" />
-                  </Button>
-                  <Button variant="ghost" size="icon" onClick={e => {
-              e.stopPropagation();
-              openDeleteGroupDialog(group);
-            }} className="h-8 w-8 text-red-500">
-                    <Trash2 className="h-4 w-4" />
-                  </Button>
-                </div>
-              </div>
+        {groups.length > 0 ? groups.map(group => (
+          <Collapsible key={group.id} open={expandedGroups.includes(group.id)} onOpenChange={() => toggleGroupExpand(group.id)} className="border rounded-lg overflow-hidden">
+            <div className="flex justify-between items-center p-4 bg-white">
+              <CollapsibleTrigger className="flex items-center gap-2 text-left w-full">
+                {expandedGroups.includes(group.id) ? <ChevronUp className="h-4 w-4 text-gray-500" /> : <ChevronDown className="h-4 w-4 text-gray-500" />}
+                <span className="font-medium text-lg">{group.name}</span>
+                {group.description && <span className="text-sm text-gray-500 ml-2">- {group.description}</span>}
+              </CollapsibleTrigger>
               
-              <CollapsibleContent>
-                <div className="p-6 bg-white border-t">
-                  <div className="resident-grid">
-                    {getResidentsByGroup(group.id).map(resident => <div key={resident.id} className="resident-item">
-                        <div className="resident-image">
-                          {resident.image_url ? <img src={resident.image_url} alt={resident.name} className="w-full h-full object-cover" /> : <div className="text-gray-400 text-xs">No Image</div>}
-                        </div>
-                        <div className="p-2 text-center">
-                          <p className="font-medium truncate">{resident.name}</p>
-                          <div className="flex justify-center gap-1 mt-1">
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-6 w-6" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openEditResidentDialog(resident);
-                              }}
-                            >
-                              <Edit className="h-3 w-3 text-blue-500" />
-                            </Button>
-                            <Button 
-                              variant="ghost" 
-                              size="icon" 
-                              className="h-6 w-6" 
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                openDeleteResidentDialog(resident);
-                              }}
-                            >
-                              <Trash2 className="h-3 w-3 text-red-500" />
-                            </Button>
-                          </div>
-                        </div>
-                      </div>)}
-                    
-                    <Link to={`/residents/new?group=${group.id}`} className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors">
-                      <div className="flex flex-col items-center text-gray-500">
-                        <Plus className="h-6 w-6" />
-                        <span className="text-sm">Add Animal</span>
+              <div className="flex items-center">
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={e => {
+                    e.stopPropagation();
+                    openEditGroupDialog(group);
+                  }} 
+                  className="h-8 w-8 text-gray-500"
+                >
+                  <Edit className="h-4 w-4" />
+                </Button>
+                <Button 
+                  variant="ghost" 
+                  size="icon" 
+                  onClick={e => {
+                    e.stopPropagation();
+                    openDeleteGroupDialog(group);
+                  }} 
+                  className="h-8 w-8 text-red-500"
+                >
+                  <Trash2 className="h-4 w-4" />
+                </Button>
+              </div>
+            </div>
+            
+            <CollapsibleContent>
+              <div className="p-6 bg-white border-t">
+                <div className="resident-grid">
+                  {getResidentsByGroup(group.id).map(resident => (
+                    <div key={resident.id} className="resident-item">
+                      <div className="resident-image">
+                        {resident.image_url ? (
+                          <img src={resident.image_url} alt={resident.name} className="w-full h-full object-cover" />
+                        ) : (
+                          <div className="text-gray-400 text-xs">No Image</div>
+                        )}
                       </div>
-                    </Link>
-                  </div>
+                      <div className="p-2 text-center">
+                        <p className="font-medium truncate">{resident.name}</p>
+                        <div className="flex justify-center gap-1 mt-1">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openEditResidentDialog(resident);
+                            }}
+                          >
+                            <Edit className="h-3 w-3 text-blue-500" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-6 w-6" 
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              openDeleteResidentDialog(resident);
+                            }}
+                          >
+                            <Trash2 className="h-3 w-3 text-red-500" />
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
                   
-                  {group.subgroups && group.subgroups.length > 0 && group.subgroups.map(subgroup => <div key={subgroup.id} className="mt-6">
-                        <div className="flex justify-between items-center mb-3">
-                          <h3 className="font-medium text-gray-700 flex items-center">
-                            <div className="w-1 h-6 bg-sanctuary-green mr-2"></div>
-                            {subgroup.name}
-                            {subgroup.description && <span className="text-sm text-gray-500 ml-2">- {subgroup.description}</span>}
-                          </h3>
-                          <div className="flex items-center space-x-1">
-                            <Button variant="ghost" size="icon" onClick={() => openEditSubgroupDialog(subgroup)} className="h-7 w-7 text-gray-500">
-                              <Edit className="h-3.5 w-3.5" />
-                            </Button>
-                            <Button variant="ghost" size="icon" onClick={() => openDeleteSubgroupDialog(subgroup)} className="h-7 w-7 text-red-500">
-                              <Trash2 className="h-3.5 w-3.5" />
-                            </Button>
+                  <Link to={`/residents/new?group=${group.id}`} className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors">
+                    <div className="flex flex-col items-center text-gray-500">
+                      <Plus className="h-6 w-6" />
+                      <span className="text-sm">Add Animal</span>
+                    </div>
+                  </Link>
+                </div>
+                
+                {group.subgroups && group.subgroups.length > 0 && group.subgroups.map(subgroup => (
+                  <div key={subgroup.id} className="mt-6">
+                    <div className="flex justify-between items-center mb-3">
+                      <h3 className="font-medium text-gray-700 flex items-center">
+                        <div className="w-1 h-6 bg-sanctuary-green mr-2"></div>
+                        {subgroup.name}
+                        {subgroup.description && <span className="text-sm text-gray-500 ml-2">- {subgroup.description}</span>}
+                      </h3>
+                      <div className="flex items-center space-x-1">
+                        <Button variant="ghost" size="icon" onClick={() => openEditSubgroupDialog(subgroup)} className="h-7 w-7 text-gray-500">
+                          <Edit className="h-3.5 w-3.5" />
+                        </Button>
+                        <Button variant="ghost" size="icon" onClick={() => openDeleteSubgroupDialog(subgroup)} className="h-7 w-7 text-red-500">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                    
+                    <div className="resident-grid">
+                      {getResidentsBySubgroup(subgroup.id).map(resident => (
+                        <div key={resident.id} className="resident-item">
+                          <div className="resident-image">
+                            {resident.image_url ? (
+                              <img src={resident.image_url} alt={resident.name} className="w-full h-full object-cover" />
+                            ) : (
+                              <div className="text-gray-400 text-xs">No Image</div>
+                            )}
+                          </div>
+                          <div className="p-2 text-center">
+                            <p className="font-medium truncate">{resident.name}</p>
+                            <div className="flex justify-center gap-1 mt-1">
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openEditResidentDialog(resident);
+                                }}
+                              >
+                                <Edit className="h-3 w-3 text-blue-500" />
+                              </Button>
+                              <Button 
+                                variant="ghost" 
+                                size="icon" 
+                                className="h-6 w-6"
+                                onClick={(e) => {
+                                  e.stopPropagation();
+                                  openDeleteResidentDialog(resident);
+                                }}
+                              >
+                                <Trash2 className="h-3 w-3 text-red-500" />
+                              </Button>
+                            </div>
                           </div>
                         </div>
-                        
-                        <div className="resident-grid">
-                          {getResidentsBySubgroup(subgroup.id).map(resident => <div key={resident.id} className="resident-item">
-                              <div className="resident-image">
-                                {resident.image_url ? <img src={resident.image_url} alt={resident.name} className="w-full h-full object-cover" /> : <div className="text-gray-400 text-xs">No Image</div>}
-                              </div>
-                              <div className="p-2 text-center">
-                                <p className="font-medium truncate">{resident.name}</p>
-                                <div className="flex justify-center gap-1 mt-1">
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      openEditResidentDialog(resident);
-                                    }}
-                                  >
-                                    <Edit className="h-3 w-3 text-blue-500" />
-                                  </Button>
-                                  <Button 
-                                    variant="ghost" 
-                                    size="icon" 
-                                    className="h-6 w-6"
-                                    onClick={(e) => {
-                                      e.stopPropagation();
-                                      openDeleteResidentDialog(resident);
-                                    }}
-                                  >
-                                    <Trash2 className="h-3 w-3 text-red-500" />
-                                  </Button>
-                                </div>
-                              </div>
-                            </div>)}
-                          
-                          <Link to={`/residents/new?group=${group.id}&subgroup=${subgroup.id}`} className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors">
-                            <div className="flex flex-col items-center text-gray-500">
-                              <Plus className="h-6 w-6" />
-                              <span className="text-sm">Add Animal</span>
-                            </div>
-                          </Link>
+                      ))}
+                      
+                      <Link to={`/residents/new?group=${group.id}&subgroup=${subgroup.id}`} className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors">
+                        <div className="flex flex-col items-center text-gray-500">
+                          <Plus className="h-6 w-6" />
+                          <span className="text-sm">Add Animal</span>
                         </div>
-                      </div>)}
-                  
-                  {showSubgroupInput === group.id ? <div className="mt-6 subgroup-input">
-                      <Input placeholder="Subgroup name" value={newSubgroupName} onChange={e => setNewSubgroupName(e.target.value)} className="max-w-xs" />
-                      <Button onClick={handleQuickAddSubgroup} disabled={!newSubgroupName.trim()}>
-                        Add
-                      </Button>
-                      <Button variant="outline" onClick={() => setShowSubgroupInput(null)}>
-                        Cancel
-                      </Button>
-                    </div> : <div className="mt-4">
-                      <Button variant="outline" onClick={() => toggleSubgroupInput(group.id)} className="flex items-center gap-2">
-                        <Plus className="h-4 w-4" />
-                        Add Subgroup
-                      </Button>
-                    </div>}
-                </div>
-              </CollapsibleContent>
-            </Collapsible>) : <div className="text-center p-8 border rounded-lg bg-gray-50">
+                      </Link>
+                    </div>
+                  </div>
+                ))}
+                
+                {showSubgroupInput === group.id ? (
+                  <div className="mt-6 subgroup-input">
+                    <Input placeholder="Subgroup name" value={newSubgroupName} onChange={e => setNewSubgroupName(e.target.value)} className="max-w-xs" />
+                    <Button onClick={handleQuickAddSubgroup} disabled={!newSubgroupName.trim()}>
+                      Add
+                    </Button>
+                    <Button variant="outline" onClick={() => setShowSubgroupInput(null)}>
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    <Button variant="outline" onClick={() => toggleSubgroupInput(group.id)} className="flex items-center gap-2">
+                      <Plus className="h-4 w-4" />
+                      Add Subgroup
+                    </Button>
+                  </div>
+                )}
+              </div>
+            </CollapsibleContent>
+          </Collapsible>
+        )) : (
+          <div className="text-center p-8 border rounded-lg bg-gray-50">
             <p className="text-gray-500 mb-4">No resident groups found</p>
             <Button onClick={openAddGroupDialog} className="bg-sanctuary-green hover:bg-sanctuary-light-green">
               <Plus className="h-4 w-4 mr-2" />
               Add First Group
             </Button>
-          </div>}
+          </div>
+        )}
       </div>
       
+      {/* Dialogs for groups */}
       <Dialog open={isAddGroupDialogOpen} onOpenChange={setIsAddGroupDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -835,13 +871,4 @@ export default function Dashboard() {
             <Button variant="outline" onClick={() => setIsEditGroupDialogOpen(false)}>
               Cancel
             </Button>
-            <Button className="bg-sanctuary-green hover:bg-sanctuary-light-green" onClick={handleEditGroup} disabled={!newGroupName.trim()}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <AlertDialog open={isDeleteGroupDialogOpen} onOpenChange={setIsDeleteGroupDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader
+            <Button className="bg-sanctuary
