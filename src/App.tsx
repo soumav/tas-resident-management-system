@@ -30,30 +30,28 @@ const App = () => (
         <TooltipProvider>
           <Toaster />
           <Sonner />
-          <div className="min-h-screen flex flex-col">
-            <Routes>
-              {/* Auth Routes */}
-              <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
-              
-              {/* Protected Dashboard Routes */}
-              <Route path="/" element={<DashboardLayout />}>
-                <Route index element={<Dashboard />} />
-                <Route path="residents" element={<AllResidents />} />
-                <Route path="residents/new" element={<AddResident />} />
-                <Route path="residents/edit/:id" element={<AddResident />} />
-                <Route path="resident-types" element={<ResidentTypeManager />} />
-                <Route path="groups" element={<Groups />} /> 
-                <Route path="staff" element={<StaffVolunteers />} />
-                <Route path="settings" element={<Dashboard />} />
-                <Route path="about" element={<Dashboard />} />
-                <Route path="help" element={<Dashboard />} />
-              </Route>
-              
-              {/* Catch-all route */}
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
+          <Routes>
+            {/* Auth Routes */}
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<Signup />} />
+            
+            {/* Protected Dashboard Routes */}
+            <Route path="/" element={<DashboardLayout />}>
+              <Route index element={<Dashboard />} />
+              <Route path="residents" element={<AllResidents />} />
+              <Route path="residents/new" element={<AddResident />} />
+              <Route path="residents/edit/:id" element={<AddResident />} />
+              <Route path="resident-types" element={<ResidentTypeManager />} />
+              <Route path="groups" element={<Groups />} /> 
+              <Route path="staff" element={<StaffVolunteers />} />
+              <Route path="settings" element={<Dashboard />} />
+              <Route path="about" element={<Dashboard />} />
+              <Route path="help" element={<Dashboard />} />
+            </Route>
+            
+            {/* Catch-all route */}
+            <Route path="*" element={<NotFound />} />
+          </Routes>
         </TooltipProvider>
       </AuthProvider>
     </BrowserRouter>

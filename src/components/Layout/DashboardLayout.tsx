@@ -26,11 +26,15 @@ export default function DashboardLayout() {
   const username = user?.email?.split('@')[0] || 'User';
   
   return (
-    <div className="flex min-h-screen h-full bg-gray-50">
-      <Sidebar />
+    <div className="flex h-screen overflow-hidden bg-gray-50">
+      {/* Fixed sidebar */}
+      <div className="h-screen sticky top-0">
+        <Sidebar />
+      </div>
         
-      <div className="flex-1 flex flex-col">
-        <header className="bg-white border-b border-gray-200 shadow-sm h-16 flex items-center px-6">
+      {/* Scrollable main content */}
+      <div className="flex-1 flex flex-col overflow-auto">
+        <header className="bg-white border-b border-gray-200 shadow-sm h-16 flex items-center px-6 sticky top-0 z-10">
           <div className="flex-1 flex justify-center">
             <h1 className="text-xl font-semibold tracking-wider text-sanctuary-dark-green">The Alice Sanctuary Resident Directory</h1>
           </div>
@@ -51,8 +55,8 @@ export default function DashboardLayout() {
           </div>
         </header>
         
-        <div className="dashboard-content flex-1 overflow-auto">
-          <div className="py-4 px-6 flex flex-col min-h-[calc(100vh-4rem)]">
+        <div className="flex-1 overflow-auto">
+          <div className="py-4 px-6 min-h-[calc(100vh-4rem)]">
             <Outlet />
           </div>
           <Footer />
