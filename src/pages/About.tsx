@@ -1,11 +1,8 @@
-
 import React from 'react';
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from '@/components/ui/card';
 import { Heart, Globe } from 'lucide-react';
-
 export default function About() {
-  return (
-    <div className="container mx-auto py-6 space-y-8">
+  return <div className="container mx-auto py-6 space-y-8">
       <h1 className="text-3xl font-bold text-sanctuary-dark-green mb-8">About The Alice Sanctuary</h1>
       
       <Card className="shadow-md">
@@ -44,9 +41,8 @@ export default function About() {
         </CardContent>
         
         <CardFooter className="bg-gray-50 border-t">
-          <p className="text-sm text-gray-500">Together, we're making a difference in the lives of farm animals.</p>
+          
         </CardFooter>
       </Card>
-    </div>
-  );
+    </div>;
 }
