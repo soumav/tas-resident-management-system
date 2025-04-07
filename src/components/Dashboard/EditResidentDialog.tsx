@@ -170,7 +170,7 @@ export function EditResidentDialog({
                 <SelectValue placeholder="Select" />
               </SelectTrigger>
               <SelectContent>
-                <SelectItem value="" disabled>Select</SelectItem>
+                <SelectItem value="placeholder" disabled>Select</SelectItem>
                 {groups.map((group) => (
                   <SelectItem key={group.id} value={group.id.toString()}>
                     {group.name}
@@ -196,7 +196,7 @@ export function EditResidentDialog({
                   <SelectValue placeholder="Select" />
                 </SelectTrigger>
                 <SelectContent>
-                  <SelectItem value="" disabled>Select</SelectItem>
+                  <SelectItem value="placeholder" disabled>Select</SelectItem>
                   {selectedGroup?.subgroups?.map((subgroup) => (
                     <SelectItem key={subgroup.id} value={subgroup.id.toString()}>
                       {subgroup.name}
