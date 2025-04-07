@@ -268,7 +268,7 @@ export default function AddResident() {
               />
             </div>
             
-            <div>
+            <div className="z-40">
               <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
                 Type of Resident <span className="text-red-500">*</span>
               </label>
@@ -280,7 +280,7 @@ export default function AddResident() {
                 <SelectTrigger id="type" className="w-full">
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
-                <SelectContent className="w-full bg-white z-[150]">
+                <SelectContent className="w-full bg-white z-[200]">
                   {categories.map((category) => (
                     <SelectGroup key={category.id}>
                       <SelectLabel>{category.name}</SelectLabel>
@@ -288,7 +288,6 @@ export default function AddResident() {
                         <SelectItem 
                           key={type.id} 
                           value={type.id.toString()}
-                          className="cursor-pointer hover:bg-accent active:bg-accent-foreground"
                         >
                           {type.name}
                         </SelectItem>
@@ -304,7 +303,7 @@ export default function AddResident() {
               </Select>
             </div>
             
-            <div>
+            <div className="z-30">
               <label htmlFor="arrival-date" className="block text-sm font-medium text-gray-700 mb-1">
                 Date arrived at TAS <span className="text-red-500">*</span>
               </label>
@@ -319,7 +318,7 @@ export default function AddResident() {
                     {arrivalDate ? format(arrivalDate, 'PPP') : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0 z-[100]" align="start">
+                <PopoverContent className="w-auto p-0" align="start">
                   <Calendar
                     mode="single"
                     selected={arrivalDate}
@@ -330,7 +329,7 @@ export default function AddResident() {
               </Popover>
             </div>
             
-            <div>
+            <div className="z-20">
               <label htmlFor="group" className="block text-sm font-medium text-gray-700 mb-1">
                 Group
               </label>
@@ -341,12 +340,11 @@ export default function AddResident() {
                 <SelectTrigger id="group">
                   <SelectValue placeholder="Select a group" />
                 </SelectTrigger>
-                <SelectContent className="bg-white z-[100]">
+                <SelectContent className="bg-white z-[150]">
                   {groups.map((group) => (
                     <SelectItem 
                       key={group.id} 
                       value={group.id.toString()}
-                      className="cursor-pointer hover:bg-accent"
                     >
                       {group.name}
                     </SelectItem>
@@ -361,7 +359,7 @@ export default function AddResident() {
             </div>
             
             {groupId && (
-              <div>
+              <div className="z-10">
                 <label htmlFor="subgroup" className="block text-sm font-medium text-gray-700 mb-1">
                   Subgroup
                 </label>
@@ -378,7 +376,6 @@ export default function AddResident() {
                       <SelectItem 
                         key={subgroup.id} 
                         value={subgroup.id.toString()}
-                        className="cursor-pointer hover:bg-accent"
                       >
                         {subgroup.name}
                       </SelectItem>
