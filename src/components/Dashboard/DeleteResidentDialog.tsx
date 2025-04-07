@@ -21,8 +21,7 @@ export function DeleteResidentDialog({
 }: DeleteResidentDialogProps) {
   const { toast } = useToast();
   
-  const handleDelete = async (event: React.MouseEvent) => {
-    event.preventDefault(); // Prevent default to ensure proper handling
+  const handleDelete = async () => {
     try {
       // Call the parent component's delete handler
       await onDelete();

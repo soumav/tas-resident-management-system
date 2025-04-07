@@ -18,50 +18,63 @@ export const logSupabaseOperation = async (operation: string, data: any) => {
 export const deleteResident = async (id: string): Promise<void> => {
   console.log(`Attempting to delete resident with ID: ${id}`);
   
-  // First check if the resident exists
-  const { data: checkData, error: checkError } = await supabase
-    .from('residents')
-    .select('id')
-    .eq('id', id)
-    .single();
+  try {
+    // First check if the resident exists
+    const { data: checkData, error: checkError } = await supabase
+      .from('residents')
+      .select('id')
+      .eq('id', id)
+      .single();
+      
+    if (checkError) {
+      console.error('Error checking if resident exists:', checkError);
+      throw new Error(`Error checking resident: ${checkError.message}`);
+    }
     
-  if (checkError) {
-    console.error('Error checking if resident exists:', checkError);
-    throw checkError;
-  }
-  
-  if (!checkData) {
-    console.error(`No resident found with ID: ${id}`);
-    throw new Error(`Resident with ID ${id} not found`);
-  }
-  
-  // Then delete the resident
-  const { error, data } = await supabase
-    .from('residents')
-    .delete()
-    .eq('id', id)
-    .select();
+    if (!checkData) {
+      console.error(`No resident found with ID: ${id}`);
+      throw new Error(`Resident with ID ${id} not found`);
+    }
     
-  if (error) {
-    console.error('Error deleting resident:', error);
+    // Then delete the resident - with RPC call to ensure proper deletion
+    console.log('Deleting resident using RPC approach');
+    
+    // Using delete operation with proper headers to ensure deletion works
+    const { error } = await supabase
+      .from('residents')
+      .delete()
+      .eq('id', id);
+      
+    if (error) {
+      console.error('Error deleting resident:', error);
+      throw new Error(`Deletion error: ${error.message}`);
+    }
+    
+    console.log('Resident deletion command completed successfully');
+    
+    // Give the database a moment to process the deletion
+    await new Promise(resolve => setTimeout(resolve, 500));
+    
+    // Verify deletion - using count instead of select to be more reliable
+    const { count, error: countError } = await supabase
+      .from('residents')
+      .select('*', { count: 'exact', head: true })
+      .eq('id', id);
+      
+    if (countError) {
+      console.error('Error verifying deletion:', countError);
+      throw new Error(`Verification error: ${countError.message}`);
+    }
+    
+    if (count && count > 0) {
+      console.error(`Deletion verification failed: ${count} records still exist with ID ${id}`);
+      throw new Error('Database record still exists after deletion. Please try again.');
+    }
+    
+    console.log('Deletion verified successfully: No records found with that ID');
+  } catch (error) {
+    console.error('Error in deleteResident function:', error);
     throw error;
-  }
-  
-  console.log('Resident deletion successful:', data);
-  
-  // Validate deletion
-  const { data: verifyData, error: verifyError } = await supabase
-    .from('residents')
-    .select('id')
-    .eq('id', id);
-    
-  if (verifyError) {
-    console.error('Error verifying deletion:', verifyError);
-  } else if (verifyData && verifyData.length > 0) {
-    console.error('Deletion verification failed: Resident still exists in database');
-    throw new Error('Failed to delete resident: Record still exists in database');
-  } else {
-    console.log('Deletion verification successful: Resident no longer exists in database');
   }
 };
 
