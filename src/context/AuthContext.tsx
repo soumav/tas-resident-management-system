@@ -7,10 +7,11 @@ import { Loader2 } from 'lucide-react';
 
 type AuthContextType = {
   user: User | null;
+  userData: { name: string } | null;
   session: Session | null;
   isLoading: boolean;
   signIn: (email: string, password: string) => Promise<{ error: any }>;
-  signUp: (email: string, password: string) => Promise<{ error: any, data: any }>;
+  signUp: (email: string, password: string, name: string) => Promise<{ error: any, data: any }>;
   signOut: () => Promise<void>;
 };
 
@@ -18,6 +19,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
+  const [userData, setUserData] = useState<{ name: string } | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
@@ -27,14 +29,42 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const { data } = await supabase
+          .from('users')
+          .select('name')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (data) {
+          setUserData(data);
+        }
+      }
+      
       setIsLoading(false);
     };
     
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       setUser(session?.user ?? null);
+      
+      if (session?.user) {
+        const { data } = await supabase
+          .from('users')
+          .select('name')
+          .eq('id', session.user.id)
+          .single();
+          
+        if (data) {
+          setUserData(data);
+        }
+      } else {
+        setUserData(null);
+      }
+      
       setIsLoading(false);
     });
 
@@ -54,13 +84,24 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { error };
   };
 
-  const signUp = async (email: string, password: string) => {
+  const signUp = async (email: string, password: string, name: string) => {
     const { data, error } = await supabase.auth.signUp({
       email,
       password,
+      options: {
+        data: { name }
+      }
     });
     
-    if (!error) {
+    if (!error && data?.user) {
+      // Insert the user with name into the users table
+      await supabase.from('users').insert({
+        id: data.user.id,
+        email: email,
+        name: name,
+        role: 'user'
+      });
+      
       navigate('/');
     }
     
@@ -73,7 +114,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   };
 
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={{ user, userData, session, isLoading, signIn, signUp, signOut }}>
       {isLoading ? (
         <div className="flex items-center justify-center h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green" />
