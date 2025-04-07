@@ -227,7 +227,7 @@ export default function Dashboard() {
         }
       }
       
-      const updateData = {
+      const residentData = {
         name: editResidentData.name,
         description: editResidentData.description,
         image_url: updatedImageUrl,
@@ -236,12 +236,12 @@ export default function Dashboard() {
         subgroup_id: editResidentData.subgroup_id
       };
 
-      console.log('Updating resident with data:', updateData);
+      console.log('Updating resident with data:', residentData);
       console.log('Selected resident ID:', selectedResident.id);
       
-      const { error: updateError, data: updateData } = await supabase
+      const { error: updateError, data: updatedResident } = await supabase
         .from('residents')
-        .update(updateData)
+        .update(residentData)
         .eq('id', selectedResident.id)
         .select();
       
@@ -250,7 +250,7 @@ export default function Dashboard() {
         throw updateError;
       }
       
-      console.log('Database update successful:', updateData);
+      console.log('Database update successful:', updatedResident);
       
       await fetchResidents();
       

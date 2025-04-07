@@ -228,25 +228,20 @@ export default function AllResidents() {
         }
       }
       
-      console.log('Updating resident with data:', {
+      const residentData = {
         name: editResidentData.name,
         description: editResidentData.description,
         image_url: updatedImageUrl,
         arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
         group_id: editResidentData.group_id,
         subgroup_id: editResidentData.subgroup_id
-      });
+      };
       
-      const { error, data } = await supabase
+      console.log('Updating resident with data:', residentData);
+      
+      const { error, data: updatedResident } = await supabase
         .from('residents')
-        .update({
-          name: editResidentData.name,
-          description: editResidentData.description,
-          image_url: updatedImageUrl,
-          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
-          group_id: editResidentData.group_id,
-          subgroup_id: editResidentData.subgroup_id
-        })
+        .update(residentData)
         .eq('id', selectedResident.id)
         .select();
       
@@ -255,7 +250,7 @@ export default function AllResidents() {
         throw error;
       }
       
-      console.log('Update successful, response:', data);
+      console.log('Update successful, response:', updatedResident);
       
       toast({
         title: 'Resident updated',
