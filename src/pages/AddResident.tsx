@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -82,14 +83,19 @@ export default function AddResident() {
     try {
       setIsRefreshing(true);
       
+      // Fetch all resident categories with their types in a single query
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('resident_categories')
         .select('id, name');
         
       if (categoriesError) throw categoriesError;
       
-      const formattedCategories: ResidentCategory[] = [];
+      console.log('Fetched categories:', categoriesData);
       
+      const formattedCategories: ResidentCategory[] = [];
+      const allTypes: ResidentType[] = [];
+      
+      // For each category, fetch its types
       for (const category of categoriesData || []) {
         const { data: typesData, error: typesError } = await supabase
           .from('resident_types')
@@ -98,17 +104,27 @@ export default function AddResident() {
           
         if (typesError) throw typesError;
         
+        console.log(`Types for category ${category.id} (${category.name}):`, typesData);
+        
         formattedCategories.push({
           id: category.id,
           name: category.name,
           types: typesData || []
         });
         
-        setTypes(prev => [...prev, ...(typesData || [])]);
+        // Add to the overall types array
+        if (typesData) {
+          allTypes.push(...typesData);
+        }
       }
       
+      setTypes(allTypes);
       setCategories(formattedCategories);
       
+      console.log('All resident types:', allTypes);
+      console.log('Formatted categories with types:', formattedCategories);
+      
+      // Fetch groups and subgroups
       const { data: groupsData, error: groupsError } = await supabase
         .from('resident_groups')
         .select('id, name');
@@ -126,6 +142,9 @@ export default function AddResident() {
       
       setGroups(typedGroupsData);
       setSubgroups(typedSubgroupsData);
+      
+      console.log('Groups:', typedGroupsData);
+      console.log('Subgroups:', typedSubgroupsData);
       
     } catch (error) {
       console.error('Error fetching options:', error);
@@ -223,12 +242,16 @@ export default function AddResident() {
   
   const handleRefresh = () => {
     setTypes([]);
+    setCategories([]);
     fetchOptions();
     toast({
       title: 'Refreshed',
       description: 'Resident types and groups have been refreshed',
     });
   };
+
+  // For debugging
+  const hasTypes = categories.some(category => category.types.length > 0);
   
   return (
     <div>
@@ -251,6 +274,10 @@ export default function AddResident() {
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-2">Resident Information</h3>
           <p className="text-gray-600 text-sm">Fill in the details about the new sanctuary resident</p>
+          {/* Debug info - remove in production */}
+          <p className="text-xs text-gray-500 mt-1">
+            Types loaded: {types.length}, Categories with types: {hasTypes ? 'Yes' : 'No'}
+          </p>
         </div>
         
         <form onSubmit={handleSubmit}>
@@ -268,7 +295,7 @@ export default function AddResident() {
               />
             </div>
             
-            <div className="z-40">
+            <div>
               <label htmlFor="type" className="block text-sm font-medium text-gray-700 mb-1">
                 Type of Resident <span className="text-red-500">*</span>
               </label>
@@ -280,7 +307,7 @@ export default function AddResident() {
                 <SelectTrigger id="type" className="w-full">
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
-                <SelectContent className="w-full bg-white z-[200]">
+                <SelectContent className="w-full">
                   {categories.map((category) => (
                     <SelectGroup key={category.id}>
                       <SelectLabel>{category.name}</SelectLabel>
@@ -292,6 +319,11 @@ export default function AddResident() {
                           {type.name}
                         </SelectItem>
                       ))}
+                      {category.types.length === 0 && (
+                        <SelectItem value={`no-types-${category.id}`} disabled>
+                          No types in this category
+                        </SelectItem>
+                      )}
                     </SelectGroup>
                   ))}
                   {categories.length === 0 && (
@@ -303,7 +335,7 @@ export default function AddResident() {
               </Select>
             </div>
             
-            <div className="z-30">
+            <div>
               <label htmlFor="arrival-date" className="block text-sm font-medium text-gray-700 mb-1">
                 Date arrived at TAS <span className="text-red-500">*</span>
               </label>
@@ -329,7 +361,7 @@ export default function AddResident() {
               </Popover>
             </div>
             
-            <div className="z-20">
+            <div>
               <label htmlFor="group" className="block text-sm font-medium text-gray-700 mb-1">
                 Group
               </label>
@@ -340,7 +372,7 @@ export default function AddResident() {
                 <SelectTrigger id="group">
                   <SelectValue placeholder="Select a group" />
                 </SelectTrigger>
-                <SelectContent className="bg-white z-[150]">
+                <SelectContent>
                   {groups.map((group) => (
                     <SelectItem 
                       key={group.id} 
@@ -359,7 +391,7 @@ export default function AddResident() {
             </div>
             
             {groupId && (
-              <div className="z-10">
+              <div>
                 <label htmlFor="subgroup" className="block text-sm font-medium text-gray-700 mb-1">
                   Subgroup
                 </label>
@@ -371,7 +403,7 @@ export default function AddResident() {
                   <SelectTrigger id="subgroup">
                     <SelectValue placeholder={availableSubgroups.length > 0 ? "Select a subgroup" : "No subgroups available"} />
                   </SelectTrigger>
-                  <SelectContent className="bg-white z-[100]">
+                  <SelectContent>
                     {availableSubgroups.map((subgroup) => (
                       <SelectItem 
                         key={subgroup.id} 
