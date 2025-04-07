@@ -5,15 +5,15 @@ import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface DashboardHeaderProps {
-  displayName: string;
+  username: string;
 }
 
-export function DashboardHeader({ displayName }: DashboardHeaderProps) {
+export function DashboardHeader({ username }: DashboardHeaderProps) {
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center">
         <div>
-          <h2 className="text-2xl font-bold text-gray-800">Welcome, {displayName}!</h2>
+          <h2 className="text-2xl font-bold text-gray-800">Welcome, {username}!</h2>
           <p className="text-gray-600">Manage your sanctuary residents and groups</p>
         </div>
         

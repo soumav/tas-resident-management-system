@@ -1,16 +1,12 @@
 
 import React from 'react';
-import { Outlet, Navigate, useOutletContext } from 'react-router-dom';
+import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
-
-type DashboardContextType = {
-  displayName: string;
-};
 
 export default function DashboardLayout() {
   const { user, isLoading, signOut } = useAuth();
@@ -28,8 +24,6 @@ export default function DashboardLayout() {
   };
   
   const username = user?.email?.split('@')[0] || 'User';
-  // Use the username with capitalized first letter as the display name
-  const displayName = username.charAt(0).toUpperCase() + username.slice(1);
   
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
@@ -47,7 +41,7 @@ export default function DashboardLayout() {
           
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="font-medium">{displayName}</p>
+              <p className="font-medium">{username}</p>
               <p className="text-xs text-gray-500">Staff</p>
             </div>
             <Button 
@@ -63,16 +57,11 @@ export default function DashboardLayout() {
         
         <div className="flex-1 overflow-auto">
           <div className="py-4 px-6 min-h-[calc(100vh-4rem)]">
-            <Outlet context={{ displayName }} />
+            <Outlet />
           </div>
           <Footer />
         </div>
       </div>
     </div>
   );
-}
-
-// Helper hook to get the display name from context
-export function useDashboardContext() {
-  return useOutletContext<DashboardContextType>();
 }
