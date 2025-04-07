@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -811,7 +812,7 @@ export default function Dashboard() {
         )}
       </div>
       
-      {/* Dialogs for groups */}
+      {/* Group dialog modals */}
       <Dialog open={isAddGroupDialogOpen} onOpenChange={setIsAddGroupDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -871,4 +872,190 @@ export default function Dashboard() {
             <Button variant="outline" onClick={() => setIsEditGroupDialogOpen(false)}>
               Cancel
             </Button>
-            <Button className="bg-sanctuary
+            <Button className="bg-sanctuary-green hover:bg-sanctuary-light-green" onClick={handleEditGroup} disabled={!newGroupName.trim()}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog open={isDeleteGroupDialogOpen} onOpenChange={setIsDeleteGroupDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Group</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this group? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteGroupDialogOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteGroup} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Subgroup dialog modals */}
+      <Dialog open={isAddSubgroupDialogOpen} onOpenChange={setIsAddSubgroupDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add New Subgroup</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="subgroup-name" className="text-sm font-medium">
+                Subgroup Name
+              </label>
+              <Input id="subgroup-name" value={newSubgroupName} onChange={e => setNewSubgroupName(e.target.value)} placeholder="Enter subgroup name" />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="subgroup-description" className="text-sm font-medium">
+                Description (Optional)
+              </label>
+              <Textarea id="subgroup-description" value={newSubgroupDescription} onChange={e => setNewSubgroupDescription(e.target.value)} placeholder="Enter description" rows={3} />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddSubgroupDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-sanctuary-green hover:bg-sanctuary-light-green" onClick={handleAddSubgroup} disabled={!newSubgroupName.trim()}>
+              Add Subgroup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isEditSubgroupDialogOpen} onOpenChange={setIsEditSubgroupDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Subgroup</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="edit-subgroup-name" className="text-sm font-medium">
+                Subgroup Name
+              </label>
+              <Input id="edit-subgroup-name" value={newSubgroupName} onChange={e => setNewSubgroupName(e.target.value)} placeholder="Enter subgroup name" />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="edit-subgroup-description" className="text-sm font-medium">
+                Description (Optional)
+              </label>
+              <Textarea id="edit-subgroup-description" value={newSubgroupDescription} onChange={e => setNewSubgroupDescription(e.target.value)} placeholder="Enter description" rows={3} />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditSubgroupDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-sanctuary-green hover:bg-sanctuary-light-green" onClick={handleEditSubgroup} disabled={!newSubgroupName.trim()}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog open={isDeleteSubgroupDialogOpen} onOpenChange={setIsDeleteSubgroupDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Subgroup</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete this subgroup? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteSubgroupDialogOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSubgroup} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+
+      {/* Resident dialog modals */}
+      <Dialog open={isEditResidentDialogOpen} onOpenChange={setIsEditResidentDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Resident</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="edit-resident-name" className="text-sm font-medium">
+                Name
+              </label>
+              <Input 
+                id="edit-resident-name" 
+                value={editResidentData.name} 
+                onChange={e => setEditResidentData({...editResidentData, name: e.target.value})} 
+                placeholder="Enter resident name" 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="edit-resident-description" className="text-sm font-medium">
+                Description
+              </label>
+              <Textarea 
+                id="edit-resident-description" 
+                value={editResidentData.description} 
+                onChange={e => setEditResidentData({...editResidentData, description: e.target.value})} 
+                placeholder="Enter description" 
+                rows={3} 
+              />
+            </div>
+            
+            <div className="flex justify-end">
+              <Button 
+                variant="outline"
+                onClick={() => selectedResident && handleEditResident(selectedResident)}
+              >
+                Full Edit
+              </Button>
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditResidentDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button className="bg-sanctuary-green hover:bg-sanctuary-light-green" onClick={handleEditResidentSubmit} disabled={!editResidentData.name.trim()}>
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog open={isDeleteResidentDialogOpen} onOpenChange={setIsDeleteResidentDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Resident</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to remove {selectedResident?.name} from the system? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel onClick={() => setIsDeleteResidentDialogOpen(false)}>
+              Cancel
+            </AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteResident} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+    </div>
+  );
+}
