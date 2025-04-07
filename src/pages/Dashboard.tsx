@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -53,6 +54,7 @@ export default function Dashboard() {
   const [isEditGroupDialogOpen, setIsEditGroupDialogOpen] = useState(false);
   const [isDeleteGroupDialogOpen, setIsDeleteGroupDialogOpen] = useState(false);
   const [isAddSubgroupDialogOpen, setIsAddSubgroupDialogOpen] = useState(false);
+  const [showSubgroupInput, setShowSubgroupInput] = useState<number | null>(null);
   const [isEditSubgroupDialogOpen, setIsEditSubgroupDialogOpen] = useState(false);
   const [isDeleteSubgroupDialogOpen, setIsDeleteSubgroupDialogOpen] = useState(false);
   
@@ -321,6 +323,15 @@ export default function Dashboard() {
   };
   
   // Subgroup management functions
+  const toggleSubgroupInput = (groupId: number) => {
+    if (showSubgroupInput === groupId) {
+      setShowSubgroupInput(null);
+    } else {
+      setShowSubgroupInput(groupId);
+      setNewSubgroupName('');
+    }
+  };
+  
   const openAddSubgroupDialog = (groupId: number) => {
     setSelectedGroupId(groupId);
     setNewSubgroupName('');
@@ -372,6 +383,55 @@ export default function Dashboard() {
       );
       
       setIsAddSubgroupDialogOpen(false);
+      setShowSubgroupInput(null);
+      
+      toast({
+        title: 'Success',
+        description: `Subgroup "${newSubgroupName}" has been added`,
+      });
+      
+    } catch (error) {
+      console.error('Error adding subgroup:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add subgroup',
+        variant: 'destructive'
+      });
+    }
+  };
+  
+  const handleQuickAddSubgroup = async () => {
+    if (!showSubgroupInput || !newSubgroupName.trim()) return;
+    
+    try {
+      const { data, error } = await supabase
+        .from('resident_subgroups')
+        .insert({
+          name: newSubgroupName.trim(),
+          group_id: showSubgroupInput
+        })
+        .select();
+      
+      if (error) throw error;
+      
+      // Update the groups in state
+      setGroups(prev => 
+        prev.map(group => {
+          if (group.id === showSubgroupInput) {
+            return {
+              ...group,
+              subgroups: [
+                ...(group.subgroups || []),
+                data[0]
+              ]
+            };
+          }
+          return group;
+        })
+      );
+      
+      setShowSubgroupInput(null);
+      setNewSubgroupName('');
       
       toast({
         title: 'Success',
@@ -503,7 +563,7 @@ export default function Dashboard() {
   
   // Get residents by group or subgroup
   const getResidentsByGroup = (groupId: number) => {
-    return residents.filter(resident => resident.group_id === groupId);
+    return residents.filter(resident => resident.group_id === groupId && !resident.subgroup_id);
   };
   
   const getResidentsBySubgroup = (subgroupId: number) => {
@@ -626,9 +686,9 @@ export default function Dashboard() {
               key={group.id} 
               open={expandedGroups.includes(group.id)}
               onOpenChange={() => toggleGroupExpand(group.id)}
-              className="border rounded-lg overflow-hidden bg-white"
+              className="border rounded-lg overflow-hidden"
             >
-              <div className="flex justify-between items-center p-4 border-b">
+              <div className="flex justify-between items-center p-4 bg-white">
                 <CollapsibleTrigger className="flex items-center gap-2 text-left w-full">
                   {expandedGroups.includes(group.id) ? (
                     <ChevronUp className="h-4 w-4 text-gray-500" />
@@ -642,17 +702,6 @@ export default function Dashboard() {
                 </CollapsibleTrigger>
                 
                 <div className="flex items-center">
-                  <Button 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={(e) => {
-                      e.stopPropagation(); 
-                      openAddSubgroupDialog(group.id);
-                    }}
-                    className="h-8 w-8 text-gray-500"
-                  >
-                    <Plus className="h-4 w-4" />
-                  </Button>
                   <Button 
                     variant="ghost" 
                     size="icon" 
@@ -679,51 +728,44 @@ export default function Dashboard() {
               </div>
               
               <CollapsibleContent>
-                {/* Subgroups and directly associated residents */}
-                <div className="divide-y">
-                  {/* Residents directly in the group (not in any subgroup) */}
-                  {getResidentsByGroup(group.id)
-                    .filter(resident => !resident.subgroup_id)
-                    .length > 0 && (
-                    <div className="p-4">
-                      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                        {getResidentsByGroup(group.id)
-                          .filter(resident => !resident.subgroup_id)
-                          .map(resident => (
-                          <Card key={resident.id} className="overflow-hidden">
-                            <div className="aspect-square bg-gray-200 flex items-center justify-center">
-                              {resident.image_url ? (
-                                <img 
-                                  src={resident.image_url} 
-                                  alt={resident.name} 
-                                  className="w-full h-full object-cover"
-                                />
-                              ) : (
-                                <div className="text-gray-400 text-xs">No Image</div>
-                              )}
-                            </div>
-                            <div className="p-2 text-center">
-                              <p className="font-medium truncate">{resident.name}</p>
-                            </div>
-                          </Card>
-                        ))}
-                        <Link 
-                          to={`/residents/new?group=${group.id}`}
-                          className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors"
-                        >
-                          <div className="flex flex-col items-center text-gray-500">
-                            <Plus className="h-6 w-6" />
-                            <span className="text-sm">Add Animal</span>
-                          </div>
-                        </Link>
+                <div className="p-6 bg-white border-t">
+                  {/* Residents in the group */}
+                  <div className="resident-grid">
+                    {getResidentsByGroup(group.id).map(resident => (
+                      <div key={resident.id} className="resident-item">
+                        <div className="resident-image">
+                          {resident.image_url ? (
+                            <img 
+                              src={resident.image_url} 
+                              alt={resident.name} 
+                              className="w-full h-full object-cover"
+                            />
+                          ) : (
+                            <div className="text-gray-400 text-xs">No Image</div>
+                          )}
+                        </div>
+                        <div className="p-2 text-center">
+                          <p className="font-medium truncate">{resident.name}</p>
+                        </div>
                       </div>
-                    </div>
-                  )}
+                    ))}
+                    
+                    {/* Add Animal Button */}
+                    <Link 
+                      to={`/residents/new?group=${group.id}`}
+                      className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors"
+                    >
+                      <div className="flex flex-col items-center text-gray-500">
+                        <Plus className="h-6 w-6" />
+                        <span className="text-sm">Add Animal</span>
+                      </div>
+                    </Link>
+                  </div>
                   
                   {/* Subgroups */}
                   {group.subgroups && group.subgroups.length > 0 && 
                     group.subgroups.map(subgroup => (
-                      <div key={subgroup.id} className="p-4">
+                      <div key={subgroup.id} className="mt-6">
                         <div className="flex justify-between items-center mb-3">
                           <h3 className="font-medium text-gray-700 flex items-center">
                             <div className="w-1 h-6 bg-sanctuary-green mr-2"></div>
@@ -752,10 +794,10 @@ export default function Dashboard() {
                           </div>
                         </div>
                         
-                        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
+                        <div className="resident-grid">
                           {getResidentsBySubgroup(subgroup.id).map(resident => (
-                            <Card key={resident.id} className="overflow-hidden">
-                              <div className="aspect-square bg-gray-200 flex items-center justify-center">
+                            <div key={resident.id} className="resident-item">
+                              <div className="resident-image">
                                 {resident.image_url ? (
                                   <img 
                                     src={resident.image_url} 
@@ -769,8 +811,10 @@ export default function Dashboard() {
                               <div className="p-2 text-center">
                                 <p className="font-medium truncate">{resident.name}</p>
                               </div>
-                            </Card>
+                            </div>
                           ))}
+                          
+                          {/* Add Animal to Subgroup Button */}
                           <Link 
                             to={`/residents/new?group=${group.id}&subgroup=${subgroup.id}`}
                             className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors"
@@ -785,16 +829,37 @@ export default function Dashboard() {
                     ))
                   }
                   
-                  {/* Add subgroup input when there are no subgroups */}
-                  {(!group.subgroups || group.subgroups.length === 0) && (
-                    <div className="p-4 flex justify-center">
+                  {/* Subgroup Input */}
+                  {showSubgroupInput === group.id ? (
+                    <div className="mt-6 subgroup-input">
+                      <Input
+                        placeholder="Subgroup name"
+                        value={newSubgroupName}
+                        onChange={(e) => setNewSubgroupName(e.target.value)}
+                        className="max-w-xs"
+                      />
+                      <Button
+                        onClick={handleQuickAddSubgroup}
+                        disabled={!newSubgroupName.trim()}
+                      >
+                        Add
+                      </Button>
                       <Button 
-                        variant="outline" 
+                        variant="outline"
+                        onClick={() => setShowSubgroupInput(null)}
+                      >
+                        Cancel
+                      </Button>
+                    </div>
+                  ) : (
+                    <div className="mt-4">
+                      <Button
+                        variant="outline"
+                        onClick={() => toggleSubgroupInput(group.id)}
                         className="flex items-center gap-2"
-                        onClick={() => openAddSubgroupDialog(group.id)}
                       >
                         <Plus className="h-4 w-4" />
-                        <span>Add Subgroup</span>
+                        Add Subgroup
                       </Button>
                     </div>
                   )}
