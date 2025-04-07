@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Using hardcoded values for demonstration
@@ -86,7 +87,10 @@ export type Resident = Tables['residents'] & {
   };
 };
 
-export type ResidentGroup = Tables['resident_groups'];
+export type ResidentGroup = Tables['resident_groups'] & {
+  subgroups?: ResidentSubgroup[];
+};
+
 export type ResidentSubgroup = Tables['resident_subgroups'] & {
   group?: {
     name: string;
