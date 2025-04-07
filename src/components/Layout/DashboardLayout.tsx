@@ -1,13 +1,42 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
+import { supabase } from '@/lib/supabase';
 import Sidebar from './Sidebar';
 import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, isLoading, signOut } = useAuth();
+  const [userName, setUserName] = useState<string | null>(null);
+
+  useEffect(() => {
+    const fetchUserProfile = async () => {
+      if (!user?.id) return;
+
+      try {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('name')
+          .eq('id', user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching user profile:', error);
+          return;
+        }
+
+        if (data?.name) {
+          setUserName(data.name);
+        }
+      } catch (error) {
+        console.error('Error in fetchUserProfile:', error);
+      }
+    };
+
+    fetchUserProfile();
+  }, [user?.id]);
 
   // If still loading, return null
   if (isLoading) return null;
@@ -20,6 +49,9 @@ export default function DashboardLayout() {
   const handleSignOut = async () => {
     await signOut();
   };
+
+  // Display name in order of preference: userName from profile, email username, or 'User'
+  const displayName = userName || user?.email?.split('@')[0] || 'User';
   
   return (
     <div className="min-h-screen bg-gray-50 flex">
@@ -33,7 +65,7 @@ export default function DashboardLayout() {
           
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="font-medium">{user?.email?.split('@')[0] || 'User'}</p>
+              <p className="font-medium">{displayName}</p>
               <p className="text-xs text-gray-500">Staff</p>
             </div>
             <Button 
