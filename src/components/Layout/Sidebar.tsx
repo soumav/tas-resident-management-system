@@ -10,10 +10,11 @@ import {
   InfoIcon,
   HelpCircle,
   LogOut,
-  Leaf
+  UserSquare
 } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
+import { Separator } from '@/components/ui/separator';
 
 export default function Sidebar() {
   const { signOut, user } = useAuth();
@@ -71,8 +72,27 @@ export default function Sidebar() {
   ];
   
   return (
-    <div className="dashboard-sidebar bg-sanctuary-dark-green h-full w-[280px] flex flex-col">
-      <div className="px-4 py-6 mb-6">
+    <div className="dashboard-sidebar bg-sanctuary-dark-green min-h-screen h-full w-[280px] flex flex-col">
+      <div className="px-4 py-4">
+        <div className="flex justify-between items-center">
+          <div className="flex items-center gap-2">
+            <UserSquare className="h-5 w-5 text-white" />
+            <span className="text-sm font-medium text-white">ID: {user?.email?.split('@')[0] || 'User'}</span>
+          </div>
+          <Button 
+            variant="ghost" 
+            size="icon"
+            onClick={signOut}
+            className="h-7 w-7 text-gray-300 hover:text-white hover:bg-sanctuary-green/20"
+          >
+            <LogOut className="h-4 w-4" />
+          </Button>
+        </div>
+      </div>
+      
+      <Separator className="bg-sanctuary-green/30" />
+      
+      <div className="px-4 py-4 mb-2">
         <div className="flex flex-col gap-1">
           <h1 className="text-xl font-bold text-white">The Alice Sanctuary</h1>
           <p className="text-sm text-gray-300">Resident Management</p>
@@ -146,15 +166,6 @@ export default function Sidebar() {
             <p className="text-xs text-gray-300">Version 1.0</p>
           </div>
         </div>
-        
-        <Button 
-          variant="outline" 
-          onClick={signOut}
-          className="w-full bg-sanctuary-dark-green hover:bg-sanctuary-green text-white border-sanctuary-green"
-        >
-          <LogOut className="h-4 w-4 mr-2" />
-          Sign Out
-        </Button>
       </div>
     </div>
   );

@@ -83,7 +83,7 @@
 }
 
 .dashboard-content {
-  max-height: 100vh;
+  max-height: calc(100vh - 64px); /* Adjust for header height */
   overflow-y: auto;
 }
 
@@ -137,3 +137,4 @@
   gap: 8px;
   padding: 16px 0;
 }
+
