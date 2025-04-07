@@ -1,4 +1,5 @@
-import { useState, useEffect } from 'react';
+
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -64,6 +65,18 @@ export default function AddResident() {
   
   const { toast } = useToast();
   const navigate = useNavigate();
+  
+  const handleTypeChange = useCallback((value: string) => {
+    setTypeId(value);
+  }, []);
+  
+  const handleGroupChange = useCallback((value: string) => {
+    setGroupId(value);
+  }, []);
+  
+  const handleSubgroupChange = useCallback((value: string) => {
+    setSubgroupId(value);
+  }, []);
   
   const fetchOptions = async () => {
     try {
@@ -261,18 +274,22 @@ export default function AddResident() {
               </label>
               <Select 
                 value={typeId} 
-                onValueChange={(value) => setTypeId(value)}
+                onValueChange={handleTypeChange}
                 required
               >
                 <SelectTrigger id="type" className="w-full">
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
-                <SelectContent className="w-full bg-white z-50">
+                <SelectContent className="w-full bg-white z-[100]">
                   {categories.map((category) => (
                     <SelectGroup key={category.id}>
                       <SelectLabel>{category.name}</SelectLabel>
                       {category.types.map((type) => (
-                        <SelectItem key={type.id} value={type.id.toString()}>
+                        <SelectItem 
+                          key={type.id} 
+                          value={type.id.toString()}
+                          className="cursor-pointer hover:bg-accent"
+                        >
                           {type.name}
                         </SelectItem>
                       ))}
@@ -302,7 +319,7 @@ export default function AddResident() {
                     {arrivalDate ? format(arrivalDate, 'PPP') : <span>Pick a date</span>}
                   </Button>
                 </PopoverTrigger>
-                <PopoverContent className="w-auto p-0" align="start">
+                <PopoverContent className="w-auto p-0 z-[100]" align="start">
                   <Calendar
                     mode="single"
                     selected={arrivalDate}
@@ -319,14 +336,18 @@ export default function AddResident() {
               </label>
               <Select 
                 value={groupId} 
-                onValueChange={setGroupId}
+                onValueChange={handleGroupChange}
               >
                 <SelectTrigger id="group">
                   <SelectValue placeholder="Select a group" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="bg-white z-[100]">
                   {groups.map((group) => (
-                    <SelectItem key={group.id} value={group.id.toString()}>
+                    <SelectItem 
+                      key={group.id} 
+                      value={group.id.toString()}
+                      className="cursor-pointer hover:bg-accent"
+                    >
                       {group.name}
                     </SelectItem>
                   ))}
@@ -346,15 +367,19 @@ export default function AddResident() {
                 </label>
                 <Select 
                   value={subgroupId} 
-                  onValueChange={setSubgroupId}
+                  onValueChange={handleSubgroupChange}
                   disabled={availableSubgroups.length === 0}
                 >
                   <SelectTrigger id="subgroup">
                     <SelectValue placeholder={availableSubgroups.length > 0 ? "Select a subgroup" : "No subgroups available"} />
                   </SelectTrigger>
-                  <SelectContent>
+                  <SelectContent className="bg-white z-[100]">
                     {availableSubgroups.map((subgroup) => (
-                      <SelectItem key={subgroup.id} value={subgroup.id.toString()}>
+                      <SelectItem 
+                        key={subgroup.id} 
+                        value={subgroup.id.toString()}
+                        className="cursor-pointer hover:bg-accent"
+                      >
                         {subgroup.name}
                       </SelectItem>
                     ))}
