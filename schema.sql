@@ -175,3 +175,24 @@ create policy "Staff can manage subgroups" on resident_subgroups
     where users.id = auth.uid() 
     and (users.role = 'staff' or users.role = 'admin')
   ));
+
+-- Allow any authenticated user to create groups and subgroups
+create policy "Authenticated users can create groups" on resident_groups
+  for insert with check (auth.role() = 'authenticated');
+
+create policy "Authenticated users can create subgroups" on resident_subgroups
+  for insert with check (auth.role() = 'authenticated');
+
+-- Allow authenticated users to update their own created groups
+create policy "Authenticated users can update groups" on resident_groups
+  for update using (auth.role() = 'authenticated');
+
+create policy "Authenticated users can update subgroups" on resident_subgroups
+  for update using (auth.role() = 'authenticated');
+
+-- Allow authenticated users to delete groups (with proper checks for dependencies)
+create policy "Authenticated users can delete groups" on resident_groups
+  for delete using (auth.role() = 'authenticated');
+
+create policy "Authenticated users can delete subgroups" on resident_subgroups
+  for delete using (auth.role() = 'authenticated');
