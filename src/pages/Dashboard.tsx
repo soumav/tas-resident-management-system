@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
@@ -46,11 +45,6 @@ export default function Dashboard() {
   // Resident state
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [isDeleteResidentDialogOpen, setIsDeleteResidentDialogOpen] = useState(false);
-  const [isEditResidentDialogOpen, setIsEditResidentDialogOpen] = useState(false);
-  const [editResidentData, setEditResidentData] = useState({
-    name: '',
-    description: ''
-  });
 
   useEffect(() => {
     fetchGroups();
@@ -134,7 +128,6 @@ export default function Dashboard() {
     });
   };
   
-  // Resident actions
   const handleEditResident = (resident: Resident) => {
     navigate(`/residents/edit/${resident.id}`);
   };
@@ -683,7 +676,7 @@ export default function Dashboard() {
                             className="h-6 w-6" 
                             onClick={(e) => {
                               e.stopPropagation();
-                              openEditResidentDialog(resident);
+                              handleEditResident(resident);
                             }}
                           >
                             <Edit className="h-3 w-3 text-blue-500" />
@@ -749,7 +742,7 @@ export default function Dashboard() {
                                 className="h-6 w-6"
                                 onClick={(e) => {
                                   e.stopPropagation();
-                                  openEditResidentDialog(resident);
+                                  handleEditResident(resident);
                                 }}
                               >
                                 <Edit className="h-3 w-3 text-blue-500" />
@@ -812,7 +805,6 @@ export default function Dashboard() {
         )}
       </div>
       
-      {/* Group dialog modals */}
       <Dialog open={isAddGroupDialogOpen} onOpenChange={setIsAddGroupDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -898,7 +890,6 @@ export default function Dashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Subgroup dialog modals */}
       <Dialog open={isAddSubgroupDialogOpen} onOpenChange={setIsAddSubgroupDialogOpen}>
         <DialogContent>
           <DialogHeader>
@@ -984,60 +975,6 @@ export default function Dashboard() {
         </AlertDialogContent>
       </AlertDialog>
 
-      {/* Resident dialog modals */}
-      <Dialog open={isEditResidentDialogOpen} onOpenChange={setIsEditResidentDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Resident</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="edit-resident-name" className="text-sm font-medium">
-                Name
-              </label>
-              <Input 
-                id="edit-resident-name" 
-                value={editResidentData.name} 
-                onChange={e => setEditResidentData({...editResidentData, name: e.target.value})} 
-                placeholder="Enter resident name" 
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="edit-resident-description" className="text-sm font-medium">
-                Description
-              </label>
-              <Textarea 
-                id="edit-resident-description" 
-                value={editResidentData.description} 
-                onChange={e => setEditResidentData({...editResidentData, description: e.target.value})} 
-                placeholder="Enter description" 
-                rows={3} 
-              />
-            </div>
-            
-            <div className="flex justify-end">
-              <Button 
-                variant="outline"
-                onClick={() => selectedResident && handleEditResident(selectedResident)}
-              >
-                Full Edit
-              </Button>
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditResidentDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button className="bg-sanctuary-green hover:bg-sanctuary-light-green" onClick={handleEditResidentSubmit} disabled={!editResidentData.name.trim()}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
       <AlertDialog open={isDeleteResidentDialogOpen} onOpenChange={setIsDeleteResidentDialogOpen}>
         <AlertDialogContent>
           <AlertDialogHeader>
