@@ -5,10 +5,15 @@ const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
 const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
 
 if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase credentials');
+  console.error('Missing Supabase credentials. Please connect this Lovable project to Supabase using the Supabase integration button in the top right corner.');
 }
 
-export const supabase = createClient(supabaseUrl || '', supabaseAnonKey || '');
+// Create a fallback client with empty strings that will show a clear error
+// This prevents the app from crashing immediately but will show proper error UI
+export const supabase = createClient(
+  supabaseUrl || 'https://placeholder-url.supabase.co', 
+  supabaseAnonKey || 'placeholder-key'
+);
 
 export type Tables = {
   users: {

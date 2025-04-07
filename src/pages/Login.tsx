@@ -1,21 +1,48 @@
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { Leaf } from 'lucide-react';
+import { Leaf, AlertCircle } from 'lucide-react';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [hasSupabaseError, setHasSupabaseError] = useState(false);
   const { signIn } = useAuth();
   const { toast } = useToast();
 
+  useEffect(() => {
+    // Check console for Supabase credential errors
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      if (args[0]?.includes?.('Supabase credentials')) {
+        setHasSupabaseError(true);
+      }
+      originalConsoleError(...args);
+    };
+    
+    return () => {
+      console.error = originalConsoleError;
+    };
+  }, []);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    
+    if (hasSupabaseError) {
+      toast({
+        title: "Connection Error",
+        description: "Cannot connect to Supabase. Please connect the project to Supabase first.",
+        variant: "destructive"
+      });
+      return;
+    }
+    
     setIsLoading(true);
     
     const { error } = await signIn(email, password);
@@ -42,6 +69,17 @@ export default function Login() {
         <h1 className="text-3xl font-bold text-sanctuary-green">The Alice Sanctuary</h1>
         <p className="text-gray-600">Resident Management System</p>
       </div>
+      
+      {hasSupabaseError && (
+        <Alert variant="destructive" className="mb-6">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Supabase Connection Error</AlertTitle>
+          <AlertDescription>
+            This app requires Supabase connection. Please connect to Supabase using the 
+            green button in the Lovable interface.
+          </AlertDescription>
+        </Alert>
+      )}
       
       <div className="auth-card">
         <h2 className="text-2xl font-semibold mb-6">Sign In</h2>
@@ -86,7 +124,7 @@ export default function Login() {
           <Button
             type="submit"
             className="w-full bg-sanctuary-green hover:bg-sanctuary-light-green"
-            disabled={isLoading}
+            disabled={isLoading || hasSupabaseError}
           >
             {isLoading ? 'Signing in...' : 'Sign In'}
           </Button>
