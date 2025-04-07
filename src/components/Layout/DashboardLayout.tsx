@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -55,41 +54,39 @@ export default function DashboardLayout() {
   const displayName = userName || user?.email?.split('@')[0] || 'User';
   
   return (
-    <div className="min-h-screen bg-gray-50 flex flex-col">
-      <div className="flex flex-1">
-        <Sidebar />
+    <div className="flex min-h-screen bg-gray-50">
+      <Sidebar />
         
-        <div className="flex-1 flex flex-col">
-          <header className="bg-white border-b border-gray-200 shadow-sm h-16 flex items-center px-6">
-            <div className="flex-1 flex justify-center">
-              <h1 className="text-xl font-semibold tracking-wider text-sanctuary-dark-green">The Alice Sanctuary Resident Directory</h1>
-            </div>
-            
-            <div className="flex items-center gap-3">
-              <div className="text-right">
-                <p className="font-medium">{displayName}</p>
-                <p className="text-xs text-gray-500">Staff</p>
-              </div>
-              <Button 
-                variant="ghost" 
-                size="sm" 
-                onClick={handleSignOut} 
-                className="text-gray-600 hover:text-gray-800"
-              >
-                <LogOut className="h-4 w-4" />
-              </Button>
-            </div>
-          </header>
+      <div className="flex-1 flex flex-col">
+        <header className="bg-white border-b border-gray-200 shadow-sm h-16 flex items-center px-6">
+          <div className="flex-1 flex justify-center">
+            <h1 className="text-xl font-semibold tracking-wider text-sanctuary-dark-green">The Alice Sanctuary Resident Directory</h1>
+          </div>
           
-          <div className="dashboard-content flex-1 overflow-auto">
-            <div className="py-4 px-6">
-              <Outlet />
+          <div className="flex items-center gap-3">
+            <div className="text-right">
+              <p className="font-medium">{displayName}</p>
+              <p className="text-xs text-gray-500">Staff</p>
             </div>
+            <Button 
+              variant="ghost" 
+              size="sm" 
+              onClick={handleSignOut} 
+              className="text-gray-600 hover:text-gray-800"
+            >
+              <LogOut className="h-4 w-4" />
+            </Button>
+          </div>
+        </header>
+        
+        <div className="dashboard-content flex-1 overflow-auto">
+          <div className="py-4 px-6">
+            <Outlet />
           </div>
         </div>
+        
+        <Footer />
       </div>
-      
-      <Footer />
     </div>
   );
 }

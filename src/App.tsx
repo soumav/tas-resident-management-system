@@ -32,8 +32,8 @@ const App = () => (
           <div className="min-h-screen flex flex-col">
             <Routes>
               {/* Auth Routes */}
-              <Route path="/login" element={<><Login /><Footer /></>} />
-              <Route path="/signup" element={<><Signup /><Footer /></>} />
+              <Route path="/login" element={<div className="flex flex-col flex-1"><Login /><Footer /></div>} />
+              <Route path="/signup" element={<div className="flex flex-col flex-1"><Signup /><Footer /></div>} />
               
               {/* Protected Dashboard Routes */}
               <Route path="/" element={<DashboardLayout />}>
@@ -49,7 +49,7 @@ const App = () => (
               </Route>
               
               {/* Catch-all route */}
-              <Route path="*" element={<><NotFound /><Footer /></>} />
+              <Route path="*" element={<div className="flex flex-col flex-1"><NotFound /><Footer /></div>} />
             </Routes>
           </div>
         </AuthProvider>
