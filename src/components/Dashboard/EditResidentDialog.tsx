@@ -117,6 +117,7 @@ export function EditResidentDialog({
                     src={previewUrl} 
                     alt="Preview" 
                     className="h-full w-full object-cover"
+                    key={`preview-${new Date().getTime()}`} // Add key to force re-render
                   />
                 </div>
               )}
@@ -145,7 +146,11 @@ export function EditResidentDialog({
                     variant="outline"
                     size="sm"
                     className="mt-2"
-                    onClick={resetFileInput}
+                    onClick={() => {
+                      resetFileInput();
+                      // Make sure to set the image_url to null in the form data
+                      onFormChange({ image_url: '' });
+                    }}
                   >
                     Remove
                   </Button>

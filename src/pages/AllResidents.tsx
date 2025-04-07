@@ -209,7 +209,7 @@ export default function AllResidents() {
     setIsLoading(true);
     
     try {
-      let updatedImageUrl = editResidentData.image_url;
+      let updatedImageUrl = selectedFile ? '' : null;
       
       if (selectedFile) {
         try {
@@ -254,6 +254,8 @@ export default function AllResidents() {
             variant: 'destructive',
           });
         }
+      } else if (previewUrl) {
+        updatedImageUrl = editResidentData.image_url;
       }
       
       const residentData = {
