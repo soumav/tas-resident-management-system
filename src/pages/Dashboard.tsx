@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Plus } from 'lucide-react';
-import { supabase, ResidentGroup, ResidentSubgroup, Resident, deleteResident } from '@/lib/supabase';
+import { supabase, ResidentGroup, ResidentSubgroup, Resident } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 
 // Component imports
@@ -22,7 +22,6 @@ export default function Dashboard() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-  const [isDeleting, setIsDeleting] = useState(false);
   
   const { toast } = useToast();
   
@@ -283,19 +282,20 @@ export default function Dashboard() {
   const handleDeleteResident = async () => {
     if (!selectedResident) return;
     
-    setIsDeleting(true);
     try {
-      await deleteResident(selectedResident.id);
+      const { error } = await supabase
+        .from('residents')
+        .delete()
+        .eq('id', selectedResident.id);
+      
+      if (error) throw error;
       
       toast({
         title: 'Resident deleted',
         description: `${selectedResident.name} has been removed from the system`
       });
       
-      await fetchResidents();
-      
-      setResidents(prev => prev.filter(resident => resident.id !== selectedResident.id));
-      
+      fetchResidents();
       setIsDeleteResidentDialogOpen(false);
       
     } catch (error: any) {
@@ -303,10 +303,8 @@ export default function Dashboard() {
       toast({
         title: 'Error',
         description: error.message || 'Failed to delete resident',
-        variant: 'destructive',
+        variant: 'destructive'
       });
-    } finally {
-      setIsDeleting(false);
     }
   };
 
@@ -721,7 +719,6 @@ export default function Dashboard() {
         residentName={selectedResident?.name || ''}
         onClose={() => setIsDeleteResidentDialogOpen(false)}
         onDelete={handleDeleteResident}
-        isDeleting={isDeleting}
       />
       
       <GroupDialogs 
