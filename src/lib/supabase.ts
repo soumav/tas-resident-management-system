@@ -14,6 +14,76 @@ export const logSupabaseOperation = async (operation: string, data: any) => {
   return data;
 };
 
+// Enhanced delete resident function to ensure deletion works
+export const deleteResident = async (id: string) => {
+  try {
+    console.log('Attempting to delete resident with ID:', id);
+    
+    // First, verify the resident exists
+    const { data: checkData, error: checkError } = await supabase
+      .from('residents')
+      .select('id')
+      .eq('id', id)
+      .single();
+      
+    if (checkError) {
+      console.error('Error checking if resident exists:', checkError);
+      throw new Error(`Cannot delete: ${checkError.message}`);
+    }
+    
+    if (!checkData) {
+      console.log('Resident not found, nothing to delete');
+      return { success: true, message: 'Resident not found' };
+    }
+    
+    // Clear any relationships or dependencies first
+    const { error: messagesError } = await supabase
+      .from('messages')
+      .delete()
+      .eq('resident_id', id);
+      
+    if (messagesError) {
+      console.warn('Could not delete related messages:', messagesError);
+      // Continue with deletion anyway
+    }
+    
+    // Perform the actual deletion
+    const { error: deleteError } = await supabase
+      .from('residents')
+      .delete()
+      .eq('id', id);
+      
+    if (deleteError) {
+      console.error('Error during deletion:', deleteError);
+      
+      // Check if the error is related to permissions
+      if (deleteError.message.includes('permission') || deleteError.code === '42501') {
+        throw new Error('Permission denied. You do not have access to delete this resident.');
+      }
+      
+      throw new Error(`Failed to delete: ${deleteError.message}`);
+    }
+    
+    // Verify the deletion was successful
+    const { data: verifyData } = await supabase
+      .from('residents')
+      .select('id')
+      .eq('id', id);
+      
+    if (verifyData && verifyData.length > 0) {
+      console.error('Deletion verification failed - record still exists');
+      throw new Error('Deletion failed: Record still exists in the database');
+    }
+    
+    console.log('Resident successfully deleted');
+    return { success: true, message: 'Resident successfully deleted' };
+    
+  } catch (error: any) {
+    console.error('Delete resident operation failed:', error);
+    throw error;
+  }
+};
+
 // Type definitions
 export type Tables = {
   users: {
