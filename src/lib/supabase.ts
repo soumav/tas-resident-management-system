@@ -1,19 +1,11 @@
-
 import { createClient } from '@supabase/supabase-js';
 
-const supabaseUrl = import.meta.env.VITE_SUPABASE_URL;
-const supabaseAnonKey = import.meta.env.VITE_SUPABASE_ANON_KEY;
+// Using hardcoded values for demonstration
+const supabaseUrl = 'https://gehagzfikmuolfjwyaiq.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdlaGFnemZpa211b2xmand5YWlxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMDA0MTIsImV4cCI6MjA1OTU3NjQxMn0.HsK4wtUkJU7BnezD6iU_iSdlcXmU8NfSgvMCxDSWPYk';
 
-if (!supabaseUrl || !supabaseAnonKey) {
-  console.error('Missing Supabase credentials. Please connect this Lovable project to Supabase using the Supabase integration button in the top right corner.');
-}
-
-// Create a fallback client with empty strings that will show a clear error
-// This prevents the app from crashing immediately but will show proper error UI
-export const supabase = createClient(
-  supabaseUrl || 'https://placeholder-url.supabase.co', 
-  supabaseAnonKey || 'placeholder-key'
-);
+// Create a supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 export type Tables = {
   users: {
@@ -100,4 +92,3 @@ export type ResidentSubgroup = Tables['resident_subgroups'] & {
     name: string;
   }
 };
-
