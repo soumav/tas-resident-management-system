@@ -6,6 +6,7 @@ import {
   CardContent,
 } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   Select,
   SelectContent,
@@ -129,8 +130,7 @@ export default function AllResidents() {
     description: '',
     image_url: '',
     notes: '',
-    arrival_date: null as Date | null,
-    medical_notes: ''
+    arrival_date: null as Date | null
   });
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -163,8 +163,7 @@ export default function AllResidents() {
       description: resident.description || '',
       image_url: resident.image_url || '',
       notes: resident.notes || '',
-      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null,
-      medical_notes: resident.medical_notes || ''
+      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null
     });
     setPreviewUrl(resident.image_url || null);
     setIsEditResidentDialogOpen(true);
@@ -235,8 +234,7 @@ export default function AllResidents() {
           description: editResidentData.description,
           image_url: updatedImageUrl,
           notes: editResidentData.notes,
-          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
-          medical_notes: editResidentData.medical_notes
+          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null
         })
         .eq('id', selectedResident.id);
       
@@ -675,19 +673,6 @@ export default function AllResidents() {
                 value={editResidentData.notes} 
                 onChange={e => setEditResidentData({...editResidentData, notes: e.target.value})}
                 placeholder="Enter notes" 
-                rows={3} 
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="resident-medical" className="text-sm font-medium">
-                Medical Notes (Optional)
-              </label>
-              <Textarea 
-                id="resident-medical" 
-                value={editResidentData.medical_notes} 
-                onChange={e => setEditResidentData({...editResidentData, medical_notes: e.target.value})}
-                placeholder="Enter medical notes" 
                 rows={3} 
               />
             </div>
