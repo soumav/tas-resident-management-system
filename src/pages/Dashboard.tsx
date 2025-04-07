@@ -226,7 +226,6 @@ export default function Dashboard() {
         }
       }
       
-      // Update the resident record with new data including group_id and subgroup_id
       const updateData = {
         name: editResidentData.name,
         description: editResidentData.description,
@@ -259,7 +258,6 @@ export default function Dashboard() {
         description: `${editResidentData.name} has been updated successfully`
       });
       
-      // Update the local resident data with the new data
       if (data && data.length > 0) {
         setResidents(prev => 
           prev.map(resident => 
@@ -267,7 +265,6 @@ export default function Dashboard() {
           )
         );
       } else {
-        // If we don't get the updated data back, fetch all residents again
         await fetchResidents();
       }
       
@@ -892,4 +889,47 @@ export default function Dashboard() {
                                   }}
                                 >
                                   <Trash2 className="h-3 w-3 text-red-500" />
-                                </
+                                </Button>
+                              </div>
+                            </div>
+                          </div>
+                        ))}
+                        
+                        <Link to={`/residents/new?group=${group.id}&subgroup=${subgroup.id}`} className="border-2 border-dashed border-gray-300 rounded-lg flex items-center justify-center aspect-square hover:border-gray-400 transition-colors">
+                          <div className="flex flex-col items-center text-gray-500">
+                            <Plus className="h-6 w-6" />
+                            <span className="text-sm">Add Animal</span>
+                          </div>
+                        </Link>
+                      </div>
+                    </div>
+                  ))}
+                  
+                  <div className="mt-4">
+                    <Button 
+                      variant="outline" 
+                      className="text-sm flex items-center gap-1"
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openAddSubgroupDialog(group.id);
+                      }}
+                    >
+                      <Plus className="h-3 w-3" />
+                      Add Subgroup
+                    </Button>
+                  </div>
+                </div>
+              </ScrollArea>
+            </CollapsibleContent>
+          </Collapsible>
+        )) : (
+          <div className="text-center py-8 border rounded-lg bg-gray-50">
+            <p className="text-gray-500">No groups created yet. Add your first group to get started.</p>
+          </div>
+        )}
+      </div>
+
+      {/* Dialog modals for group/subgroup management */}
+    </div>
+  );
+}
