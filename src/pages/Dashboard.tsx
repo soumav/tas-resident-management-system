@@ -11,6 +11,7 @@ import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
+
 export default function Dashboard() {
   const {
     user
@@ -37,10 +38,12 @@ export default function Dashboard() {
   const [newSubgroupDescription, setNewSubgroupDescription] = useState('');
   const [selectedSubgroupId, setSelectedSubgroupId] = useState<number | null>(null);
   const [selectedSubgroup, setSelectedSubgroup] = useState<ResidentSubgroup | null>(null);
+
   useEffect(() => {
     fetchGroups();
     fetchResidents();
   }, []);
+
   useEffect(() => {
     if (residents.length) {
       const typeCount: Record<string, number> = {};
@@ -51,6 +54,7 @@ export default function Dashboard() {
       setResidentsByType(typeCount);
     }
   }, [residents]);
+
   const fetchGroups = async () => {
     try {
       const {
@@ -80,6 +84,7 @@ export default function Dashboard() {
       });
     }
   };
+
   const fetchResidents = async () => {
     try {
       const {
@@ -105,6 +110,7 @@ export default function Dashboard() {
       });
     }
   };
+
   const toggleGroupExpand = (groupId: number) => {
     setExpandedGroups(prev => {
       if (prev.includes(groupId)) {
@@ -114,21 +120,25 @@ export default function Dashboard() {
       }
     });
   };
+
   const openAddGroupDialog = () => {
     setNewGroupName('');
     setNewGroupDescription('');
     setIsAddGroupDialogOpen(true);
   };
+
   const openEditGroupDialog = (group: ResidentGroup) => {
     setSelectedGroup(group);
     setNewGroupName(group.name);
     setNewGroupDescription(group.description || '');
     setIsEditGroupDialogOpen(true);
   };
+
   const openDeleteGroupDialog = (group: ResidentGroup) => {
     setSelectedGroup(group);
     setIsDeleteGroupDialogOpen(true);
   };
+
   const handleAddGroup = async () => {
     if (!newGroupName.trim()) return;
     try {
@@ -158,6 +168,7 @@ export default function Dashboard() {
       });
     }
   };
+
   const handleEditGroup = async () => {
     if (!selectedGroup || !newGroupName.trim()) return;
     try {
@@ -192,6 +203,7 @@ export default function Dashboard() {
       });
     }
   };
+
   const handleDeleteGroup = async () => {
     if (!selectedGroup) return;
     try {
@@ -235,6 +247,7 @@ export default function Dashboard() {
       });
     }
   };
+
   const toggleSubgroupInput = (groupId: number) => {
     if (showSubgroupInput === groupId) {
       setShowSubgroupInput(null);
@@ -243,22 +256,26 @@ export default function Dashboard() {
       setNewSubgroupName('');
     }
   };
+
   const openAddSubgroupDialog = (groupId: number) => {
     setSelectedGroupId(groupId);
     setNewSubgroupName('');
     setNewSubgroupDescription('');
     setIsAddSubgroupDialogOpen(true);
   };
+
   const openEditSubgroupDialog = (subgroup: ResidentSubgroup) => {
     setSelectedSubgroup(subgroup);
     setNewSubgroupName(subgroup.name);
     setNewSubgroupDescription(subgroup.description || '');
     setIsEditSubgroupDialogOpen(true);
   };
+
   const openDeleteSubgroupDialog = (subgroup: ResidentSubgroup) => {
     setSelectedSubgroup(subgroup);
     setIsDeleteSubgroupDialogOpen(true);
   };
+
   const handleAddSubgroup = async () => {
     if (!selectedGroupId || !newSubgroupName.trim()) return;
     try {
@@ -295,6 +312,7 @@ export default function Dashboard() {
       });
     }
   };
+
   const handleQuickAddSubgroup = async () => {
     if (!showSubgroupInput || !newSubgroupName.trim()) return;
     try {
@@ -330,6 +348,7 @@ export default function Dashboard() {
       });
     }
   };
+
   const handleEditSubgroup = async () => {
     if (!selectedSubgroup || !newSubgroupName.trim()) return;
     try {
@@ -372,6 +391,7 @@ export default function Dashboard() {
       });
     }
   };
+
   const handleDeleteSubgroup = async () => {
     if (!selectedSubgroup) return;
     try {
@@ -419,23 +439,24 @@ export default function Dashboard() {
       });
     }
   };
+
   const getResidentsByGroup = (groupId: number) => {
     return residents.filter(resident => resident.group_id === groupId && !resident.subgroup_id);
   };
+
   const getResidentsBySubgroup = (subgroupId: number) => {
     return residents.filter(resident => resident.subgroup_id === subgroupId);
   };
+
   const getTopResidentTypes = (limit: number = 3) => {
     return Object.entries(residentsByType).sort(([, countA], [, countB]) => countB - countA).slice(0, limit);
   };
+
   const getResidentTypeIcon = (typeName: string) => {
     return Rabbit;
   };
-  return <div>
-      <div className="mb-8">
-        <h1 className="text-3xl font-bold text-sanctuary-green">The Alice Sanctuary Directory 9</h1>
-      </div>
 
+  return <div>
       <div className="mb-8">
         <div className="flex justify-between items-center">
           <div>
