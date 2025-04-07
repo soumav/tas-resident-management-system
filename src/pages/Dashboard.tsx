@@ -57,11 +57,16 @@ export default function Dashboard() {
     subgroup_id: null as number | null
   });
 
+  // This useEffect will run whenever the Dashboard component mounts
   useEffect(() => {
+    console.log('Dashboard mounted/revisited - fetching fresh data');
     fetchGroups();
     fetchResidents();
+    
+    // We don't need a cleanup function since we're not subscribing to anything
   }, []);
 
+  // Calculate resident types whenever residents change
   useEffect(() => {
     if (residents.length) {
       const typeCount: Record<string, number> = {};
@@ -70,6 +75,9 @@ export default function Dashboard() {
         typeCount[typeName] = (typeCount[typeName] || 0) + 1;
       });
       setResidentsByType(typeCount);
+    } else {
+      // If there are no residents, make sure residentsByType is empty
+      setResidentsByType({});
     }
   }, [residents]);
 
@@ -108,6 +116,7 @@ export default function Dashboard() {
 
   const fetchResidents = async () => {
     try {
+      console.log('Fetching residents...');
       const {
         data,
         error

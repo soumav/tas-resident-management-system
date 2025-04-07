@@ -42,12 +42,15 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
     return '🐾'; // Default is now a paw emoji
   };
 
+  // Calculate the resident count directly from the current props
+  const residentCount = residents.length;
+
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
       <Card className="p-6 flex justify-between items-center">
         <div>
           <h3 className="text-lg text-gray-500 font-medium mb-1">Total Residents</h3>
-          <p className="text-4xl font-bold">{residents.length}</p>
+          <p className="text-4xl font-bold">{residentCount}</p>
           <p className="text-sm text-gray-500">Animals in the sanctuary</p>
         </div>
         <div className="h-12 w-12 rounded-full bg-gray-100 flex items-center justify-center">
@@ -68,7 +71,7 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
       
       {getTopResidentTypes().map(([typeName, count]) => {
         const emoji = getResidentTypeEmoji(typeName);
-        const percentage = residents.length > 0 ? Math.round(count / residents.length * 100) : 0;
+        const percentage = residentCount > 0 ? Math.round(count / residentCount * 100) : 0;
         return (
           <Card key={typeName} className="p-6 flex justify-between items-center">
             <div>
