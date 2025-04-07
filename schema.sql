@@ -226,3 +226,28 @@ create policy "Authenticated users can update types" on resident_types
   
 create policy "Authenticated users can delete types" on resident_types
   for delete using (auth.role() = 'authenticated');
+
+-- NEW: Storage policies for the resident-images bucket
+-- Enable all authenticated users to create buckets and upload files
+create policy "Enable bucket creation for authenticated users"
+  on storage.buckets for insert to authenticated with check (true);
+
+create policy "Enable bucket access for all users"
+  on storage.buckets for select to authenticated using (true);
+
+-- Grant access to objects in resident-images bucket
+create policy "Give users access to their own folder"
+  on storage.objects for select
+  using (bucket_id = 'resident-images');
+
+create policy "Allow authenticated users to upload files to resident-images"
+  on storage.objects for insert to authenticated
+  with check (bucket_id = 'resident-images');
+
+create policy "Allow users to update their own objects in resident-images"
+  on storage.objects for update to authenticated
+  using (bucket_id = 'resident-images');
+
+create policy "Allow users to delete their own objects in resident-images"
+  on storage.objects for delete to authenticated
+  using (bucket_id = 'resident-images');

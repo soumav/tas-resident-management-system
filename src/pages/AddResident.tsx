@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -202,57 +201,46 @@ export default function AddResident() {
       if (image) {
         console.log('Uploading image:', image.name);
         
-        // First, create the bucket if it doesn't exist
-        const { data: buckets, error: bucketsError } = await supabase
-          .storage
-          .listBuckets();
+        try {
+          // Skip bucket creation since we've now set up policies in the schema
+          // Instead, directly attempt to upload the file
+          const fileExt = image.name.split('.').pop();
+          const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
+          const filePath = `${fileName}`;
           
-        if (bucketsError) {
-          console.error('Error checking buckets:', bucketsError);
-          throw bucketsError;
-        }
-        
-        const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
-        
-        if (!bucketExists) {
-          console.log('Creating resident-images bucket...');
-          const { error: createBucketError } = await supabase
-            .storage
-            .createBucket('resident-images', {
-              public: true,
-              fileSizeLimit: 10485760, // 10MB
-            });
+          const { error: uploadError, data: uploadData } = await supabase.storage
+            .from('resident-images')
+            .upload(filePath, image);
             
-          if (createBucketError) {
-            console.error('Error creating bucket:', createBucketError);
-            throw createBucketError;
+          if (uploadError) {
+            console.error('Image upload error:', uploadError);
+            throw uploadError;
           }
           
-          console.log('Bucket created successfully');
-        }
-        
-        // Now upload the file to the bucket
-        const fileExt = image.name.split('.').pop();
-        const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `${fileName}`;
-        
-        const { error: uploadError, data: uploadData } = await supabase.storage
-          .from('resident-images')
-          .upload(filePath, image);
+          console.log('Image uploaded successfully:', uploadData);
           
-        if (uploadError) {
-          console.error('Image upload error:', uploadError);
-          throw uploadError;
-        }
-        
-        console.log('Image uploaded successfully:', uploadData);
-        
-        const { data } = supabase.storage
-          .from('resident-images')
-          .getPublicUrl(filePath);
+          const { data } = supabase.storage
+            .from('resident-images')
+            .getPublicUrl(filePath);
+            
+          imageUrl = data.publicUrl;
+          console.log('Image URL:', imageUrl);
+        } catch (uploadError: any) {
+          console.error('Upload error:', uploadError);
           
-        imageUrl = data.publicUrl;
-        console.log('Image URL:', imageUrl);
+          // If we get a bucket not found error, inform the user they need to run the schema
+          if (uploadError.message && uploadError.message.includes('bucket not found')) {
+            toast({
+              title: 'Bucket not found',
+              description: 'The resident-images bucket does not exist. Please ensure the schema has been properly applied to your database.',
+              variant: 'destructive',
+            });
+            setIsLoading(false);
+            return;
+          } else {
+            throw uploadError;
+          }
+        }
       }
       
       const residentData = {
@@ -287,7 +275,7 @@ export default function AddResident() {
       console.error('Error adding resident:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to add resident. Policy violation - make sure you are logged in and have proper permissions.',
+        description: error.message || 'Failed to add resident. Please ensure you have the proper permissions.',
         variant: 'destructive',
       });
     }
