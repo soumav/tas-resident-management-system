@@ -1,4 +1,3 @@
-
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -83,7 +82,6 @@ export default function AddResident() {
     try {
       setIsRefreshing(true);
       
-      // Fetch all resident categories with their types in a single query
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('resident_categories')
         .select('id, name');
@@ -95,7 +93,6 @@ export default function AddResident() {
       const formattedCategories: ResidentCategory[] = [];
       const allTypes: ResidentType[] = [];
       
-      // For each category, fetch its types
       for (const category of categoriesData || []) {
         const { data: typesData, error: typesError } = await supabase
           .from('resident_types')
@@ -112,7 +109,6 @@ export default function AddResident() {
           types: typesData || []
         });
         
-        // Add to the overall types array
         if (typesData) {
           allTypes.push(...typesData);
         }
@@ -124,7 +120,6 @@ export default function AddResident() {
       console.log('All resident types:', allTypes);
       console.log('Formatted categories with types:', formattedCategories);
       
-      // Fetch groups and subgroups
       const { data: groupsData, error: groupsError } = await supabase
         .from('resident_groups')
         .select('id, name');
@@ -189,27 +184,46 @@ export default function AddResident() {
     setIsLoading(true);
     
     try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        throw new Error('You must be logged in to add a resident');
+      }
+
+      console.log('Submitting resident with the following data:');
+      console.log('Name:', name);
+      console.log('Type ID:', typeId);
+      console.log('Group ID:', groupId);
+      console.log('Subgroup ID:', subgroupId);
+      console.log('Arrival date:', arrivalDate);
+      
       let imageUrl = null;
       
       if (image) {
+        console.log('Uploading image:', image.name);
         const fileExt = image.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
         const filePath = `resident-images/${fileName}`;
         
-        const { error: uploadError } = await supabase.storage
+        const { error: uploadError, data: uploadData } = await supabase.storage
           .from('resident-images')
           .upload(filePath, image);
           
-        if (uploadError) throw uploadError;
+        if (uploadError) {
+          console.error('Image upload error:', uploadError);
+          throw uploadError;
+        }
+        
+        console.log('Image uploaded successfully:', uploadData);
         
         const { data } = supabase.storage
           .from('resident-images')
           .getPublicUrl(filePath);
           
         imageUrl = data.publicUrl;
+        console.log('Image URL:', imageUrl);
       }
       
-      const { error } = await supabase.from('residents').insert({
+      const residentData = {
         name,
         type_id: parseInt(typeId),
         group_id: groupId ? parseInt(groupId) : null,
@@ -217,9 +231,18 @@ export default function AddResident() {
         arrival_date: arrivalDate?.toISOString(),
         description,
         image_url: imageUrl,
-      });
+      };
       
-      if (error) throw error;
+      console.log('Inserting resident with data:', residentData);
+      
+      const { data, error } = await supabase.from('residents').insert([residentData]);
+      
+      if (error) {
+        console.error('Error inserting resident:', error);
+        throw error;
+      }
+      
+      console.log('Resident added successfully:', data);
       
       toast({
         title: 'Success',
@@ -232,7 +255,7 @@ export default function AddResident() {
       console.error('Error adding resident:', error);
       toast({
         title: 'Error',
-        description: error.message || 'Failed to add resident',
+        description: error.message || 'Failed to add resident. Policy violation - make sure you are logged in and have proper permissions.',
         variant: 'destructive',
       });
     }
@@ -250,7 +273,6 @@ export default function AddResident() {
     });
   };
 
-  // For debugging
   const hasTypes = categories.some(category => category.types.length > 0);
   
   return (
@@ -274,7 +296,6 @@ export default function AddResident() {
         <div className="mb-6">
           <h3 className="text-lg font-medium mb-2">Resident Information</h3>
           <p className="text-gray-600 text-sm">Fill in the details about the new sanctuary resident</p>
-          {/* Debug info - remove in production */}
           <p className="text-xs text-gray-500 mt-1">
             Types loaded: {types.length}, Categories with types: {hasTypes ? 'Yes' : 'No'}
           </p>

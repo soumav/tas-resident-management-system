@@ -125,6 +125,10 @@ create policy "Anyone can read resident categories" on resident_categories for s
 create policy "Anyone can read resident groups" on resident_groups for select using (true);
 create policy "Anyone can read resident subgroups" on resident_subgroups for select using (true);
 
+-- Modified: Allow authenticated users to create residents
+create policy "Authenticated users can create residents" on residents 
+  for insert with check (auth.role() = 'authenticated');
+
 -- Staff and admin can manage residents
 create policy "Staff can manage residents" on residents 
   for all using (exists (
