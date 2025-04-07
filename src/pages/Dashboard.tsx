@@ -45,6 +45,15 @@ export default function Dashboard() {
   // Resident state
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [isDeleteResidentDialogOpen, setIsDeleteResidentDialogOpen] = useState(false);
+  const [isEditResidentDialogOpen, setIsEditResidentDialogOpen] = useState(false);
+  const [editResidentData, setEditResidentData] = useState({
+    name: '',
+    description: '',
+    image_url: '',
+    notes: '',
+    year_arrived: '',
+    medical_notes: ''
+  });
 
   useEffect(() => {
     fetchGroups();
@@ -129,14 +138,18 @@ export default function Dashboard() {
   };
   
   const handleEditResident = (resident: Resident) => {
-    navigate(`/residents/edit/${resident.id}`);
+    openEditResidentDialog(resident);
   };
 
   const openEditResidentDialog = (resident: Resident) => {
     setSelectedResident(resident);
     setEditResidentData({
       name: resident.name,
-      description: resident.description || ''
+      description: resident.description || '',
+      image_url: resident.image_url || '',
+      notes: resident.notes || '',
+      year_arrived: resident.year_arrived || '',
+      medical_notes: resident.medical_notes || ''
     });
     setIsEditResidentDialogOpen(true);
   };
@@ -149,7 +162,11 @@ export default function Dashboard() {
         .from('residents')
         .update({
           name: editResidentData.name,
-          description: editResidentData.description
+          description: editResidentData.description,
+          image_url: editResidentData.image_url,
+          notes: editResidentData.notes,
+          year_arrived: editResidentData.year_arrived,
+          medical_notes: editResidentData.medical_notes
         })
         .eq('id', selectedResident.id);
       
@@ -974,6 +991,107 @@ export default function Dashboard() {
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
+
+      <Dialog open={isEditResidentDialogOpen} onOpenChange={setIsEditResidentDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Edit Resident</DialogTitle>
+            <DialogDescription>
+              Make changes to {selectedResident?.name}'s information
+            </DialogDescription>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="resident-name" className="text-sm font-medium">
+                Name
+              </label>
+              <Input 
+                id="resident-name" 
+                value={editResidentData.name} 
+                onChange={e => setEditResidentData({...editResidentData, name: e.target.value})}
+                placeholder="Enter resident name" 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-image" className="text-sm font-medium">
+                Image URL (Optional)
+              </label>
+              <Input 
+                id="resident-image" 
+                value={editResidentData.image_url} 
+                onChange={e => setEditResidentData({...editResidentData, image_url: e.target.value})}
+                placeholder="Enter image URL" 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-description" className="text-sm font-medium">
+                Description (Optional)
+              </label>
+              <Textarea 
+                id="resident-description" 
+                value={editResidentData.description} 
+                onChange={e => setEditResidentData({...editResidentData, description: e.target.value})}
+                placeholder="Enter description" 
+                rows={3} 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-year" className="text-sm font-medium">
+                Year Arrived (Optional)
+              </label>
+              <Input 
+                id="resident-year" 
+                value={editResidentData.year_arrived} 
+                onChange={e => setEditResidentData({...editResidentData, year_arrived: e.target.value})}
+                placeholder="Enter year arrived" 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-notes" className="text-sm font-medium">
+                Notes (Optional)
+              </label>
+              <Textarea 
+                id="resident-notes" 
+                value={editResidentData.notes} 
+                onChange={e => setEditResidentData({...editResidentData, notes: e.target.value})}
+                placeholder="Enter notes" 
+                rows={3} 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-medical" className="text-sm font-medium">
+                Medical Notes (Optional)
+              </label>
+              <Textarea 
+                id="resident-medical" 
+                value={editResidentData.medical_notes} 
+                onChange={e => setEditResidentData({...editResidentData, medical_notes: e.target.value})}
+                placeholder="Enter medical notes" 
+                rows={3} 
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditResidentDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-sanctuary-green hover:bg-sanctuary-light-green" 
+              onClick={handleEditResidentSubmit} 
+              disabled={!editResidentData.name.trim()}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       <AlertDialog open={isDeleteResidentDialogOpen} onOpenChange={setIsDeleteResidentDialogOpen}>
         <AlertDialogContent>
