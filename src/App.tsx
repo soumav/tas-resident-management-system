@@ -41,6 +41,7 @@ const App = () => (
                 <Route index element={<Dashboard />} />
                 <Route path="residents" element={<AllResidents />} />
                 <Route path="residents/new" element={<AddResident />} />
+                <Route path="residents/edit/:id" element={<AddResident />} />
                 <Route path="resident-types" element={<ResidentTypeManager />} />
                 <Route path="groups" element={<Groups />} /> 
                 <Route path="staff" element={<StaffVolunteers />} />

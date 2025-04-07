@@ -2,10 +2,10 @@ import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Card } from '@/components/ui/card';
 import { Plus, ChevronDown, ChevronUp, Edit, Trash2, ListIcon, Users, Rabbit } from 'lucide-react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { supabase, ResidentGroup, ResidentSubgroup, Resident } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
-import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -23,6 +23,9 @@ export default function Dashboard() {
   const {
     toast
   } = useToast();
+  const navigate = useNavigate();
+  
+  // Group and subgroup state
   const [isAddGroupDialogOpen, setIsAddGroupDialogOpen] = useState(false);
   const [isEditGroupDialogOpen, setIsEditGroupDialogOpen] = useState(false);
   const [isDeleteGroupDialogOpen, setIsDeleteGroupDialogOpen] = useState(false);
@@ -38,6 +41,15 @@ export default function Dashboard() {
   const [newSubgroupDescription, setNewSubgroupDescription] = useState('');
   const [selectedSubgroupId, setSelectedSubgroupId] = useState<number | null>(null);
   const [selectedSubgroup, setSelectedSubgroup] = useState<ResidentSubgroup | null>(null);
+  
+  // Resident state
+  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
+  const [isDeleteResidentDialogOpen, setIsDeleteResidentDialogOpen] = useState(false);
+  const [isEditResidentDialogOpen, setIsEditResidentDialogOpen] = useState(false);
+  const [editResidentData, setEditResidentData] = useState({
+    name: '',
+    description: ''
+  });
 
   useEffect(() => {
     fetchGroups();
@@ -119,6 +131,86 @@ export default function Dashboard() {
         return [...prev, groupId];
       }
     });
+  };
+  
+  // Resident actions
+  const handleEditResident = (resident: Resident) => {
+    navigate(`/residents/edit/${resident.id}`);
+  };
+
+  const openEditResidentDialog = (resident: Resident) => {
+    setSelectedResident(resident);
+    setEditResidentData({
+      name: resident.name,
+      description: resident.description || ''
+    });
+    setIsEditResidentDialogOpen(true);
+  };
+
+  const handleEditResidentSubmit = async () => {
+    if (!selectedResident) return;
+    
+    try {
+      const { error } = await supabase
+        .from('residents')
+        .update({
+          name: editResidentData.name,
+          description: editResidentData.description
+        })
+        .eq('id', selectedResident.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Resident updated',
+        description: `${editResidentData.name} has been updated successfully`
+      });
+      
+      fetchResidents();
+      setIsEditResidentDialogOpen(false);
+      
+    } catch (error: any) {
+      console.error('Error updating resident:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update resident',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const openDeleteResidentDialog = (resident: Resident) => {
+    setSelectedResident(resident);
+    setIsDeleteResidentDialogOpen(true);
+  };
+
+  const handleDeleteResident = async () => {
+    if (!selectedResident) return;
+    
+    try {
+      const { error } = await supabase
+        .from('residents')
+        .delete()
+        .eq('id', selectedResident.id);
+      
+      if (error) throw error;
+      
+      toast({
+        title: 'Resident deleted',
+        description: `${selectedResident.name} has been removed from the system`
+      });
+      
+      fetchResidents();
+      setIsDeleteResidentDialogOpen(false);
+      
+    } catch (error: any) {
+      console.error('Error deleting resident:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to delete resident',
+        variant: 'destructive'
+      });
+    }
   };
 
   const openAddGroupDialog = () => {
@@ -456,7 +548,7 @@ export default function Dashboard() {
     return Rabbit;
   };
 
-  const name = "Soumav";
+  const name = user?.email?.split('@')[0] || "User";
 
   return <div>
       <div className="mb-8">
@@ -564,6 +656,30 @@ export default function Dashboard() {
                         </div>
                         <div className="p-2 text-center">
                           <p className="font-medium truncate">{resident.name}</p>
+                          <div className="flex justify-center gap-1 mt-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openEditResidentDialog(resident);
+                              }}
+                            >
+                              <Edit className="h-3 w-3 text-blue-500" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              className="h-6 w-6" 
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                openDeleteResidentDialog(resident);
+                              }}
+                            >
+                              <Trash2 className="h-3 w-3 text-red-500" />
+                            </Button>
+                          </div>
                         </div>
                       </div>)}
                     
@@ -599,6 +715,30 @@ export default function Dashboard() {
                               </div>
                               <div className="p-2 text-center">
                                 <p className="font-medium truncate">{resident.name}</p>
+                                <div className="flex justify-center gap-1 mt-1">
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openEditResidentDialog(resident);
+                                    }}
+                                  >
+                                    <Edit className="h-3 w-3 text-blue-500" />
+                                  </Button>
+                                  <Button 
+                                    variant="ghost" 
+                                    size="icon" 
+                                    className="h-6 w-6"
+                                    onClick={(e) => {
+                                      e.stopPropagation();
+                                      openDeleteResidentDialog(resident);
+                                    }}
+                                  >
+                                    <Trash2 className="h-3 w-3 text-red-500" />
+                                  </Button>
+                                </div>
                               </div>
                             </div>)}
                           
@@ -704,104 +844,4 @@ export default function Dashboard() {
       
       <AlertDialog open={isDeleteGroupDialogOpen} onOpenChange={setIsDeleteGroupDialogOpen}>
         <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Group</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the group "{selectedGroup?.name}" and all its subgroups. 
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteGroup} className="bg-red-500 hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-      
-      <Dialog open={isAddSubgroupDialogOpen} onOpenChange={setIsAddSubgroupDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Add Subgroup</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="subgroup-name" className="text-sm font-medium">
-                Subgroup Name
-              </label>
-              <Input id="subgroup-name" value={newSubgroupName} onChange={e => setNewSubgroupName(e.target.value)} placeholder="Enter subgroup name" />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="subgroup-description" className="text-sm font-medium">
-                Description (Optional)
-              </label>
-              <Textarea id="subgroup-description" value={newSubgroupDescription} onChange={e => setNewSubgroupDescription(e.target.value)} placeholder="Enter description" rows={3} />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsAddSubgroupDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button className="bg-sanctuary-green hover:bg-sanctuary-light-green" onClick={handleAddSubgroup} disabled={!newSubgroupName.trim()}>
-              Add Subgroup
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <Dialog open={isEditSubgroupDialogOpen} onOpenChange={setIsEditSubgroupDialogOpen}>
-        <DialogContent>
-          <DialogHeader>
-            <DialogTitle>Edit Subgroup</DialogTitle>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-4">
-            <div className="grid gap-2">
-              <label htmlFor="edit-subgroup-name" className="text-sm font-medium">
-                Subgroup Name
-              </label>
-              <Input id="edit-subgroup-name" value={newSubgroupName} onChange={e => setNewSubgroupName(e.target.value)} placeholder="Enter subgroup name" />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="edit-subgroup-description" className="text-sm font-medium">
-                Description (Optional)
-              </label>
-              <Textarea id="edit-subgroup-description" value={newSubgroupDescription} onChange={e => setNewSubgroupDescription(e.target.value)} placeholder="Enter description" rows={3} />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setIsEditSubgroupDialogOpen(false)}>
-              Cancel
-            </Button>
-            <Button className="bg-sanctuary-green hover:bg-sanctuary-light-green" onClick={handleEditSubgroup} disabled={!newSubgroupName.trim()}>
-              Save Changes
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-      
-      <AlertDialog open={isDeleteSubgroupDialogOpen} onOpenChange={setIsDeleteSubgroupDialogOpen}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Delete Subgroup</AlertDialogTitle>
-            <AlertDialogDescription>
-              This will permanently delete the subgroup "{selectedSubgroup?.name}". 
-              This action cannot be undone.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Cancel</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDeleteSubgroup} className="bg-red-500 hover:bg-red-600">
-              Delete
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
-    </div>;
-}
+          <AlertDialogHeader

@@ -2,73 +2,56 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
- 
+
 @layer base {
   :root {
     --background: 0 0% 100%;
     --foreground: 222.2 84% 4.9%;
- 
-    --muted: 210 40% 96.1%;
-    --muted-foreground: 215.4 16.3% 46.9%;
- 
-    --popover: 0 0% 100%;
-    --popover-foreground: 222.2 84% 4.9%;
- 
     --card: 0 0% 100%;
     --card-foreground: 222.2 84% 4.9%;
- 
-    --border: 214.3 31.8% 91.4%;
-    --input: 214.3 31.8% 91.4%;
- 
-    --primary: 222.2 47.4% 11.2%;
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+    --primary: 221.2 83.2% 53.3%;
     --primary-foreground: 210 40% 98%;
- 
     --secondary: 210 40% 96.1%;
     --secondary-foreground: 222.2 47.4% 11.2%;
- 
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
     --accent: 210 40% 96.1%;
     --accent-foreground: 222.2 47.4% 11.2%;
- 
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
- 
-    --ring: 215 20.2% 65.1%;
- 
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 221.2 83.2% 53.3%;
     --radius: 0.5rem;
+    --sanctuary-green: 130 34% 52%;
+    --sanctuary-light-green: 130 34% 65%;
   }
- 
+
   .dark {
     --background: 222.2 84% 4.9%;
     --foreground: 210 40% 98%;
- 
-    --muted: 217.2 32.6% 17.5%;
-    --muted-foreground: 215 20.2% 65.1%;
- 
-    --popover: 222.2 84% 4.9%;
-    --popover-foreground: 210 40% 98%;
- 
     --card: 222.2 84% 4.9%;
     --card-foreground: 210 40% 98%;
- 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
- 
-    --primary: 210 40% 98%;
+    --popover: 222.2 84% 4.9%;
+    --popover-foreground: 210 40% 98%;
+    --primary: 217.2 91.2% 59.8%;
     --primary-foreground: 222.2 47.4% 11.2%;
- 
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
- 
+    --muted: 217.2 32.6% 17.5%;
+    --muted-foreground: 215 20.2% 65.1%;
     --accent: 217.2 32.6% 17.5%;
     --accent-foreground: 210 40% 98%;
- 
     --destructive: 0 62.8% 30.6%;
-    --destructive-foreground: 0 85.7% 97.3%;
- 
-    --ring: 217.2 32.6% 17.5%;
+    --destructive-foreground: 210 40% 98%;
+    --border: 217.2 32.6% 17.5%;
+    --input: 217.2 32.6% 17.5%;
+    --ring: 224.3 76.5% 48%;
   }
 }
- 
+
 @layer base {
   * {
     @apply border-border;
@@ -78,63 +61,32 @@
   }
 }
 
-.dashboard-sidebar {
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+@layer components {
+  .bg-sanctuary-green {
+    background-color: #4a9c4e;
+  }
+  
+  .bg-sanctuary-light-green {
+    background-color: #5ebe62;
+  }
+  
+  .hover\:bg-sanctuary-light-green:hover {
+    background-color: #5ebe62;
+  }
+  
+  .resident-grid {
+    @apply grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4;
+  }
+  
+  .resident-item {
+    @apply border rounded-lg overflow-hidden transition-all hover:shadow-md;
+  }
+  
+  .resident-image {
+    @apply aspect-square bg-gray-200 flex items-center justify-center;
+  }
+  
+  .subgroup-input {
+    @apply flex space-x-2 items-center;
+  }
 }
-
-.dashboard-content {
-  max-height: calc(100vh - 64px); /* Adjust for header height */
-  overflow-y: auto;
-}
-
-.sanctuary-logo {
-  width: 40px;
-  height: 40px;
-  background-color: #215b33;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  color: #fff;
-}
-
-.resident-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
-  gap: 16px;
-}
-
-.resident-item {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  overflow: hidden;
-}
-
-.resident-image {
-  aspect-ratio: 1 / 1;
-  background-color: #f3f4f6;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.group-header {
-  border: 1px solid #e5e7eb;
-  border-radius: 8px 8px 0 0;
-  background-color: #fff;
-}
-
-.group-content {
-  border: 1px solid #e5e7eb;
-  border-top: none;
-  border-radius: 0 0 8px 8px;
-  background-color: #fff;
-  padding: 16px;
-}
-
-.subgroup-input {
-  display: flex;
-  gap: 8px;
-  padding: 16px 0;
-}
-

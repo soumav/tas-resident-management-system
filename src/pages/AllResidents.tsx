@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import {
   Card,
@@ -20,6 +20,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from '@/components/ui/dialog';
 import { PlusCircle, Search, Info, Edit, Trash2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -33,9 +34,16 @@ export default function AllResidents() {
   const [typeFilter, setTypeFilter] = useState('all');
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isDeleteConfirmOpen, setIsDeleteConfirmOpen] = useState(false);
   const [types, setTypes] = useState<{id: number, name: string}[]>([]);
+  const [isEditing, setIsEditing] = useState(false);
+  const [editFormData, setEditFormData] = useState({
+    name: '',
+    description: '',
+  });
   
   const { toast } = useToast();
+  const navigate = useNavigate();
   
   const fetchResidents = async () => {
     try {
@@ -113,6 +121,11 @@ export default function AllResidents() {
   const handleViewResident = (resident: Resident) => {
     setSelectedResident(resident);
     setIsDialogOpen(true);
+    setEditFormData({
+      name: resident.name,
+      description: resident.description || '',
+    });
+    setIsEditing(false);
   };
   
   const handleDeleteResident = async (id: string) => {
@@ -130,6 +143,7 @@ export default function AllResidents() {
       });
       
       setIsDialogOpen(false);
+      setIsDeleteConfirmOpen(false);
       fetchResidents(); // Refresh data
       
     } catch (error: any) {
@@ -140,6 +154,49 @@ export default function AllResidents() {
         variant: 'destructive',
       });
     }
+  };
+
+  const handleEditClick = () => {
+    if (!selectedResident) return;
+    setIsEditing(true);
+  };
+  
+  const handleEditSave = async () => {
+    if (!selectedResident) return;
+    
+    try {
+      const { error } = await supabase
+        .from('residents')
+        .update({
+          name: editFormData.name,
+          description: editFormData.description,
+        })
+        .eq('id', selectedResident.id);
+        
+      if (error) throw error;
+      
+      toast({
+        title: 'Resident updated',
+        description: 'The resident information has been updated',
+      });
+      
+      setIsEditing(false);
+      fetchResidents(); // Refresh data
+      setIsDialogOpen(false);
+      
+    } catch (error: any) {
+      console.error('Error updating resident:', error);
+      toast({
+        title: 'Error',
+        description: error.message || 'Failed to update resident',
+        variant: 'destructive',
+      });
+    }
+  };
+  
+  const handleFullEdit = () => {
+    if (!selectedResident) return;
+    navigate(`/residents/edit/${selectedResident.id}`);
   };
   
   const formatDate = (dateString: string) => {
@@ -230,13 +287,36 @@ export default function AllResidents() {
                           {resident.subgroup && ` > ${resident.subgroup.name}`}
                         </p>
                       </div>
-                      <Button
-                        variant="ghost"
-                        size="icon"
-                        onClick={() => handleViewResident(resident)}
-                      >
-                        <Info className="h-5 w-5" />
-                      </Button>
+                      <div className="flex gap-1">
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => handleViewResident(resident)}
+                        >
+                          <Info className="h-5 w-5" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedResident(resident);
+                            handleEditClick();
+                            setIsDialogOpen(true);
+                          }}
+                        >
+                          <Edit className="h-5 w-5 text-blue-500" />
+                        </Button>
+                        <Button
+                          variant="ghost"
+                          size="icon"
+                          onClick={() => {
+                            setSelectedResident(resident);
+                            setIsDeleteConfirmOpen(true);
+                          }}
+                        >
+                          <Trash2 className="h-5 w-5 text-red-500" />
+                        </Button>
+                      </div>
                     </div>
                   </CardContent>
                 </Card>
@@ -264,13 +344,38 @@ export default function AllResidents() {
         </div>
       )}
       
-      {/* Resident details dialog */}
+      {/* Confirm Delete Dialog */}
+      <Dialog open={isDeleteConfirmOpen} onOpenChange={setIsDeleteConfirmOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Delete Resident</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete {selectedResident?.name}? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsDeleteConfirmOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              variant="destructive" 
+              onClick={() => selectedResident && handleDeleteResident(selectedResident.id)}
+            >
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      {/* Resident details/edit dialog */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>
         <DialogContent className="max-w-2xl">
           {selectedResident && (
             <>
               <DialogHeader>
-                <DialogTitle className="text-xl">{selectedResident.name}</DialogTitle>
+                <DialogTitle className="text-xl">
+                  {isEditing ? "Edit Resident" : selectedResident.name}
+                </DialogTitle>
               </DialogHeader>
               
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
@@ -286,69 +391,115 @@ export default function AllResidents() {
                       </div>
                     )}
                   </div>
-                  <div className="text-center">
-                    <Button variant="outline" className="mr-2">
-                      <Edit className="h-4 w-4 mr-2" /> Edit
-                    </Button>
-                    <Button
-                      variant="outline"
-                      className="text-red-500 border-red-200 hover:bg-red-50"
-                      onClick={() => handleDeleteResident(selectedResident.id)}
-                    >
-                      <Trash2 className="h-4 w-4 mr-2" /> Delete
-                    </Button>
-                  </div>
+                  {!isEditing && (
+                    <div className="text-center">
+                      <Button variant="outline" className="mr-2" onClick={handleEditClick}>
+                        <Edit className="h-4 w-4 mr-2" /> Edit
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="text-red-500 border-red-200 hover:bg-red-50"
+                        onClick={() => setIsDeleteConfirmOpen(true)}
+                      >
+                        <Trash2 className="h-4 w-4 mr-2" /> Delete
+                      </Button>
+                    </div>
+                  )}
                 </div>
                 
                 <div>
-                  <div className="space-y-4">
-                    <div>
-                      <h4 className="font-medium text-gray-500">Name</h4>
-                      <p>{selectedResident.name}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-gray-500">Type of Resident</h4>
-                      <p>{selectedResident.type?.name}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-gray-500">Group</h4>
-                      <p>{selectedResident.group?.name || 'No group assigned'}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-gray-500">Subgroup</h4>
-                      <p>{selectedResident.subgroup?.name || 'No subgroup assigned'}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-gray-500">Description</h4>
-                      <p>{selectedResident.description || 'No description available.'}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-gray-500">Date Added</h4>
-                      <p>{formatDate(selectedResident.created_at)}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-gray-500">Date Arrived at TAS</h4>
-                      <p>{selectedResident.arrival_date ? formatDate(selectedResident.arrival_date) : 'Unknown'}</p>
-                    </div>
-                    
-                    <div>
-                      <h4 className="font-medium text-gray-500">Messages</h4>
-                      <p className="text-gray-400 italic">No messages yet.</p>
+                  {isEditing ? (
+                    <div className="space-y-4">
+                      <div>
+                        <label className="font-medium text-gray-500">Name</label>
+                        <Input 
+                          value={editFormData.name} 
+                          onChange={(e) => setEditFormData({...editFormData, name: e.target.value})}
+                        />
+                      </div>
                       
-                      <div className="mt-2 flex">
-                        <Input placeholder="Add a message..." className="flex-1 mr-2" />
-                        <Button size="sm" className="bg-sanctuary-green hover:bg-sanctuary-light-green">
-                          Add
+                      <div>
+                        <label className="font-medium text-gray-500">Description</label>
+                        <Input 
+                          value={editFormData.description} 
+                          onChange={(e) => setEditFormData({...editFormData, description: e.target.value})}
+                        />
+                      </div>
+                      
+                      <div className="pt-4">
+                        <Button 
+                          className="bg-sanctuary-green hover:bg-sanctuary-light-green mr-2"
+                          onClick={handleEditSave}
+                        >
+                          Save Changes
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          onClick={handleFullEdit}
+                        >
+                          Full Edit
+                        </Button>
+                        
+                        <Button 
+                          variant="outline" 
+                          className="ml-2"
+                          onClick={() => setIsEditing(false)}
+                        >
+                          Cancel
                         </Button>
                       </div>
                     </div>
-                  </div>
+                  ) : (
+                    <div className="space-y-4">
+                      <div>
+                        <h4 className="font-medium text-gray-500">Name</h4>
+                        <p>{selectedResident.name}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-gray-500">Type of Resident</h4>
+                        <p>{selectedResident.type?.name}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-gray-500">Group</h4>
+                        <p>{selectedResident.group?.name || 'No group assigned'}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-gray-500">Subgroup</h4>
+                        <p>{selectedResident.subgroup?.name || 'No subgroup assigned'}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-gray-500">Description</h4>
+                        <p>{selectedResident.description || 'No description available.'}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-gray-500">Date Added</h4>
+                        <p>{formatDate(selectedResident.created_at)}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-gray-500">Date Arrived at TAS</h4>
+                        <p>{selectedResident.arrival_date ? formatDate(selectedResident.arrival_date) : 'Unknown'}</p>
+                      </div>
+                      
+                      <div>
+                        <h4 className="font-medium text-gray-500">Messages</h4>
+                        <p className="text-gray-400 italic">No messages yet.</p>
+                        
+                        <div className="mt-2 flex">
+                          <Input placeholder="Add a message..." className="flex-1 mr-2" />
+                          <Button size="sm" className="bg-sanctuary-green hover:bg-sanctuary-light-green">
+                            Add
+                          </Button>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               </div>
               
