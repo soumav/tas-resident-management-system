@@ -295,7 +295,7 @@ export default function Dashboard() {
         description: `${selectedResident.name} has been removed from the system`
       });
       
-      fetchResidents();
+      await fetchResidents();
       setIsDeleteResidentDialogOpen(false);
       
     } catch (error: any) {
