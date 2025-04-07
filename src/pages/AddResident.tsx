@@ -18,6 +18,7 @@ import { Calendar as CalendarIcon, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 
+// Update the type definition to correctly represent the data structure
 type ResidentType = {
   id: number;
   name: string;
@@ -62,7 +63,8 @@ export default function AddResident() {
           
         if (typesError) throw typesError;
         
-        const formattedTypes = (typesData || []).map(type => ({
+        // Transform the data to match our ResidentType interface
+        const formattedTypes: ResidentType[] = (typesData || []).map((type: any) => ({
           id: type.id,
           name: type.name,
           category_id: type.category_id,
@@ -78,7 +80,10 @@ export default function AddResident() {
           .select('id, name');
           
         if (groupsError) throw groupsError;
-        setGroups(groupsData as ResidentGroup[] || []);
+        
+        // Properly type the groupsData before setting state
+        const typedGroupsData = (groupsData || []) as ResidentGroup[];
+        setGroups(typedGroupsData);
         
       } catch (error) {
         console.error('Error fetching options:', error);
