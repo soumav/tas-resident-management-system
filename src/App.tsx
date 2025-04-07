@@ -16,6 +16,7 @@ import AddResident from "./pages/AddResident";
 import ResidentTypeManager from "./pages/ResidentTypeManager";
 import StaffVolunteers from "./pages/StaffVolunteers";
 import NotFound from "./pages/NotFound";
+import Groups from "./pages/Groups";
 
 // Layouts
 import DashboardLayout from "./components/Layout/DashboardLayout";
@@ -41,7 +42,7 @@ const App = () => (
                 <Route path="residents" element={<AllResidents />} />
                 <Route path="residents/new" element={<AddResident />} />
                 <Route path="resident-types" element={<ResidentTypeManager />} />
-                <Route path="groups" element={<Dashboard />} /> 
+                <Route path="groups" element={<Groups />} /> 
                 <Route path="staff" element={<StaffVolunteers />} />
                 <Route path="settings" element={<Dashboard />} />
                 <Route path="about" element={<Dashboard />} />
