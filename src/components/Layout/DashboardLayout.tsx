@@ -23,6 +23,8 @@ export default function DashboardLayout() {
     await signOut();
   };
   
+  const username = user?.email?.split('@')[0] || 'User';
+  
   return (
     <div className="flex min-h-screen bg-gray-50">
       <Sidebar />
@@ -35,7 +37,7 @@ export default function DashboardLayout() {
           
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="font-medium">Soumav</p>
+              <p className="font-medium">{username}</p>
               <p className="text-xs text-gray-500">Staff</p>
             </div>
             <Button 
