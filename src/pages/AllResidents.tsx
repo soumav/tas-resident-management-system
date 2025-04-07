@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -31,7 +32,7 @@ import { Calendar } from "@/components/ui/calendar";
 import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
-import { Resident } from '@/lib/supabase';
+import { Resident, ResidentGroup, ResidentSubgroup } from '@/lib/supabase';
 import { format } from 'date-fns';
 import { cn } from "@/lib/utils";
 
@@ -48,6 +49,7 @@ export default function AllResidents() {
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [groups, setGroups] = useState<ResidentGroup[]>([]);
   
   const { toast } = useToast();
   const navigate = useNavigate();
@@ -85,6 +87,38 @@ export default function AllResidents() {
     }
   };
   
+  const fetchGroups = async () => {
+    try {
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('resident_groups')
+        .select('*')
+        .order('name');
+        
+      if (groupsError) throw groupsError;
+      
+      const { data: subgroupsData, error: subgroupsError } = await supabase
+        .from('resident_subgroups')
+        .select('*')
+        .order('name');
+        
+      if (subgroupsError) throw subgroupsError;
+      
+      const groupsWithSubgroups = (groupsData || []).map((group: ResidentGroup) => {
+        const groupSubgroups = (subgroupsData || [])
+          .filter((subgroup: ResidentSubgroup) => subgroup.group_id === group.id);
+        
+        return {
+          ...group,
+          subgroups: groupSubgroups
+        };
+      });
+      
+      setGroups(groupsWithSubgroups);
+    } catch (error) {
+      console.error('Error fetching groups:', error);
+    }
+  };
+  
   const fetchTypes = async () => {
     try {
       const { data, error } = await supabase
@@ -102,6 +136,7 @@ export default function AllResidents() {
   useEffect(() => {
     fetchResidents();
     fetchTypes();
+    fetchGroups();
   }, [toast]);
   
   useEffect(() => {
@@ -127,7 +162,9 @@ export default function AllResidents() {
     name: '',
     description: '',
     image_url: '',
-    arrival_date: null as Date | null
+    arrival_date: null as Date | null,
+    group_id: null as number | null,
+    subgroup_id: null as number | null
   });
   
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -159,7 +196,9 @@ export default function AllResidents() {
       name: resident.name,
       description: resident.description || '',
       image_url: resident.image_url || '',
-      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null
+      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null,
+      group_id: resident.group_id,
+      subgroup_id: resident.subgroup_id
     });
     setPreviewUrl(resident.image_url || null);
     setIsEditResidentDialogOpen(true);
@@ -218,14 +257,18 @@ export default function AllResidents() {
         }
       }
       
+      const updateData = {
+        name: editResidentData.name,
+        description: editResidentData.description,
+        image_url: updatedImageUrl,
+        arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
+        group_id: editResidentData.group_id,
+        subgroup_id: editResidentData.subgroup_id
+      };
+      
       const { error, data } = await supabase
         .from('residents')
-        .update({
-          name: editResidentData.name,
-          description: editResidentData.description,
-          image_url: updatedImageUrl,
-          arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null
-        })
+        .update(updateData)
         .eq('id', selectedResident.id)
         .select(`
           *,
@@ -249,6 +292,7 @@ export default function AllResidents() {
       });
       
       if (data && data.length > 0) {
+        // Update the existing resident with the new data
         setResidents(prev => 
           prev.map(resident => 
             resident.id === selectedResident.id ? data[0] : resident
@@ -519,10 +563,12 @@ export default function AllResidents() {
                       <p>{selectedResident.group?.name || 'No group assigned'}</p>
                     </div>
                     
-                    <div>
-                      <h4 className="font-medium text-gray-500">Subgroup</h4>
-                      <p>{selectedResident.subgroup?.name || 'No subgroup assigned'}</p>
-                    </div>
+                    {selectedResident.subgroup && (
+                      <div>
+                        <h4 className="font-medium text-gray-500">Subgroup</h4>
+                        <p>{selectedResident.subgroup.name}</p>
+                      </div>
+                    )}
                     
                     <div>
                       <h4 className="font-medium text-gray-500">Description</h4>
@@ -587,9 +633,106 @@ export default function AllResidents() {
             </div>
             
             <div className="grid gap-2">
-              <label className="text-sm font-medium">
-                Image
+              <label htmlFor="resident-description" className="text-sm font-medium">
+                Description (Optional)
               </label>
+              <Textarea 
+                id="resident-description" 
+                value={editResidentData.description} 
+                onChange={e => setEditResidentData({...editResidentData, description: e.target.value})}
+                placeholder="Enter description" 
+                rows={3} 
+              />
+            </div>
+
+            <div className="grid gap-2">
+              <label htmlFor="resident-group" className="text-sm font-medium">
+                Group (Optional)
+              </label>
+              <select
+                id="resident-group"
+                className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                value={editResidentData.group_id || ""}
+                onChange={(e) => {
+                  const groupId = e.target.value ? Number(e.target.value) : null;
+                  setEditResidentData({
+                    ...editResidentData,
+                    group_id: groupId,
+                    // Reset subgroup when group changes
+                    subgroup_id: null
+                  });
+                }}
+              >
+                <option value="">No Group</option>
+                {groups.map((group) => (
+                  <option key={group.id} value={group.id}>
+                    {group.name}
+                  </option>
+                ))}
+              </select>
+            </div>
+            
+            {editResidentData.group_id && groups.find(g => g.id === editResidentData.group_id)?.subgroups?.length > 0 && (
+              <div className="grid gap-2">
+                <label htmlFor="resident-subgroup" className="text-sm font-medium">
+                  Subgroup (Optional)
+                </label>
+                <select
+                  id="resident-subgroup"
+                  className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-ring"
+                  value={editResidentData.subgroup_id || ""}
+                  onChange={(e) => {
+                    const subgroupId = e.target.value ? Number(e.target.value) : null;
+                    setEditResidentData({
+                      ...editResidentData,
+                      subgroup_id: subgroupId
+                    });
+                  }}
+                >
+                  <option value="">No Subgroup</option>
+                  {groups
+                    .find(g => g.id === editResidentData.group_id)
+                    ?.subgroups
+                    ?.map((subgroup) => (
+                      <option key={subgroup.id} value={subgroup.id}>
+                        {subgroup.name}
+                      </option>
+                    ))
+                  }
+                </select>
+              </div>
+            )}
+            
+            <div className="grid gap-2">
+              <label htmlFor="resident-arrival" className="text-sm font-medium">
+                Arrival Date
+              </label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    variant="outline"
+                    className={cn(
+                      "w-full justify-start text-left font-normal",
+                      !editResidentData.arrival_date && "text-muted-foreground"
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {editResidentData.arrival_date ? format(editResidentData.arrival_date, "PPP") : <span>Pick a date</span>}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0">
+                  <Calendar
+                    mode="single"
+                    selected={editResidentData.arrival_date || undefined}
+                    onSelect={(date) => setEditResidentData({...editResidentData, arrival_date: date})}
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
+            </div>
+            
+            <div className="grid gap-2">
+              <label>Image</label>
               <div className="flex flex-col space-y-3">
                 {previewUrl && (
                   <div className="relative w-full h-40 bg-gray-100 rounded-md overflow-hidden">
@@ -629,47 +772,6 @@ export default function AllResidents() {
                   )}
                 </div>
               </div>
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="resident-description" className="text-sm font-medium">
-                Description (Optional)
-              </label>
-              <Textarea 
-                id="resident-description" 
-                value={editResidentData.description} 
-                onChange={e => setEditResidentData({...editResidentData, description: e.target.value})}
-                placeholder="Enter description" 
-                rows={3} 
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="resident-arrival" className="text-sm font-medium">
-                Arrival Date
-              </label>
-              <Popover>
-                <PopoverTrigger asChild>
-                  <Button
-                    variant="outline"
-                    className={cn(
-                      "w-full justify-start text-left font-normal",
-                      !editResidentData.arrival_date && "text-muted-foreground"
-                    )}
-                  >
-                    <CalendarIcon className="mr-2 h-4 w-4" />
-                    {editResidentData.arrival_date ? format(editResidentData.arrival_date, "PPP") : <span>Pick a date</span>}
-                  </Button>
-                </PopoverTrigger>
-                <PopoverContent className="w-auto p-0">
-                  <Calendar
-                    mode="single"
-                    selected={editResidentData.arrival_date || undefined}
-                    onSelect={(date) => setEditResidentData({...editResidentData, arrival_date: date})}
-                    initialFocus
-                  />
-                </PopoverContent>
-              </Popover>
             </div>
           </div>
           
