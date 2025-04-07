@@ -19,15 +19,11 @@ export default {
       },
     },
     extend: {
-      fontFamily: {
-        'playfair': ['"Playfair Display"', 'serif'],
-      },
       colors: {
         sanctuary: {
-          "green": "#215b33",
-          "light-green": "#4b9c64",
-          "dark-green": "#184527",
-          "button-green": "#478a5b",
+          "green": "#4d7c0f",
+          "light-green": "#65a30d",
+          "dark-green": "#215b33",
         },
         border: "hsl(var(--border))",
         input: "hsl(var(--input))",
