@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -29,7 +28,7 @@ import {
   PopoverTrigger,
 } from "@/components/ui/popover";
 import { Calendar } from "@/components/ui/calendar";
-import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload } from 'lucide-react';
+import { PlusCircle, Search, Info, Edit, Trash2, CalendarIcon, Upload, Cat, Dog, Fish, Bird, Apple, Cow } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase, Resident, ResidentGroup } from '@/lib/supabase';
 import { format } from 'date-fns';
@@ -354,6 +353,20 @@ export default function AllResidents() {
   
   const [isEditResidentDialogOpen, setIsEditResidentDialogOpen] = useState(false);
 
+  const getResidentTypeIcon = (typeName: string | undefined) => {
+    if (!typeName) return Apple;
+    
+    const type = typeName.toLowerCase();
+    
+    if (type.includes('cat')) return Cat;
+    if (type.includes('dog')) return Dog;
+    if (type.includes('cow')) return Cow;
+    if (type.includes('fish')) return Fish;
+    if (type.includes('bird') || type.includes('chicken') || type.includes('duck')) return Bird;
+    
+    return Apple; // Default icon
+  };
+
   return (
     <div>
       <div className="mb-6 flex justify-between items-center">
@@ -408,8 +421,7 @@ export default function AllResidents() {
                   >
                     {!resident.image_url && (
                       <div className="text-gray-400 flex flex-col items-center">
-                        <Info className="h-8 w-8 mb-2" />
-                        <span>No Image</span>
+                        {React.createElement(getResidentTypeIcon(resident.type?.name), { size: 48 })}
                       </div>
                     )}
                   </div>
@@ -516,8 +528,7 @@ export default function AllResidents() {
                   >
                     {!selectedResident.image_url && (
                       <div className="text-gray-400 flex flex-col items-center">
-                        <Info className="h-8 w-8 mb-2" />
-                        <span>No Image</span>
+                        {React.createElement(getResidentTypeIcon(selectedResident.type?.name), { size: 64 })}
                       </div>
                     )}
                   </div>

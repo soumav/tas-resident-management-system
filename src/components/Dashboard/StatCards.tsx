@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Card } from '@/components/ui/card';
-import { Users, ListIcon, Rabbit } from 'lucide-react';
+import { Users, ListIcon, Cat, Dog, Fish, Bird, Apple, Cow } from 'lucide-react';
 import { Resident, ResidentGroup } from '@/lib/supabase';
 
 interface StatCardsProps {
@@ -22,8 +22,16 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
     return Object.entries(residentsByType).sort(([, countA], [, countB]) => countB - countA);
   };
 
-  const getResidentTypeIcon = () => {
-    return Rabbit;
+  const getResidentTypeIcon = (typeName: string) => {
+    const type = typeName.toLowerCase();
+    
+    if (type.includes('cat')) return Cat;
+    if (type.includes('dog')) return Dog;
+    if (type.includes('cow')) return Cow;
+    if (type.includes('fish')) return Fish;
+    if (type.includes('bird') || type.includes('chicken') || type.includes('duck')) return Bird;
+    
+    return Apple; // Default icon
   };
 
   return (
@@ -51,7 +59,7 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
       </Card>
       
       {getTopResidentTypes().map(([typeName, count]) => {
-        const TypeIcon = getResidentTypeIcon();
+        const TypeIcon = getResidentTypeIcon(typeName);
         const percentage = residents.length > 0 ? Math.round(count / residents.length * 100) : 0;
         return (
           <Card key={typeName} className="p-6 flex justify-between items-center">
