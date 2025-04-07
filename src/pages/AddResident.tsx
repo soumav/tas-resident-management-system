@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -200,9 +201,40 @@ export default function AddResident() {
       
       if (image) {
         console.log('Uploading image:', image.name);
+        
+        // First, create the bucket if it doesn't exist
+        const { data: buckets, error: bucketsError } = await supabase
+          .storage
+          .listBuckets();
+          
+        if (bucketsError) {
+          console.error('Error checking buckets:', bucketsError);
+          throw bucketsError;
+        }
+        
+        const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
+        
+        if (!bucketExists) {
+          console.log('Creating resident-images bucket...');
+          const { error: createBucketError } = await supabase
+            .storage
+            .createBucket('resident-images', {
+              public: true,
+              fileSizeLimit: 10485760, // 10MB
+            });
+            
+          if (createBucketError) {
+            console.error('Error creating bucket:', createBucketError);
+            throw createBucketError;
+          }
+          
+          console.log('Bucket created successfully');
+        }
+        
+        // Now upload the file to the bucket
         const fileExt = image.name.split('.').pop();
         const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-        const filePath = `resident-images/${fileName}`;
+        const filePath = `${fileName}`;
         
         const { error: uploadError, data: uploadData } = await supabase.storage
           .from('resident-images')
