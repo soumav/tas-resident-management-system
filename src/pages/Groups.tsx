@@ -1,8 +1,7 @@
-
 import { useState, useEffect } from 'react';
 import { Card } from '@/components/ui/card';
 import { Plus, ChevronDown, ChevronUp, Edit, Trash2 } from 'lucide-react';
-import { supabase, ResidentGroup } from '@/lib/supabase';
+import { supabase, ResidentGroup, ResidentSubgroup } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle } from '@/components/ui/dialog';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
@@ -21,6 +20,15 @@ export default function Groups() {
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<ResidentGroup | null>(null);
+  
+  const [isAddSubgroupDialogOpen, setIsAddSubgroupDialogOpen] = useState(false);
+  const [isEditSubgroupDialogOpen, setIsEditSubgroupDialogOpen] = useState(false);
+  const [isDeleteSubgroupDialogOpen, setIsDeleteSubgroupDialogOpen] = useState(false);
+  const [showSubgroupInput, setShowSubgroupInput] = useState<number | null>(null);
+  const [newSubgroupName, setNewSubgroupName] = useState('');
+  const [newSubgroupDescription, setNewSubgroupDescription] = useState('');
+  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
+  const [selectedSubgroup, setSelectedSubgroup] = useState<ResidentSubgroup | null>(null);
 
   useEffect(() => {
     fetchGroups();
@@ -193,6 +201,198 @@ export default function Groups() {
     }
   };
 
+  const toggleSubgroupInput = (groupId: number) => {
+    if (showSubgroupInput === groupId) {
+      setShowSubgroupInput(null);
+    } else {
+      setShowSubgroupInput(groupId);
+      setNewSubgroupName('');
+    }
+  };
+
+  const openAddSubgroupDialog = (groupId: number) => {
+    setSelectedGroupId(groupId);
+    setNewSubgroupName('');
+    setNewSubgroupDescription('');
+    setIsAddSubgroupDialogOpen(true);
+  };
+
+  const openEditSubgroupDialog = (subgroup: ResidentSubgroup) => {
+    setSelectedSubgroup(subgroup);
+    setNewSubgroupName(subgroup.name);
+    setNewSubgroupDescription(subgroup.description || '');
+    setIsEditSubgroupDialogOpen(true);
+  };
+
+  const openDeleteSubgroupDialog = (subgroup: ResidentSubgroup) => {
+    setSelectedSubgroup(subgroup);
+    setIsDeleteSubgroupDialogOpen(true);
+  };
+
+  const handleAddSubgroup = async () => {
+    if (!selectedGroupId || !newSubgroupName.trim()) return;
+    try {
+      const {
+        data,
+        error
+      } = await supabase.from('resident_subgroups').insert({
+        name: newSubgroupName.trim(),
+        description: newSubgroupDescription.trim() || null,
+        group_id: selectedGroupId
+      }).select();
+      if (error) throw error;
+      setGroups(prev => prev.map(group => {
+        if (group.id === selectedGroupId) {
+          return {
+            ...group,
+            subgroups: [...(group.subgroups || []), data[0]]
+          };
+        }
+        return group;
+      }));
+      setIsAddSubgroupDialogOpen(false);
+      setShowSubgroupInput(null);
+      toast({
+        title: 'Success',
+        description: `Subgroup "${newSubgroupName}" has been added`
+      });
+    } catch (error) {
+      console.error('Error adding subgroup:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add subgroup',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleQuickAddSubgroup = async () => {
+    if (!showSubgroupInput || !newSubgroupName.trim()) return;
+    try {
+      const {
+        data,
+        error
+      } = await supabase.from('resident_subgroups').insert({
+        name: newSubgroupName.trim(),
+        group_id: showSubgroupInput
+      }).select();
+      if (error) throw error;
+      setGroups(prev => prev.map(group => {
+        if (group.id === showSubgroupInput) {
+          return {
+            ...group,
+            subgroups: [...(group.subgroups || []), data[0]]
+          };
+        }
+        return group;
+      }));
+      setShowSubgroupInput(null);
+      setNewSubgroupName('');
+      toast({
+        title: 'Success',
+        description: `Subgroup "${newSubgroupName}" has been added`
+      });
+    } catch (error) {
+      console.error('Error adding subgroup:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to add subgroup',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleEditSubgroup = async () => {
+    if (!selectedSubgroup || !newSubgroupName.trim()) return;
+    try {
+      const {
+        error
+      } = await supabase.from('resident_subgroups').update({
+        name: newSubgroupName.trim(),
+        description: newSubgroupDescription.trim() || null
+      }).eq('id', selectedSubgroup.id);
+      if (error) throw error;
+      setGroups(prev => prev.map(group => {
+        if (group.subgroups?.some(subgroup => subgroup.id === selectedSubgroup.id)) {
+          return {
+            ...group,
+            subgroups: group.subgroups?.map(subgroup => {
+              if (subgroup.id === selectedSubgroup.id) {
+                return {
+                  ...subgroup,
+                  name: newSubgroupName.trim(),
+                  description: newSubgroupDescription.trim() || null
+                };
+              }
+              return subgroup;
+            })
+          };
+        }
+        return group;
+      }));
+      setIsEditSubgroupDialogOpen(false);
+      toast({
+        title: 'Success',
+        description: `Subgroup "${selectedSubgroup.name}" has been updated`
+      });
+    } catch (error) {
+      console.error('Error editing subgroup:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to update subgroup',
+        variant: 'destructive'
+      });
+    }
+  };
+
+  const handleDeleteSubgroup = async () => {
+    if (!selectedSubgroup) return;
+    try {
+      const {
+        count: residentCount,
+        error: countError
+      } = await supabase.from('residents').select('*', {
+        count: 'exact',
+        head: true
+      }).eq('subgroup_id', selectedSubgroup.id);
+      if (countError) throw countError;
+      if (residentCount && residentCount > 0) {
+        toast({
+          title: 'Error',
+          description: `Cannot delete subgroup "${selectedSubgroup.name}" because it has residents assigned to it.`,
+          variant: 'destructive'
+        });
+        setIsDeleteSubgroupDialogOpen(false);
+        return;
+      }
+      const {
+        error
+      } = await supabase.from('resident_subgroups').delete().eq('id', selectedSubgroup.id);
+      if (error) throw error;
+      setGroups(prev => prev.map(group => {
+        if (group.subgroups?.some(subgroup => subgroup.id === selectedSubgroup.id)) {
+          return {
+            ...group,
+            subgroups: group.subgroups?.filter(subgroup => subgroup.id !== selectedSubgroup.id)
+          };
+        }
+        return group;
+      }));
+      setIsDeleteSubgroupDialogOpen(false);
+      toast({
+        title: 'Success',
+        description: `Subgroup "${selectedSubgroup.name}" has been deleted`
+      });
+    } catch (error) {
+      console.error('Error deleting subgroup:', error);
+      toast({
+        title: 'Error',
+        description: 'Failed to delete subgroup',
+        variant: 'destructive'
+      });
+    }
+  };
+
   return (
     <div>
       <div className="mb-8">
@@ -255,18 +455,76 @@ export default function Groups() {
             
             <CollapsibleContent>
               <div className="p-6 bg-white border-t">
-                <p className="text-gray-700">
+                <p className="text-gray-700 mb-4">
                   {group.description || "No description provided."}
                 </p>
                 
                 {group.subgroups && group.subgroups.length > 0 && (
-                  <div className="mt-4">
+                  <div className="mb-4">
                     <h4 className="font-medium text-gray-700 mb-2">Subgroups:</h4>
-                    <ul className="list-disc pl-5 space-y-1">
+                    <div className="space-y-3">
                       {group.subgroups.map(subgroup => (
-                        <li key={subgroup.id}>{subgroup.name}</li>
+                        <div key={subgroup.id} className="flex justify-between items-center p-2 border rounded-md">
+                          <div>
+                            <span className="font-medium">{subgroup.name}</span>
+                            {subgroup.description && <span className="text-sm text-gray-500 ml-2">- {subgroup.description}</span>}
+                          </div>
+                          <div className="flex items-center space-x-1">
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => openEditSubgroupDialog(subgroup)} 
+                              className="h-7 w-7 text-gray-500"
+                            >
+                              <Edit className="h-3.5 w-3.5" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon" 
+                              onClick={() => openDeleteSubgroupDialog(subgroup)} 
+                              className="h-7 w-7 text-red-500"
+                            >
+                              <Trash2 className="h-3.5 w-3.5" />
+                            </Button>
+                          </div>
+                        </div>
                       ))}
-                    </ul>
+                    </div>
+                  </div>
+                )}
+                
+                {showSubgroupInput === group.id ? (
+                  <div className="mt-4 flex items-center space-x-2">
+                    <Input 
+                      placeholder="Subgroup name" 
+                      value={newSubgroupName} 
+                      onChange={e => setNewSubgroupName(e.target.value)} 
+                      className="max-w-xs"
+                    />
+                    <Button 
+                      onClick={handleQuickAddSubgroup} 
+                      disabled={!newSubgroupName.trim()}
+                      className="bg-sanctuary-green hover:bg-sanctuary-light-green"
+                    >
+                      Add
+                    </Button>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => setShowSubgroupInput(null)}
+                    >
+                      Cancel
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="mt-4">
+                    <Button 
+                      variant="outline" 
+                      onClick={() => toggleSubgroupInput(group.id)} 
+                      className="flex items-center gap-2"
+                    >
+                      <Plus className="h-4 w-4" />
+                      Add Subgroup
+                    </Button>
                   </div>
                 )}
               </div>
@@ -391,6 +649,120 @@ export default function Groups() {
           <AlertDialogFooter>
             <AlertDialogCancel>Cancel</AlertDialogCancel>
             <AlertDialogAction onClick={handleDeleteGroup} className="bg-red-500 hover:bg-red-600">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
+      
+      <Dialog open={isAddSubgroupDialogOpen} onOpenChange={setIsAddSubgroupDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Subgroup</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="subgroup-name" className="text-sm font-medium">
+                Subgroup Name
+              </label>
+              <Input 
+                id="subgroup-name" 
+                value={newSubgroupName} 
+                onChange={e => setNewSubgroupName(e.target.value)} 
+                placeholder="Enter subgroup name" 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="subgroup-description" className="text-sm font-medium">
+                Description (Optional)
+              </label>
+              <Textarea 
+                id="subgroup-description" 
+                value={newSubgroupDescription} 
+                onChange={e => setNewSubgroupDescription(e.target.value)} 
+                placeholder="Enter description" 
+                rows={3} 
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsAddSubgroupDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-sanctuary-green hover:bg-sanctuary-light-green" 
+              onClick={handleAddSubgroup} 
+              disabled={!newSubgroupName.trim()}
+            >
+              Add Subgroup
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <Dialog open={isEditSubgroupDialogOpen} onOpenChange={setIsEditSubgroupDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Edit Subgroup</DialogTitle>
+          </DialogHeader>
+          
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="edit-subgroup-name" className="text-sm font-medium">
+                Subgroup Name
+              </label>
+              <Input 
+                id="edit-subgroup-name" 
+                value={newSubgroupName} 
+                onChange={e => setNewSubgroupName(e.target.value)} 
+                placeholder="Enter subgroup name" 
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="edit-subgroup-description" className="text-sm font-medium">
+                Description (Optional)
+              </label>
+              <Textarea 
+                id="edit-subgroup-description" 
+                value={newSubgroupDescription} 
+                onChange={e => setNewSubgroupDescription(e.target.value)} 
+                placeholder="Enter description" 
+                rows={3} 
+              />
+            </div>
+          </div>
+          
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setIsEditSubgroupDialogOpen(false)}>
+              Cancel
+            </Button>
+            <Button 
+              className="bg-sanctuary-green hover:bg-sanctuary-light-green" 
+              onClick={handleEditSubgroup} 
+              disabled={!newSubgroupName.trim()}
+            >
+              Save Changes
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+      
+      <AlertDialog open={isDeleteSubgroupDialogOpen} onOpenChange={setIsDeleteSubgroupDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Subgroup</AlertDialogTitle>
+            <AlertDialogDescription>
+              This will permanently delete the subgroup "{selectedSubgroup?.name}". 
+              This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDeleteSubgroup} className="bg-red-500 hover:bg-red-600">
               Delete
             </AlertDialogAction>
           </AlertDialogFooter>
