@@ -129,6 +129,10 @@ create policy "Anyone can read resident subgroups" on resident_subgroups for sel
 create policy "Authenticated users can create residents" on residents 
   for insert with check (auth.role() = 'authenticated');
 
+-- NEW: Allow authenticated users to update residents
+create policy "Authenticated users can update residents" on residents 
+  for update using (auth.role() = 'authenticated');
+
 -- Staff and admin can manage residents
 create policy "Staff can manage residents" on residents 
   for all using (exists (

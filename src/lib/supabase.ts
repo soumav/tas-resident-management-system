@@ -8,6 +8,13 @@ const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYm
 // Create a supabase client
 export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
+// Debug function to log supabase operations
+export const logSupabaseOperation = async (operation: string, data: any) => {
+  console.log(`Supabase ${operation} operation:`, data);
+  return data;
+};
+
+// Type definitions
 export type Tables = {
   users: {
     id: string;

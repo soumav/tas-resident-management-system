@@ -1,5 +1,5 @@
 
-import React, { useState } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -53,6 +53,10 @@ export function EditResidentDialog({
     : null;
     
   const hasSubgroups = selectedGroup?.subgroups && selectedGroup.subgroups.length > 0;
+  
+  console.log('EditResidentDialog formData:', formData);
+  console.log('Selected Group:', selectedGroup);
+  console.log('Has Subgroups:', hasSubgroups);
   
   return (
     <Dialog open={open} onOpenChange={onClose}>
@@ -161,6 +165,7 @@ export function EditResidentDialog({
               onValueChange={(value) => {
                 // Handle both selection and deselection properly
                 if (value === "placeholder" || value === "") {
+                  console.log("Clearing group selection");
                   onFormChange({
                     group_id: null,
                     subgroup_id: null
@@ -197,6 +202,7 @@ export function EditResidentDialog({
                 onValueChange={(value) => {
                   // Handle both selection and deselection properly
                   if (value === "placeholder" || value === "") {
+                    console.log("Clearing subgroup selection");
                     onFormChange({
                       subgroup_id: null
                     });
