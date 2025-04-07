@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Using hardcoded values for demonstration
@@ -11,7 +12,6 @@ export type Tables = {
   users: {
     id: string;
     email: string;
-    name: string;
     role: string;
     created_at: string;
   };

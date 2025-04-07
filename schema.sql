@@ -1,3 +1,4 @@
+
 -- Reset tables if they exist (be careful with this in production)
 drop table if exists messages;
 drop table if exists volunteers;
@@ -13,7 +14,6 @@ drop table if exists users;
 create table users (
   id uuid primary key default uuid_generate_v4(),
   email text not null unique,
-  name text not null,
   role text not null default 'user',
   created_at timestamp with time zone default now() not null
 );
@@ -188,3 +188,4 @@ create policy "Staff can manage subgroups" on resident_subgroups
     where users.id = auth.uid() 
     and (users.role = 'staff' or users.role = 'admin')
   ));
+

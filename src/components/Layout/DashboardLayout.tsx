@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { LogOut } from 'lucide-react';
 
 export default function DashboardLayout() {
-  const { user, userData, isLoading, signOut } = useAuth();
+  const { user, isLoading, signOut } = useAuth();
 
   // If still loading, return null
   if (isLoading) return null;
@@ -33,7 +33,7 @@ export default function DashboardLayout() {
           
           <div className="flex items-center gap-3">
             <div className="text-right">
-              <p className="font-medium">{userData?.name || user?.email?.split('@')[0] || 'User'}</p>
+              <p className="font-medium">{user?.email?.split('@')[0] || 'User'}</p>
               <p className="text-xs text-gray-500">Staff</p>
             </div>
             <Button 
