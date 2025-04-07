@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -20,7 +19,6 @@ import { Calendar as CalendarIcon, Upload, RefreshCw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
 import { supabase } from '@/lib/supabase';
 
-// Update the type definition to correctly represent the data structure
 type ResidentType = {
   id: number;
   name: string;
@@ -71,7 +69,6 @@ export default function AddResident() {
     try {
       setIsRefreshing(true);
       
-      // Fetch resident categories
       const { data: categoriesData, error: categoriesError } = await supabase
         .from('resident_categories')
         .select('id, name');
@@ -80,7 +77,6 @@ export default function AddResident() {
       
       const formattedCategories: ResidentCategory[] = [];
       
-      // For each category, fetch its types
       for (const category of categoriesData || []) {
         const { data: typesData, error: typesError } = await supabase
           .from('resident_types')
@@ -95,27 +91,23 @@ export default function AddResident() {
           types: typesData || []
         });
         
-        // Add all types to the flat types array
         setTypes(prev => [...prev, ...(typesData || [])]);
       }
       
       setCategories(formattedCategories);
       
-      // Fetch resident groups
       const { data: groupsData, error: groupsError } = await supabase
         .from('resident_groups')
         .select('id, name');
         
       if (groupsError) throw groupsError;
       
-      // Fetch resident subgroups
       const { data: subgroupsData, error: subgroupsError } = await supabase
         .from('resident_subgroups')
         .select('id, name, group_id');
         
       if (subgroupsError) throw subgroupsError;
       
-      // Properly type the data before setting state
       const typedGroupsData = (groupsData || []) as ResidentGroup[];
       const typedSubgroupsData = (subgroupsData || []) as ResidentSubgroup[];
       
@@ -138,7 +130,6 @@ export default function AddResident() {
     fetchOptions();
   }, [toast]);
   
-  // Update available subgroups when group changes
   useEffect(() => {
     if (groupId) {
       const filteredSubgroups = subgroups.filter(subgroup => 
@@ -146,7 +137,6 @@ export default function AddResident() {
       );
       setAvailableSubgroups(filteredSubgroups);
       
-      // Reset subgroup selection if the current selection is not in the new group
       if (subgroupId && !filteredSubgroups.some(sg => sg.id.toString() === subgroupId)) {
         setSubgroupId('');
       }
@@ -167,7 +157,6 @@ export default function AddResident() {
     setIsLoading(true);
     
     try {
-      // Upload image if present
       let imageUrl = null;
       
       if (image) {
@@ -181,7 +170,6 @@ export default function AddResident() {
           
         if (uploadError) throw uploadError;
         
-        // Get public URL
         const { data } = supabase.storage
           .from('resident-images')
           .getPublicUrl(filePath);
@@ -189,7 +177,6 @@ export default function AddResident() {
         imageUrl = data.publicUrl;
       }
       
-      // Save resident data
       const { error } = await supabase.from('residents').insert({
         name,
         type_id: parseInt(typeId),
@@ -222,7 +209,6 @@ export default function AddResident() {
   };
   
   const handleRefresh = () => {
-    // Clear the types array before fetching new data
     setTypes([]);
     fetchOptions();
     toast({
@@ -275,13 +261,13 @@ export default function AddResident() {
               </label>
               <Select 
                 value={typeId} 
-                onValueChange={setTypeId}
+                onValueChange={(value) => setTypeId(value)}
                 required
               >
-                <SelectTrigger id="type">
+                <SelectTrigger id="type" className="w-full">
                   <SelectValue placeholder="Select a type" />
                 </SelectTrigger>
-                <SelectContent>
+                <SelectContent className="w-full bg-white z-50">
                   {categories.map((category) => (
                     <SelectGroup key={category.id}>
                       <SelectLabel>{category.name}</SelectLabel>
