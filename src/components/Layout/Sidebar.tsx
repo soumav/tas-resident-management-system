@@ -1,4 +1,3 @@
-
 import { Link, useLocation } from 'react-router-dom';
 import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
@@ -35,6 +34,18 @@ export default function Sidebar() {
     checkAdminStatus();
   }, [user]);
   
+  // Get the initial based on the user role
+  const getRoleInitial = () => {
+    if (!userRole) return "U"; // Default to "U" if role is not yet determined
+    
+    switch(userRole.toLowerCase()) {
+      case "admin": return "A";
+      case "staff": return "S";
+      case "volunteer": return "V";
+      default: return "U"; // For "user" or any other role
+    }
+  };
+
   const dashboardLinks = [{
     name: 'Overview',
     path: '/',
@@ -81,7 +92,7 @@ export default function Sidebar() {
   }];
   
   const username = user?.email?.split('@')[0] || 'User';
-  const userInitial = username.charAt(0).toUpperCase();
+  const roleInitial = getRoleInitial();
   
   return (
     <div className="dashboard-sidebar bg-sanctuary-dark-green w-[280px] flex-shrink-0 flex flex-col min-h-full h-screen">
@@ -169,7 +180,7 @@ export default function Sidebar() {
       <div className="mt-auto px-4 py-6 border-t border-sanctuary-green/30">
         <div className="flex items-center gap-3">
           <Avatar className="h-10 w-10 bg-[#8B5CF6] text-sanctuary-dark-green">
-            <AvatarFallback>{userInitial}</AvatarFallback>
+            <AvatarFallback>{roleInitial}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
             <p className="text-white font-medium">Sanctuary {userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'User'}</p>
