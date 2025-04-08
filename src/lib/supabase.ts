@@ -31,7 +31,8 @@ export const logSupabaseOperation = async (operation: string, data: any) => {
 // Test connection to validate Supabase setup
 export const testSupabaseConnection = async () => {
   try {
-    const { data, error } = await supabase.from('users').select('count(*)', { count: 'exact' }).limit(0);
+    // Fix the query to not use count(*) directly as it's causing a parsing error
+    const { data, error } = await supabase.from('users').select('*').limit(1);
     
     if (error) {
       console.error('Supabase connection test failed:', error);

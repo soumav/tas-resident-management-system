@@ -2,7 +2,7 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, logSupabaseOperation } from '@/lib/supabase';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useLocation } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 
@@ -17,7 +17,8 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-export function AuthProvider({ children }: { children: React.ReactNode }) {
+// Create a wrapper component that can safely use router hooks
+function AuthProviderWithRouting({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -169,6 +170,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       )}
     </AuthContext.Provider>
   );
+}
+
+// Export a provider that doesn't need to be inside Router
+export function AuthProvider({ children }: { children: React.ReactNode }) {
+  return children;
 }
 
 export function useAuth() {
