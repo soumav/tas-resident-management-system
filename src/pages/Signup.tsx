@@ -1,26 +1,19 @@
+
 import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { Leaf, User, Mail, Lock, UserCog } from 'lucide-react';
+import { Leaf, User, Mail, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Footer from '@/components/Layout/Footer';
-import { 
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
 
 export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [role, setRole] = useState('user');
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const { toast } = useToast();
@@ -48,39 +41,44 @@ export default function Signup() {
     
     setIsLoading(true);
     
-    try {
-      // Store pending user in pending_users table
-      const { error: pendingError } = await supabase
-        .from('pending_users')
-        .insert({
-          name: name,
-          email: email,
-          password_hash: password, // Note: This is just for the admin approval workflow
-          requested_role: role
-        });
-        
-      if (pendingError) {
-        throw pendingError;
-      }
-      
-      // Send notification to admin
-      // This would typically be done via a Supabase function/webhook
-      // Here we're just simulating the concept
-      
-      toast({
-        title: "Registration submitted",
-        description: "Your account registration has been submitted for admin approval. You will receive an email once approved.",
-      });
-    } catch (error) {
-      console.error("Error in signup process:", error);
+    // Using Supabase auth for signup
+    const { data, error } = await signUp(email, password);
+    
+    if (error) {
       toast({
         title: "Sign up error",
-        description: error instanceof Error ? error.message : "An unexpected error occurred",
+        description: error.message,
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
+    } else {
+      // Add the name to the user metadata
+      try {
+        // If auth signup was successful, store the user name
+        if (data?.user?.id) {
+          await supabase
+            .from('profiles')
+            .insert({
+              id: data.user.id,
+              name: name,
+              email: email
+            });
+        }
+        
+        toast({
+          title: "Account created",
+          description: "Please check your email to confirm your account",
+        });
+      } catch (metadataError) {
+        console.error("Error saving user name:", metadataError);
+        toast({
+          title: "Warning",
+          description: "Account created but we couldn't save your name. You can update it later.",
+          variant: "destructive"
+        });
+      }
     }
+    
+    setIsLoading(false);
   };
 
   return (
@@ -139,25 +137,6 @@ export default function Signup() {
               </div>
               
               <div>
-                <label htmlFor="role" className="block text-sm font-medium text-gray-700 mb-1">
-                  Requested Role
-                </label>
-                <div className="relative">
-                  <UserCog className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
-                  <Select value={role} onValueChange={setRole}>
-                    <SelectTrigger className="pl-10">
-                      <SelectValue placeholder="Select role" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="user">User</SelectItem>
-                      <SelectItem value="staff">Staff</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                <p className="text-xs text-gray-500 mt-1">Your role request will be reviewed by an administrator.</p>
-              </div>
-              
-              <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
@@ -198,13 +177,8 @@ export default function Signup() {
                 className="w-full bg-sanctuary-green hover:bg-sanctuary-light-green h-11"
                 disabled={isLoading}
               >
-                {isLoading ? 'Submitting Request...' : 'Request Account'}
+                {isLoading ? 'Creating Account...' : 'Create Account'}
               </Button>
-              
-              <p className="text-xs text-center text-gray-500">
-                Your account request will be reviewed by an administrator.
-                You will receive an email when your account is approved.
-              </p>
             </form>
             
             <div className="mt-6 text-center text-sm">

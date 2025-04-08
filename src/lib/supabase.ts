@@ -2,49 +2,16 @@
 import { createClient } from '@supabase/supabase-js';
 
 // Using hardcoded values for demonstration
-const supabaseUrl = 'https://ghprqwotcdzowmccsfyc.supabase.co';
-const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdocHJxd290Y2R6b3dtY2NzZnljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwNjk4MDUsImV4cCI6MjA1OTY0NTgwNX0.1KVYCVO-t97HNEVXeCVbgunU7me6OxEjRd5xMLpt6-U';
+const supabaseUrl = 'https://jggvycnqqcpbeaqufvcu.supabase.co';
+const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImpnZ3Z5Y25xcWNwYmVhcXVmdmN1Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwMTAwMTIsImV4cCI6MjA1OTU4NjAxMn0.UPkBtnLUwuk4BQ1sLy-e-25aQET3FvreF9B9FhstpDo';
 
-// Create a supabase client with detailed options and logging
-export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
-  auth: {
-    persistSession: true,
-    detectSessionInUrl: true,
-    autoRefreshToken: true,
-    debug: true, // Enable debug mode
-  },
-});
+// Create a supabase client
+export const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
-// Enhanced debug function to log supabase operations
+// Debug function to log supabase operations
 export const logSupabaseOperation = async (operation: string, data: any) => {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] Supabase ${operation} operation:`, data);
-  
-  // Log additional diagnostic information
-  if (data.error) {
-    console.error(`[${timestamp}] Supabase ${operation} error:`, data.error);
-  }
-  
+  console.log(`Supabase ${operation} operation:`, data);
   return data;
-};
-
-// Test connection to validate Supabase setup
-export const testSupabaseConnection = async () => {
-  try {
-    // Using a simple query that doesn't require existing tables
-    const { data, error } = await supabase.from('users').select('*', { count: 'exact' }).limit(1);
-    
-    if (error) {
-      console.error('Supabase connection test failed:', error);
-      return { success: false, error };
-    }
-    
-    console.log('Supabase connection successful:', data);
-    return { success: true, data };
-  } catch (err) {
-    console.error('Unexpected error in Supabase connection test:', err);
-    return { success: false, error: err };
-  }
 };
 
 // Type definitions
@@ -54,21 +21,6 @@ export type Tables = {
     email: string;
     role: string;
     created_at: string;
-  };
-  profiles: {
-    id: string;
-    name: string;
-    email: string;
-    created_at: string;
-  };
-  pending_users: {
-    id: string;
-    name: string;
-    email: string;
-    password_hash: string;
-    requested_role: string;
-    created_at: string;
-    status: 'pending' | 'approved' | 'rejected';
   };
   residents: {
     id: string;
@@ -151,58 +103,4 @@ export type ResidentSubgroup = Tables['resident_subgroups'] & {
   group?: {
     name: string;
   }
-};
-
-export type PendingUser = Tables['pending_users'];
-
-// Helper functions for role-based access control
-export const canDelete = async (table?: string): Promise<boolean> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-  
-  const { data } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-    
-  // Only admin can delete staff records
-  if (table === 'staff') {
-    return data?.role === 'admin';
-  }
-  
-  // Both admin and staff can delete other records
-  return data?.role === 'admin' || data?.role === 'staff';
-};
-
-export const canModify = async (): Promise<boolean> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-  
-  const { data } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-    
-  return data?.role === 'admin' || data?.role === 'staff';
-};
-
-// New helper function to check if user is an admin
-export const isAdmin = async (): Promise<boolean> => {
-  const { data: { user } } = await supabase.auth.getUser();
-  if (!user) return false;
-  
-  const { data, error } = await supabase
-    .from('users')
-    .select('role')
-    .eq('id', user.id)
-    .single();
-    
-  if (error) {
-    console.error('Error checking admin status:', error);
-    return false;
-  }
-    
-  return data?.role === 'admin';
 };
