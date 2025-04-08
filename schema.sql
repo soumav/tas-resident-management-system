@@ -1,3 +1,4 @@
+
 -- Reset tables if they exist (be careful with this in production)
 drop table if exists messages;
 drop table if exists volunteers;
@@ -274,3 +275,22 @@ CREATE POLICY "Staff and admin can delete resident images"
   ON storage.objects FOR delete
   USING (bucket_id = 'resident-images' AND 
         (auth.jwt() ->> 'role' = 'staff' OR auth.jwt() ->> 'role' = 'admin'));
+
+-- Function to allow admins to create buckets
+CREATE OR REPLACE FUNCTION create_storage_bucket(bucket_id TEXT, bucket_public BOOLEAN DEFAULT false)
+RETURNS void AS $$
+BEGIN
+  IF (SELECT auth.jwt() ->> 'role') = 'admin' THEN
+    INSERT INTO storage.buckets (id, name, public)
+    VALUES (bucket_id, bucket_id, bucket_public);
+  ELSE
+    RAISE EXCEPTION 'Permission denied: only admins can create storage buckets';
+  END IF;
+END;
+$$ LANGUAGE plpgsql SECURITY DEFINER;
+
+-- Create a policy that allows the function to be called by admins
+DROP POLICY IF EXISTS "Admin can create buckets" ON storage.buckets;
+CREATE POLICY "Admin can create buckets" 
+  ON storage.buckets FOR insert
+  WITH CHECK ((auth.jwt() ->> 'role') = 'admin');

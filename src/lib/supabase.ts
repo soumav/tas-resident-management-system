@@ -69,6 +69,51 @@ export const promoteToAdmin = async (userEmail: string): Promise<{ success: bool
   }
 };
 
+// Create a storage bucket if it doesn't exist
+export const ensureStorageBucket = async (bucketName: string): Promise<{success: boolean; message: string}> => {
+  try {
+    // First check if bucket exists
+    const { data: buckets, error: listError } = await supabase.storage.listBuckets();
+    
+    if (listError) {
+      console.error('Error checking buckets:', listError);
+      return { success: false, message: `Failed to check if bucket exists: ${listError.message}` };
+    }
+    
+    // Check if bucket already exists
+    const bucketExists = buckets?.some(bucket => bucket.name === bucketName);
+    if (bucketExists) {
+      console.log(`Bucket ${bucketName} already exists`);
+      return { success: true, message: `Bucket ${bucketName} already exists` };
+    }
+
+    // If we need to create the bucket, ensure we have admin rights first
+    const userIsAdmin = await isAdmin();
+    if (!userIsAdmin) {
+      console.error('Only admins can create storage buckets');
+      return { success: false, message: 'Only admins can create storage buckets' };
+    }
+
+    // Create the bucket with admin credentials
+    const { error: createError } = await supabase.rpc('create_storage_bucket', { 
+      bucket_id: bucketName,
+      bucket_public: true 
+    });
+    
+    if (createError) {
+      console.error('Error creating bucket:', createError);
+      return { success: false, message: `Failed to create bucket: ${createError.message}` };
+    }
+    
+    console.log(`Bucket ${bucketName} created successfully`);
+    return { success: true, message: `Bucket ${bucketName} created successfully` };
+    
+  } catch (error: any) {
+    console.error('Error in ensureStorageBucket:', error);
+    return { success: false, message: `Unexpected error: ${error.message}` };
+  }
+};
+
 // Authorization check helpers
 export const isAdmin = async (): Promise<boolean> => {
   const role = await getUserRole();
