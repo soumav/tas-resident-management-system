@@ -339,3 +339,9 @@ export type ResidentSubgroup = Tables['resident_subgroups'] & {
     name: string;
   }
 };
+
+export type ResidentType = Tables['resident_types'] & {
+  category?: {
+    name: string;
+  }
+};

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Plus, AlertCircle } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { supabase, getUserRole, forceSetUserRole, checkRLSAccess } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
@@ -38,7 +38,8 @@ export default function Dashboard() {
   const [error, setError] = useState<Error | null>(null);
   const [loading, setLoading] = useState(true);
   const [showRLSDebugPanel, setShowRLSDebugPanel] = useState(false);
-  
+  const [residentsByType, setResidentsByType] = useState<Record<string, number>>({});
+
   const fetchResidents = async () => {
     try {
       setLoading(true);
@@ -74,7 +75,7 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const fetchResidentTypes = async () => {
     try {
       const { data: typesData, error: typesError } = await supabase
@@ -93,7 +94,7 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const fetchGroups = async () => {
     try {
       const { data: groupsData, error: groupsError } = await supabase
@@ -115,7 +116,7 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const fetchSubgroups = async () => {
     try {
       const { data: subgroupsData, error: subgroupsError } = await supabase
@@ -134,31 +135,42 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   useEffect(() => {
     Promise.all([fetchResidents(), fetchResidentTypes(), fetchGroups(), fetchSubgroups()])
-      .then(() => setLoading(false));
+      .then(() => {
+        setLoading(false);
+        
+        if (residents.length > 0) {
+          const typeCount: Record<string, number> = {};
+          residents.forEach(resident => {
+            const typeName = resident.type?.name || 'Unknown';
+            typeCount[typeName] = (typeCount[typeName] || 0) + 1;
+          });
+          setResidentsByType(typeCount);
+        }
+      });
   }, []);
-  
+
   const handleToggleGroupExpand = (groupId: number) => {
     setExpandedGroups(prev =>
       prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]
     );
   };
-  
+
   const openAddGroupDialog = () => {
     setNewGroupName('');
     setNewGroupDescription('');
     setIsAddGroupDialogOpen(true);
   };
-  
+
   const openEditGroupDialog = (group: ResidentGroup) => {
     setSelectedGroup(group);
     setNewGroupName(group.name);
     setNewGroupDescription(group.description || '');
     setIsEditGroupDialogOpen(true);
   };
-  
+
   const handleAddGroup = async () => {
     try {
       const { data, error } = await supabase
@@ -182,7 +194,7 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const handleEditGroup = async () => {
     if (!selectedGroup) return;
     try {
@@ -208,7 +220,7 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const handleDeleteGroup = async (group: ResidentGroup) => {
     try {
       const { error } = await supabase
@@ -232,12 +244,12 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const handleToggleSubgroupInput = (groupId: number) => {
     setShowSubgroupInput(prev => (prev === groupId ? null : groupId));
     setNewSubgroupName('');
   };
-  
+
   const handleAddSubgroup = async () => {
     if (!showSubgroupInput) return;
     try {
@@ -268,14 +280,14 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const handleEditSubgroup = async (subgroup: ResidentSubgroup) => {
     setSelectedSubgroup(subgroup);
     setNewSubgroupName(subgroup.name);
     setNewSubgroupDescription(subgroup.description || '');
     setIsEditSubgroupDialogOpen(true);
   };
-  
+
   const handleEditSubgroupSave = async () => {
     if (!selectedSubgroup) return;
     try {
@@ -305,7 +317,7 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const handleDeleteSubgroup = async (subgroup: ResidentSubgroup) => {
     try {
       const { error } = await supabase
@@ -330,12 +342,12 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const handleEditResident = async (resident: Resident) => {
     setSelectedResident(resident);
     setIsEditResidentDialogOpen(true);
   };
-  
+
   const handleSaveResident = async (residentData: Resident) => {
     if (!selectedResident) return;
     try {
@@ -370,12 +382,12 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const handleDeleteResident = async (resident: Resident) => {
     setSelectedResident(resident);
     setIsDeleteResidentDialogOpen(true);
   };
-  
+
   const handleConfirmDeleteResident = async () => {
     if (!selectedResident) return;
     try {
@@ -401,23 +413,26 @@ export default function Dashboard() {
       });
     }
   };
-  
+
   const getResidentsByGroup = (groupId: number) => {
     return residents.filter(resident => resident.group_id === groupId && !resident.subgroup_id);
   };
-  
+
   const getResidentsBySubgroup = (subgroupId: number) => {
     return residents.filter(resident => resident.subgroup_id === subgroupId);
   };
-  
+
   return (
     <div className="space-y-6">
       <DashboardHeader
-        title="Sanctuary Dashboard"
-        description="Overview and management of sanctuary residents, groups, and resources."
+        username={user?.email?.split('@')[0] || 'User'}
       />
       
-      <StatCards residents={residents} />
+      <StatCards 
+        residents={residents} 
+        groups={groups} 
+        residentsByType={residentsByType} 
+      />
       
       {error && (
         <Alert variant="destructive" className="mb-4">
@@ -440,7 +455,6 @@ export default function Dashboard() {
         <RLSDebugPanel onComplete={() => setShowRLSDebugPanel(false)} />
       )}
 
-      {/* Rest of your dashboard components */}
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold">Resident Groups</h2>
         <Button 
@@ -473,39 +487,65 @@ export default function Dashboard() {
       />
       
       <GroupDialogs
-        isAddGroupDialogOpen={isAddGroupDialogOpen}
-        isEditGroupDialogOpen={isEditGroupDialogOpen}
-        isEditSubgroupDialogOpen={isEditSubgroupDialogOpen}
-        newGroupName={newGroupName}
-        newGroupDescription={newGroupDescription}
-        newSubgroupName={newSubgroupName}
-        newSubgroupDescription={newSubgroupDescription}
-        onNewGroupNameChange={setNewGroupName}
-        onNewGroupDescriptionChange={setNewGroupDescription}
-        onNewSubgroupNameChange={setNewSubgroupName}
-        onNewSubgroupDescriptionChange={setNewSubgroupDescription}
+        isAddOpen={isAddGroupDialogOpen}
+        isEditOpen={isEditGroupDialogOpen}
+        isDeleteOpen={false}
+        isAddSubgroupOpen={false}
+        isEditSubgroupOpen={isEditSubgroupDialogOpen}
+        isDeleteSubgroupOpen={false}
+        groupName={newGroupName}
+        groupDescription={newGroupDescription}
+        subgroupName={newSubgroupName}
+        subgroupDescription={newSubgroupDescription}
+        selectedGroupName=""
+        selectedSubgroupName=""
+        onAddGroupClose={() => setIsAddGroupDialogOpen(false)}
+        onEditGroupClose={() => setIsEditGroupDialogOpen(false)}
+        onDeleteGroupClose={() => {}}
+        onAddSubgroupClose={() => {}}
+        onEditSubgroupClose={() => setIsEditSubgroupDialogOpen(false)}
+        onDeleteSubgroupClose={() => {}}
+        onGroupNameChange={setNewGroupName}
+        onGroupDescriptionChange={setNewGroupDescription}
+        onSubgroupNameChange={setNewSubgroupName}
+        onSubgroupDescriptionChange={setNewSubgroupDescription}
         onAddGroup={handleAddGroup}
         onEditGroup={handleEditGroup}
+        onDeleteGroup={() => {}}
+        onAddSubgroup={() => {}}
         onEditSubgroup={handleEditSubgroupSave}
-        onOpenChange={setIsAddGroupDialogOpen}
-        onEditOpenChange={setIsEditGroupDialogOpen}
-        onEditSubgroupOpenChange={setIsEditSubgroupDialogOpen}
+        onDeleteSubgroup={() => {}}
       />
       
       <EditResidentDialog 
-        isOpen={isEditResidentDialogOpen}
-        onOpenChange={setIsEditResidentDialogOpen}
-        resident={selectedResident}
-        onSave={handleSaveResident}
-        residentTypes={residentTypes}
+        open={isEditResidentDialogOpen}
+        onClose={() => setIsEditResidentDialogOpen(false)}
         groups={groups}
-        subgroups={subgroups}
+        isLoading={loading}
+        formData={{
+          name: selectedResident?.name || '',
+          description: selectedResident?.description || '',
+          image_url: selectedResident?.image_url || '',
+          arrival_date: selectedResident?.arrival_date ? new Date(selectedResident.arrival_date) : null,
+          group_id: selectedResident?.group_id || null,
+          subgroup_id: selectedResident?.subgroup_id || null
+        }}
+        previewUrl={selectedResident?.image_url || null}
+        selectedFile={null}
+        onSubmit={() => {
+          if (selectedResident) {
+            handleSaveResident(selectedResident);
+          }
+        }}
+        onFormChange={() => {}}
+        onFileChange={() => {}}
+        resetFileInput={() => {}}
       />
       
       <DeleteResidentDialog 
-        isOpen={isDeleteResidentDialogOpen}
-        onOpenChange={setIsDeleteResidentDialogOpen}
-        resident={selectedResident}
+        open={isDeleteResidentDialogOpen}
+        residentName={selectedResident?.name || ''}
+        onClose={() => setIsDeleteResidentDialogOpen(false)}
         onDelete={handleConfirmDeleteResident}
       />
     </div>

@@ -117,7 +117,7 @@ export function EditResidentDialog({
                     src={previewUrl} 
                     alt="Preview" 
                     className="h-full w-full object-cover"
-                    key={`preview-${new Date().getTime()}`} // Add key to force re-render
+                    key={`preview-${new Date().getTime()}`}
                   />
                 </div>
               )}
