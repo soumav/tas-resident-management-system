@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Home, Users, ListIcon, UserPlus, Settings, InfoIcon, HelpCircle, LogOut, UserSquare } from 'lucide-react';
+import { Home, Users, ListIcon, UserPlus, Settings, InfoIcon, HelpCircle } from 'lucide-react';
 import { 
   Sidebar as ShadcnSidebar, 
   SidebarContent, 
@@ -16,7 +16,6 @@ import {
   SidebarFooter
 } from '@/components/ui/sidebar';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { cn } from '@/lib/utils';
 
 export default function Sidebar() {
   const { user } = useAuth();
