@@ -44,7 +44,7 @@ create policy "Users can create their own messages" on messages
 -- Enable admin to create buckets
 create policy "Only admin can create buckets"
   on storage.buckets for insert 
-  using (
+  with check (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
