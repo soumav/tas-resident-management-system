@@ -9,11 +9,13 @@ import { AuthProvider } from "@/context/AuthContext";
 // Pages
 import Login from "./pages/Login";
 import Signup from "./pages/Signup";
+import PendingApproval from "./pages/PendingApproval";
 import Dashboard from "./pages/Dashboard";
 import AllResidents from "./pages/AllResidents";
 import AddResident from "./pages/AddResident";
 import ResidentTypeManager from "./pages/ResidentTypeManager";
 import StaffVolunteers from "./pages/StaffVolunteers";
+import UserApprovals from "./pages/UserApprovals";
 import NotFound from "./pages/NotFound";
 import Groups from "./pages/Groups";
 import About from "./pages/About";
@@ -36,6 +38,7 @@ const App = () => (
             {/* Auth Routes */}
             <Route path="/login" element={<Login />} />
             <Route path="/signup" element={<Signup />} />
+            <Route path="/pending-approval" element={<PendingApproval />} />
             
             {/* Protected Dashboard Routes */}
             <Route path="/" element={<DashboardLayout />}>
@@ -46,6 +49,7 @@ const App = () => (
               <Route path="resident-types" element={<ResidentTypeManager />} />
               <Route path="groups" element={<Groups />} /> 
               <Route path="staff" element={<StaffVolunteers />} />
+              <Route path="user-approvals" element={<UserApprovals />} />
               <Route path="settings" element={<Settings />} />
               <Route path="about" element={<About />} />
               <Route path="help" element={<Help />} />

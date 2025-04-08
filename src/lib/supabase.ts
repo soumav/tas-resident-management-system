@@ -22,6 +22,22 @@ export type Tables = {
     role: string;
     created_at: string;
   };
+  profiles: {
+    id: string;
+    name: string;
+    email: string;
+    created_at: string;
+  };
+  user_approval_requests: {
+    id: string;
+    user_id: string;
+    requested_role: string;
+    status: string;
+    requested_at: string;
+    processed_at: string | null;
+    processed_by: string | null;
+    notes: string | null;
+  };
   residents: {
     id: string;
     name: string;
@@ -103,4 +119,14 @@ export type ResidentSubgroup = Tables['resident_subgroups'] & {
   group?: {
     name: string;
   }
+};
+
+export type UserApprovalRequest = Tables['user_approval_requests'] & {
+  user: {
+    email: string;
+    role: string;
+    profile?: {
+      name: string;
+    }
+  };
 };

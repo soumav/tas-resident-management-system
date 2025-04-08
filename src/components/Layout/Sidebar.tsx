@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Home, Users, ListIcon, UserPlus, Settings, InfoIcon, HelpCircle, LogOut, UserSquare, PiggyBank, X } from 'lucide-react';
+import { Home, Users, ListIcon, UserPlus, Settings, InfoIcon, HelpCircle, LogOut, UserSquare, PiggyBank, X, UserCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -14,7 +14,8 @@ interface SidebarProps {
 export default function Sidebar({ closeSidebar }: SidebarProps) {
   const {
     signOut,
-    user
+    user,
+    isAdmin
   } = useAuth();
   const location = useLocation();
   const isActive = (path: string) => location.pathname === path;
@@ -31,6 +32,7 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
     path: '/groups',
     icon: ListIcon
   }];
+  
   const managementLinks = [{
     name: 'Add Resident',
     path: '/residents/new',
@@ -39,11 +41,24 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
     name: 'Staff & Volunteers',
     path: '/staff',
     icon: Users
-  }, {
+  }];
+  
+  // Add User Approvals link for admins only
+  if (isAdmin) {
+    managementLinks.push({
+      name: 'User Approvals',
+      path: '/user-approvals',
+      icon: UserCheck
+    });
+  }
+  
+  // Add settings at the end
+  managementLinks.push({
     name: 'Settings',
     path: '/settings',
     icon: Settings
-  }];
+  });
+  
   const helpLinks = [{
     name: 'About',
     path: '/about',

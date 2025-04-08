@@ -5,15 +5,22 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { PiggyBank, User, Mail, Lock } from 'lucide-react';
-import { supabase } from '@/lib/supabase';
+import { PiggyBank, User, Mail, Lock, UserCheck } from 'lucide-react';
 import Footer from '@/components/Layout/Footer';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [roleType, setRoleType] = useState('user');
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const { toast } = useToast();
@@ -41,8 +48,8 @@ export default function Signup() {
     
     setIsLoading(true);
     
-    // Using Supabase auth for signup
-    const { data, error } = await signUp(email, password);
+    // Using updated signUp function with role type
+    const { error } = await signUp(email, password, roleType, name);
     
     if (error) {
       toast({
@@ -50,32 +57,6 @@ export default function Signup() {
         description: error.message,
         variant: "destructive"
       });
-    } else {
-      // Add the name to the user metadata
-      try {
-        // If auth signup was successful, store the user name
-        if (data?.user?.id) {
-          await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              name: name,
-              email: email
-            });
-        }
-        
-        toast({
-          title: "Account created",
-          description: "Please check your email to confirm your account",
-        });
-      } catch (metadataError) {
-        console.error("Error saving user name:", metadataError);
-        toast({
-          title: "Warning",
-          description: "Account created but we couldn't save your name. You can update it later.",
-          variant: "destructive"
-        });
-      }
     }
     
     setIsLoading(false);
@@ -134,6 +115,25 @@ export default function Signup() {
                     className="pl-10"
                   />
                 </div>
+              </div>
+              
+              <div>
+                <label htmlFor="role-type" className="block text-sm font-medium text-gray-700 mb-1">
+                  Account Type
+                </label>
+                <div className="relative">
+                  <UserCheck className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-gray-400 z-10" />
+                  <Select value={roleType} onValueChange={setRoleType}>
+                    <SelectTrigger className="pl-10">
+                      <SelectValue placeholder="Select an account type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="user">Regular User</SelectItem>
+                      <SelectItem value="staff">Staff Member</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <p className="text-xs text-gray-500 mt-1">Your account will need approval by an administrator</p>
               </div>
               
               <div>

@@ -1,5 +1,6 @@
 
 -- Reset tables if they exist (be careful with this in production)
+drop table if exists user_approval_requests;
 drop table if exists messages;
 drop table if exists volunteers;
 drop table if exists staff;
@@ -15,7 +16,7 @@ drop table if exists users;
 create table users (
   id uuid primary key default uuid_generate_v4(),
   email text not null unique,
-  role text not null default 'user',
+  role text not null default 'pending', -- Changed default role to 'pending'
   created_at timestamp with time zone default now() not null
 );
 
@@ -25,6 +26,18 @@ create table profiles (
   name text,
   email text,
   created_at timestamp with time zone default now() not null
+);
+
+-- Create user approval requests table
+create table user_approval_requests (
+  id uuid primary key default uuid_generate_v4(),
+  user_id uuid not null references users(id) on delete cascade,
+  requested_role text not null,
+  status text not null default 'pending', -- pending, approved, denied
+  requested_at timestamp with time zone default now() not null,
+  processed_at timestamp with time zone,
+  processed_by uuid references users(id),
+  notes text
 );
 
 -- Create resident categories table
@@ -65,7 +78,8 @@ create table residents (
   arrival_date timestamp with time zone default now() not null,
   description text,
   image_url text,
-  created_at timestamp with time zone default now() not null
+  created_at timestamp with time zone default now() not null,
+  year_arrived text
 );
 
 -- Create staff table
@@ -99,6 +113,7 @@ create table messages (
 -- Enable Row Level Security (RLS)
 alter table users enable row level security;
 alter table profiles enable row level security;
+alter table user_approval_requests enable row level security;
 alter table residents enable row level security;
 alter table resident_types enable row level security;
 alter table resident_categories enable row level security;
@@ -108,150 +123,4 @@ alter table staff enable row level security;
 alter table volunteers enable row level security;
 alter table messages enable row level security;
 
--- Create policies
--- Users can read all users but only update themselves
-create policy "Users can read all users" on users for select using (true);
-create policy "Users can update own profile" on users for update using (auth.uid() = id);
-
--- Profiles policies
-create policy "Users can read all profiles" on profiles for select using (true);
-create policy "Users can update own profile" on profiles for update using (auth.uid() = id);
-create policy "Users can insert own profile" on profiles for insert with check (auth.uid() = id);
-
--- Everyone can read residents and related tables
-create policy "Anyone can read residents" on residents for select using (true);
-create policy "Anyone can read resident types" on resident_types for select using (true);
-create policy "Anyone can read resident categories" on resident_categories for select using (true);
-create policy "Anyone can read resident groups" on resident_groups for select using (true);
-create policy "Anyone can read resident subgroups" on resident_subgroups for select using (true);
-
--- Modified: Allow authenticated users to create residents
-create policy "Authenticated users can create residents" on residents 
-  for insert with check (auth.role() = 'authenticated');
-
--- NEW: Allow authenticated users to update residents
-create policy "Authenticated users can update residents" on residents 
-  for update using (auth.role() = 'authenticated');
-
--- Staff and admin can manage residents
-create policy "Staff can manage residents" on residents 
-  for all using (exists (
-    select 1 from users 
-    where users.id = auth.uid() 
-    and (users.role = 'staff' or users.role = 'admin')
-  ));
-
--- Only admin can manage staff
-create policy "Admin can manage staff" on staff 
-  for all using (exists (
-    select 1 from users 
-    where users.id = auth.uid() 
-    and users.role = 'admin'
-  ));
-
--- Staff and admin can manage volunteers
-create policy "Staff can manage volunteers" on volunteers 
-  for all using (exists (
-    select 1 from users 
-    where users.id = auth.uid() 
-    and (users.role = 'staff' or users.role = 'admin')
-  ));
-
--- Messages can be read by staff
-create policy "Staff can read all messages" on messages 
-  for select using (exists (
-    select 1 from users 
-    where users.id = auth.uid() 
-    and (users.role = 'staff' or users.role = 'admin')
-  ));
-
--- Messages can be created by authenticated users
-create policy "Authenticated users can create messages" on messages 
-  for insert with check (auth.uid() = user_id);
-
--- Staff and admin can manage groups and subgroups
-create policy "Staff can manage groups" on resident_groups
-  for all using (exists (
-    select 1 from users 
-    where users.id = auth.uid() 
-    and (users.role = 'staff' or users.role = 'admin')
-  ));
-
-create policy "Staff can manage subgroups" on resident_subgroups
-  for all using (exists (
-    select 1 from users 
-    where users.id = auth.uid() 
-    and (users.role = 'staff' or users.role = 'admin')
-  ));
-
--- Allow any authenticated user to create groups and subgroups
-create policy "Authenticated users can create groups" on resident_groups
-  for insert with check (auth.role() = 'authenticated');
-
-create policy "Authenticated users can create subgroups" on resident_subgroups
-  for insert with check (auth.role() = 'authenticated');
-
--- Allow authenticated users to update their own created groups
-create policy "Authenticated users can update groups" on resident_groups
-  for update using (auth.role() = 'authenticated');
-
-create policy "Authenticated users can update subgroups" on resident_subgroups
-  for update using (auth.role() = 'authenticated');
-
--- Allow authenticated users to delete groups (with proper checks for dependencies)
-create policy "Authenticated users can delete groups" on resident_groups
-  for delete using (auth.role() = 'authenticated');
-
-create policy "Authenticated users can delete subgroups" on resident_subgroups
-  for delete using (auth.role() = 'authenticated');
-
--- NEW: Allow authenticated users to manage resident categories
-create policy "Authenticated users can read categories" on resident_categories
-  for select using (true);
-  
-create policy "Authenticated users can create categories" on resident_categories
-  for insert with check (auth.role() = 'authenticated');
-  
-create policy "Authenticated users can update categories" on resident_categories
-  for update using (auth.role() = 'authenticated');
-  
-create policy "Authenticated users can delete categories" on resident_categories
-  for delete using (auth.role() = 'authenticated');
-
--- NEW: Allow authenticated users to manage resident types
-create policy "Authenticated users can read types" on resident_types
-  for select using (true);
-  
-create policy "Authenticated users can create types" on resident_types
-  for insert with check (auth.role() = 'authenticated');
-  
-create policy "Authenticated users can update types" on resident_types
-  for update using (auth.role() = 'authenticated');
-  
-create policy "Authenticated users can delete types" on resident_types
-  for delete using (auth.role() = 'authenticated');
-
--- NEW: Storage policies for the resident-images bucket
--- Enable all authenticated users to create buckets and upload files
-create policy "Enable bucket creation for authenticated users"
-  on storage.buckets for insert to authenticated with check (true);
-
-create policy "Enable bucket access for all users"
-  on storage.buckets for select to authenticated using (true);
-
--- Grant access to objects in resident-images bucket
-create policy "Give users access to their own folder"
-  on storage.objects for select
-  using (bucket_id = 'resident-images');
-
-create policy "Allow authenticated users to upload files to resident-images"
-  on storage.objects for insert to authenticated
-  with check (bucket_id = 'resident-images');
-
-create policy "Allow users to update their own objects in resident-images"
-  on storage.objects for update to authenticated
-  using (bucket_id = 'resident-images');
-
-create policy "Allow users to delete their own objects in resident-images"
-  on storage.objects for delete to authenticated
-  using (bucket_id = 'resident-images');
+-- Note: RLS policies need to be created manually as requested by the user

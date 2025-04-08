@@ -1,16 +1,26 @@
 
-import React, { useState } from 'react';
-import { Outlet, Navigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Outlet, Navigate, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import { Button } from '@/components/ui/button';
 import { LogOut, PiggyBank, Menu } from 'lucide-react';
+import { useToast } from '@/components/ui/use-toast';
 
 export default function DashboardLayout() {
-  const { user, isLoading, signOut } = useAuth();
+  const { user, isLoading, signOut, userRole, isPending } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
+  const navigate = useNavigate();
+  const { toast } = useToast();
+
+  // Redirect based on user role
+  useEffect(() => {
+    if (user && isPending) {
+      navigate('/pending-approval');
+    }
+  }, [user, isPending, navigate]);
 
   // If still loading, return null
   if (isLoading) return null;
@@ -18,6 +28,11 @@ export default function DashboardLayout() {
   // If no user is authenticated, redirect to login
   if (!user) {
     return <Navigate to="/login" />;
+  }
+
+  // If user is pending approval, redirect to pending page
+  if (isPending) {
+    return <Navigate to="/pending-approval" />;
   }
 
   const handleSignOut = async () => {
@@ -65,7 +80,7 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="font-medium">{username}</p>
-              <p className="text-xs text-gray-500">Staff</p>
+              <p className="text-xs text-gray-500 capitalize">{userRole}</p>
             </div>
             <Button 
               variant="ghost" 
