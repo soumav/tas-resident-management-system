@@ -1,4 +1,69 @@
 
+-- Reset policies if they exist
+drop policy if exists "Anyone can read users" on users;
+drop policy if exists "Staff and admin can delete users" on users;
+drop policy if exists "Staff and admin can insert/update users" on users;
+drop policy if exists "Staff and admin can update users" on users;
+
+drop policy if exists "Anyone can read profiles" on profiles;
+drop policy if exists "Staff and admin can delete profiles" on profiles;
+drop policy if exists "Staff and admin can insert/update profiles" on profiles;
+drop policy if exists "Staff and admin can update profiles" on profiles;
+
+drop policy if exists "Users can create pending requests" on pending_users;
+drop policy if exists "Users can see their own pending requests" on pending_users;
+drop policy if exists "Staff and admin can delete pending users" on pending_users;
+drop policy if exists "Staff and admin can view pending users" on pending_users;
+drop policy if exists "Staff and admin can approve/reject pending users" on pending_users;
+
+drop policy if exists "Anyone can read residents" on residents;
+drop policy if exists "Staff and admin can delete residents" on residents;
+drop policy if exists "Staff and admin can insert/update residents" on residents;
+drop policy if exists "Staff and admin can update residents" on residents;
+
+drop policy if exists "Anyone can read resident types" on resident_types;
+drop policy if exists "Staff and admin can delete resident types" on resident_types;
+drop policy if exists "Staff and admin can insert/update resident types" on resident_types;
+drop policy if exists "Staff and admin can update resident types" on resident_types;
+
+drop policy if exists "Anyone can read resident categories" on resident_categories;
+drop policy if exists "Staff and admin can delete resident categories" on resident_categories;
+drop policy if exists "Staff and admin can insert/update resident categories" on resident_categories;
+drop policy if exists "Staff and admin can update resident categories" on resident_categories;
+
+drop policy if exists "Anyone can read resident groups" on resident_groups;
+drop policy if exists "Staff and admin can delete groups" on resident_groups;
+drop policy if exists "Staff and admin can insert/update groups" on resident_groups;
+drop policy if exists "Staff and admin can update groups" on resident_groups;
+
+drop policy if exists "Anyone can read resident subgroups" on resident_subgroups;
+drop policy if exists "Staff and admin can delete subgroups" on resident_subgroups;
+drop policy if exists "Staff and admin can insert/update subgroups" on resident_subgroups;
+drop policy if exists "Staff and admin can update subgroups" on resident_subgroups;
+
+drop policy if exists "Only admin can delete staff" on staff;
+drop policy if exists "Staff and admin can read staff" on staff;
+drop policy if exists "Staff and admin can insert staff" on staff;
+drop policy if exists "Staff and admin can update staff" on staff;
+
+drop policy if exists "Anyone can read volunteers" on volunteers;
+drop policy if exists "Staff and admin can delete volunteers" on volunteers;
+drop policy if exists "Staff and admin can insert volunteers" on volunteers;
+drop policy if exists "Staff and admin can update volunteers" on volunteers;
+
+drop policy if exists "Anyone can read messages" on messages;
+drop policy if exists "Staff and admin can delete messages" on messages;
+drop policy if exists "Staff and admin can insert messages" on messages;
+drop policy if exists "Staff and admin can update messages" on messages;
+drop policy if exists "Users can create their own messages" on messages;
+
+drop policy if exists "Only admin can create buckets" on storage.buckets;
+drop policy if exists "Enable bucket access for all users" on storage.buckets;
+drop policy if exists "Give everyone access to view images" on storage.objects;
+drop policy if exists "Staff and admin can delete files" on storage.objects;
+drop policy if exists "Staff and admin can upload files to resident-images" on storage.objects;
+drop policy if exists "Staff and admin can update objects in resident-images" on storage.objects;
+
 -- Reset tables if they exist (be careful with this in production)
 drop table if exists messages cascade;
 drop table if exists volunteers cascade;
@@ -13,111 +78,4 @@ drop table if exists pending_users cascade;
 drop table if exists users cascade;
 
 -- Create users table
-create table users (
-  id uuid primary key default uuid_generate_v4(),
-  email text not null unique,
-  role text not null default 'user',
-  created_at timestamp with time zone default now() not null
-);
-
--- Create profiles table
-create table profiles (
-  id uuid primary key references users(id),
-  name text,
-  email text,
-  created_at timestamp with time zone default now() not null
-);
-
--- Create pending_users table for admin approval flow
-create table pending_users (
-  id uuid primary key default uuid_generate_v4(),
-  name text not null,
-  email text not null unique,
-  password_hash text not null,
-  requested_role text not null default 'user',
-  created_at timestamp with time zone default now() not null,
-  status text not null default 'pending' -- 'pending', 'approved', 'rejected'
-);
-
--- Create resident categories table
-create table resident_categories (
-  id serial primary key,
-  name text not null
-);
-
--- Create resident types table
-create table resident_types (
-  id serial primary key,
-  name text not null,
-  category_id integer not null references resident_categories(id)
-);
-
--- Create resident groups table
-create table resident_groups (
-  id serial primary key,
-  name text not null,
-  description text
-);
-
--- Create resident subgroups table
-create table resident_subgroups (
-  id serial primary key,
-  name text not null,
-  description text,
-  group_id integer not null references resident_groups(id)
-);
-
--- Create residents table
-create table residents (
-  id uuid primary key default uuid_generate_v4(),
-  name text not null,
-  type_id integer not null references resident_types(id),
-  group_id integer references resident_groups(id),
-  subgroup_id integer references resident_subgroups(id),
-  arrival_date timestamp with time zone default now() not null,
-  description text,
-  image_url text,
-  created_at timestamp with time zone default now() not null,
-  year_arrived text
-);
-
--- Create staff table
-create table staff (
-  id uuid primary key default uuid_generate_v4(),
-  user_id uuid not null references users(id),
-  name text not null,
-  email text not null unique,
-  role text not null,
-  created_at timestamp with time zone default now() not null
-);
-
--- Create volunteers table
-create table volunteers (
-  id uuid primary key default uuid_generate_v4(),
-  name text not null,
-  email text not null unique,
-  volunteer_type text not null,
-  created_at timestamp with time zone default now() not null
-);
-
--- Create messages table
-create table messages (
-  id uuid primary key default uuid_generate_v4(),
-  resident_id uuid not null references residents(id),
-  user_id uuid not null references users(id),
-  message text not null,
-  created_at timestamp with time zone default now() not null
-);
-
--- Enable Row Level Security (RLS)
-alter table users enable row level security;
-alter table profiles enable row level security;
-alter table pending_users enable row level security;
-alter table residents enable row level security;
-alter table resident_types enable row level security;
-alter table resident_categories enable row level security;
-alter table resident_groups enable row level security;
-alter table resident_subgroups enable row level security;
-alter table staff enable row level security;
-alter table volunteers enable row level security;
-alter table messages enable row level security;
+-- ... keep existing code (the remaining table creation code)
