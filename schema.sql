@@ -1,4 +1,3 @@
-
 -- Reset tables if they exist (be careful with this in production)
 drop table if exists messages;
 drop table if exists volunteers;
@@ -253,21 +252,25 @@ create policy "Admin can manage all messages" on messages for all
   using (auth.jwt() ->> 'role' = 'admin');
 
 -- Storage policies for resident images
-create policy "Anyone can read resident images" 
-  on storage.objects for select
-  using (bucket_id = 'resident-images');
+DROP POLICY IF EXISTS "Anyone can read resident images" ON storage.objects;
+CREATE POLICY "Anyone can read resident images" 
+  ON storage.objects FOR select
+  USING (bucket_id = 'resident-images');
 
-create policy "Staff and admin can upload resident images" 
-  on storage.objects for insert
-  with check (bucket_id = 'resident-images' and 
-             (auth.jwt() ->> 'role' = 'staff' or auth.jwt() ->> 'role' = 'admin'));
+DROP POLICY IF EXISTS "Staff and admin can upload resident images" ON storage.objects;
+CREATE POLICY "Staff and admin can upload resident images" 
+  ON storage.objects FOR insert
+  WITH CHECK (bucket_id = 'resident-images' AND 
+             (auth.jwt() ->> 'role' = 'staff' OR auth.jwt() ->> 'role' = 'admin'));
 
-create policy "Staff and admin can update resident images" 
-  on storage.objects for update
-  using (bucket_id = 'resident-images' and 
-        (auth.jwt() ->> 'role' = 'staff' or auth.jwt() ->> 'role' = 'admin'));
+DROP POLICY IF EXISTS "Staff and admin can update resident images" ON storage.objects;
+CREATE POLICY "Staff and admin can update resident images" 
+  ON storage.objects FOR update
+  USING (bucket_id = 'resident-images' AND 
+        (auth.jwt() ->> 'role' = 'staff' OR auth.jwt() ->> 'role' = 'admin'));
 
-create policy "Staff and admin can delete resident images" 
-  on storage.objects for delete
-  using (bucket_id = 'resident-images' and 
-        (auth.jwt() ->> 'role' = 'staff' or auth.jwt() ->> 'role' = 'admin'));
+DROP POLICY IF EXISTS "Staff and admin can delete resident images" ON storage.objects;
+CREATE POLICY "Staff and admin can delete resident images" 
+  ON storage.objects FOR delete
+  USING (bucket_id = 'resident-images' AND 
+        (auth.jwt() ->> 'role' = 'staff' OR auth.jwt() ->> 'role' = 'admin'));
