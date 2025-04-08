@@ -1,4 +1,3 @@
-
 import React, { useState, useEffect } from 'react';
 import { Plus, AlertCircle } from 'lucide-react';
 import { supabase, getUserRole, forceSetUserRole, checkRLSAccess, Resident, ResidentGroup, ResidentSubgroup, ResidentType } from '@/lib/supabase';
@@ -28,6 +27,7 @@ export default function Dashboard() {
   const [isLoading, setIsLoading] = useState(true);
   const [hasRLSIssue, setHasRLSIssue] = useState(false);
   const [userRole, setUserRole] = useState<string | null>(null);
+  const [username, setUsername] = useState<string>('User');
   
   // Dialog states
   const [isAddGroupOpen, setIsAddGroupOpen] = useState(false);
@@ -49,13 +49,18 @@ export default function Dashboard() {
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
   const [showRLSDebug, setShowRLSDebug] = useState(false);
 
-  // Fetch user role
+  // Fetch user role and username
   useEffect(() => {
     const fetchUserRole = async () => {
       if (user) {
         const role = await getUserRole();
         setUserRole(role);
         console.log('User role:', role);
+        
+        // Set username from email
+        if (user.email) {
+          setUsername(user.email.split('@')[0]);
+        }
       }
     };
     
@@ -323,12 +328,12 @@ export default function Dashboard() {
         <RLSDebugPanel onComplete={handleRLSDebugComplete} />
       )}
       
-      <DashboardHeader />
+      <DashboardHeader username={username} />
       
       <StatCards 
-        residents={residents} 
-        groups={groups}
-        residentsByType={residentsByType}
+        residents={residents || []} 
+        groups={groups || []}
+        residentsByType={residentsByType || {}}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
@@ -371,12 +376,12 @@ export default function Dashboard() {
         isAddSubgroupOpen={isAddSubgroupOpen}
         isEditSubgroupOpen={isEditSubgroupOpen}
         isDeleteSubgroupOpen={isDeleteSubgroupOpen}
-        groupName={groupName}
-        groupDescription={groupDescription}
-        subgroupName={subgroupName}
-        subgroupDescription={subgroupDescription}
-        selectedGroupName={selectedGroupName}
-        selectedSubgroupName={selectedSubgroupName}
+        groupName={groupName || ''}
+        groupDescription={groupDescription || ''}
+        subgroupName={subgroupName || ''}
+        subgroupDescription={subgroupDescription || ''}
+        selectedGroupName={selectedGroupName || ''}
+        selectedSubgroupName={selectedSubgroupName || ''}
         onAddGroupClose={() => setIsAddGroupOpen(false)}
         onEditGroupClose={() => setIsEditGroupOpen(false)}
         onDeleteGroupClose={() => setIsDeleteGroupOpen(false)}
@@ -412,8 +417,8 @@ export default function Dashboard() {
           
           <DeleteResidentDialog 
             open={showDeleteResidentDialog}
-            onOpenChange={setShowDeleteResidentDialog}
-            resident={selectedResident}
+            residentName={selectedResident.name || 'this resident'}
+            onClose={() => setShowDeleteResidentDialog(false)}
             onDelete={() => {
               console.log('Deleting resident:', selectedResident);
               setShowDeleteResidentDialog(false);
