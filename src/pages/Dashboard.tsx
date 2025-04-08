@@ -30,9 +30,20 @@ export default function Dashboard() {
   const [userRole, setUserRole] = useState<string | null>(null);
   
   // Dialog states
-  const [showAddGroupDialog, setShowAddGroupDialog] = useState(false);
-  const [showAddSubgroupDialog, setShowAddSubgroupDialog] = useState(false);
+  const [isAddGroupOpen, setIsAddGroupOpen] = useState(false);
+  const [isEditGroupOpen, setIsEditGroupOpen] = useState(false);
+  const [isDeleteGroupOpen, setIsDeleteGroupOpen] = useState(false);
+  const [isAddSubgroupOpen, setIsAddSubgroupOpen] = useState(false);
+  const [isEditSubgroupOpen, setIsEditSubgroupOpen] = useState(false);
+  const [isDeleteSubgroupOpen, setIsDeleteSubgroupOpen] = useState(false);
+  const [groupName, setGroupName] = useState('');
+  const [groupDescription, setGroupDescription] = useState('');
+  const [subgroupName, setSubgroupName] = useState('');
+  const [subgroupDescription, setSubgroupDescription] = useState('');
   const [selectedGroup, setSelectedGroup] = useState<ResidentGroup | null>(null);
+  const [selectedSubgroup, setSelectedSubgroup] = useState<ResidentSubgroup | null>(null);
+  const [selectedGroupName, setSelectedGroupName] = useState('');
+  const [selectedSubgroupName, setSelectedSubgroupName] = useState('');
   const [showEditResidentDialog, setShowEditResidentDialog] = useState(false);
   const [showDeleteResidentDialog, setShowDeleteResidentDialog] = useState(false);
   const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
@@ -141,10 +152,80 @@ export default function Dashboard() {
   }, [toast]);
 
   // Handle dialog opens
-  const handleOpenAddGroup = () => setShowAddGroupDialog(true);
+  const handleOpenAddGroup = () => {
+    setGroupName('');
+    setGroupDescription('');
+    setIsAddGroupOpen(true);
+  };
+  
+  const handleOpenEditGroup = (group: ResidentGroup) => {
+    setSelectedGroup(group);
+    setGroupName(group.name || '');
+    setGroupDescription(group.description || '');
+    setIsEditGroupOpen(true);
+  };
+  
+  const handleOpenDeleteGroup = (group: ResidentGroup) => {
+    setSelectedGroup(group);
+    setSelectedGroupName(group.name || '');
+    setIsDeleteGroupOpen(true);
+  };
+  
   const handleOpenAddSubgroup = (group: ResidentGroup) => {
     setSelectedGroup(group);
-    setShowAddSubgroupDialog(true);
+    setSubgroupName('');
+    setSubgroupDescription('');
+    setIsAddSubgroupOpen(true);
+  };
+  
+  const handleOpenEditSubgroup = (subgroup: ResidentSubgroup) => {
+    setSelectedSubgroup(subgroup);
+    setSubgroupName(subgroup.name || '');
+    setSubgroupDescription(subgroup.description || '');
+    setIsEditSubgroupOpen(true);
+  };
+  
+  const handleOpenDeleteSubgroup = (subgroup: ResidentSubgroup) => {
+    setSelectedSubgroup(subgroup);
+    setSelectedSubgroupName(subgroup.name || '');
+    setIsDeleteSubgroupOpen(true);
+  };
+  
+  // Handle group and subgroup operations
+  const handleAddGroup = async () => {
+    // Mock implementation for now
+    console.log('Adding group:', groupName, groupDescription);
+    setIsAddGroupOpen(false);
+  };
+  
+  const handleEditGroup = async () => {
+    // Mock implementation for now
+    console.log('Editing group:', selectedGroup?.id, groupName, groupDescription);
+    setIsEditGroupOpen(false);
+  };
+  
+  const handleDeleteGroup = async () => {
+    // Mock implementation for now
+    console.log('Deleting group:', selectedGroup?.id);
+    setIsDeleteGroupOpen(false);
+  };
+  
+  const handleAddSubgroup = async () => {
+    // Mock implementation for now
+    console.log('Adding subgroup:', subgroupName, subgroupDescription, 'to group', selectedGroup?.id);
+    setIsAddSubgroupOpen(false);
+  };
+  
+  const handleEditSubgroup = async () => {
+    // Mock implementation for now
+    console.log('Editing subgroup:', selectedSubgroup?.id, subgroupName, subgroupDescription);
+    setIsEditSubgroupOpen(false);
+  };
+  
+  const handleDeleteSubgroup = async () => {
+    // Mock implementation for now
+    console.log('Deleting subgroup:', selectedSubgroup?.id);
+    setIsDeleteSubgroupOpen(false);
   };
   
   const handleEditResident = (resident: Resident) => {
@@ -160,6 +241,59 @@ export default function Dashboard() {
   const handleRLSDebugComplete = () => {
     setShowRLSDebug(false);
     window.location.reload();
+  };
+
+  // GroupsSection props adaptation
+  const expandedGroups: number[] = [];
+  const showSubgroupInput: number | null = null;
+  const newSubgroupName = '';
+  
+  const onToggleGroupExpand = (groupId: number) => {
+    // Mock implementation
+    console.log('Toggle group expand:', groupId);
+  };
+  
+  const onEditGroup = (group: ResidentGroup | null) => {
+    if (group) {
+      handleOpenEditGroup(group);
+    } else {
+      handleOpenAddGroup();
+    }
+  };
+  
+  const onDeleteGroup = (group: ResidentGroup) => {
+    handleOpenDeleteGroup(group);
+  };
+  
+  const onToggleSubgroupInput = (groupId: number) => {
+    // Mock implementation
+    console.log('Toggle subgroup input for group:', groupId);
+  };
+  
+  const onNewSubgroupNameChange = (name: string) => {
+    // Mock implementation
+    console.log('New subgroup name:', name);
+  };
+  
+  const onQuickAddSubgroup = () => {
+    // Mock implementation
+    console.log('Quick add subgroup');
+  };
+  
+  const onEditSubgroup = (subgroup: ResidentSubgroup) => {
+    handleOpenEditSubgroup(subgroup);
+  };
+  
+  const onDeleteSubgroup = (subgroup: ResidentSubgroup) => {
+    handleOpenDeleteSubgroup(subgroup);
+  };
+  
+  const getResidentsByGroup = (groupId: number): Resident[] => {
+    return residents.filter(r => r.group_id === groupId);
+  };
+  
+  const getResidentsBySubgroup = (subgroupId: number): Resident[] => {
+    return residents.filter(r => r.subgroup_id === subgroupId);
   };
 
   return (
@@ -200,53 +334,90 @@ export default function Dashboard() {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           <ResidentDisplay 
-            residents={residents} 
-            onEdit={handleEditResident}
-            onDelete={handleDeleteResident}
+            residents={residents}
+            onEditResident={handleEditResident}
+            onDeleteResident={handleDeleteResident}
           />
         </div>
         
         <div>
           <GroupsSection 
-            groups={groups} 
-            subgroups={subgroups}
-            isLoading={isLoading}
-            onAddGroup={handleOpenAddGroup}
-            onAddSubgroup={handleOpenAddSubgroup}
+            groups={groups}
+            expandedGroups={expandedGroups}
+            showSubgroupInput={showSubgroupInput}
+            residents={residents}
+            newSubgroupName={newSubgroupName}
+            onToggleGroupExpand={onToggleGroupExpand}
+            onEditGroup={onEditGroup}
+            onDeleteGroup={onDeleteGroup}
+            onToggleSubgroupInput={onToggleSubgroupInput}
+            onNewSubgroupNameChange={onNewSubgroupNameChange}
+            onQuickAddSubgroup={onQuickAddSubgroup}
+            onEditSubgroup={onEditSubgroup}
+            onDeleteSubgroup={onDeleteSubgroup}
+            onEditResident={handleEditResident}
+            onDeleteResident={handleDeleteResident}
+            getResidentsByGroup={getResidentsByGroup}
+            getResidentsBySubgroup={getResidentsBySubgroup}
           />
         </div>
       </div>
       
       {/* Dialogs */}
       <GroupDialogs 
-        showAddGroupDialog={showAddGroupDialog}
-        setShowAddGroupDialog={setShowAddGroupDialog}
-        showAddSubgroupDialog={showAddSubgroupDialog}
-        setShowAddSubgroupDialog={setShowAddSubgroupDialog}
-        selectedGroup={selectedGroup}
-        groups={groups}
-        setGroups={setGroups}
-        subgroups={subgroups}
-        setSubgroups={setSubgroups}
+        isAddOpen={isAddGroupOpen}
+        isEditOpen={isEditGroupOpen}
+        isDeleteOpen={isDeleteGroupOpen}
+        isAddSubgroupOpen={isAddSubgroupOpen}
+        isEditSubgroupOpen={isEditSubgroupOpen}
+        isDeleteSubgroupOpen={isDeleteSubgroupOpen}
+        groupName={groupName}
+        groupDescription={groupDescription}
+        subgroupName={subgroupName}
+        subgroupDescription={subgroupDescription}
+        selectedGroupName={selectedGroupName}
+        selectedSubgroupName={selectedSubgroupName}
+        onAddGroupClose={() => setIsAddGroupOpen(false)}
+        onEditGroupClose={() => setIsEditGroupOpen(false)}
+        onDeleteGroupClose={() => setIsDeleteGroupOpen(false)}
+        onAddSubgroupClose={() => setIsAddSubgroupOpen(false)}
+        onEditSubgroupClose={() => setIsEditSubgroupOpen(false)}
+        onDeleteSubgroupClose={() => setIsDeleteSubgroupOpen(false)}
+        onGroupNameChange={setGroupName}
+        onGroupDescriptionChange={setGroupDescription}
+        onSubgroupNameChange={setSubgroupName}
+        onSubgroupDescriptionChange={setSubgroupDescription}
+        onAddGroup={handleAddGroup}
+        onEditGroup={handleEditGroup}
+        onDeleteGroup={handleDeleteGroup}
+        onAddSubgroup={handleAddSubgroup}
+        onEditSubgroup={handleEditSubgroup}
+        onDeleteSubgroup={handleDeleteSubgroup}
       />
       
       {selectedResident && (
         <>
           <EditResidentDialog 
             open={showEditResidentDialog}
-            setOpen={setShowEditResidentDialog}
+            onOpenChange={setShowEditResidentDialog}
             resident={selectedResident}
             residentTypes={residentTypes}
             groups={groups}
             subgroups={subgroups}
-            setResidents={setResidents}
+            onSave={(updatedResident) => {
+              console.log('Saving updated resident:', updatedResident);
+              setShowEditResidentDialog(false);
+            }}
           />
           
           <DeleteResidentDialog 
             open={showDeleteResidentDialog}
-            setOpen={setShowDeleteResidentDialog}
+            onOpenChange={setShowDeleteResidentDialog}
             resident={selectedResident}
-            setResidents={setResidents}
+            onDelete={() => {
+              console.log('Deleting resident:', selectedResident);
+              setShowDeleteResidentDialog(false);
+            }}
           />
         </>
       )}

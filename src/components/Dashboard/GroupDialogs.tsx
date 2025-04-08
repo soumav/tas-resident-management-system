@@ -83,7 +83,7 @@ export function GroupDialogs({
               <Input 
                 id="name" 
                 placeholder="Enter group name" 
-                value={groupName} 
+                value={groupName || ''} 
                 onChange={e => onGroupNameChange(e.target.value)} 
               />
             </div>
@@ -92,14 +92,14 @@ export function GroupDialogs({
               <Input 
                 id="description" 
                 placeholder="Enter description" 
-                value={groupDescription} 
+                value={groupDescription || ''} 
                 onChange={e => onGroupDescriptionChange(e.target.value)} 
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={onAddGroupClose}>Cancel</Button>
-            <Button onClick={onAddGroup} disabled={!groupName.trim()}>Create Group</Button>
+            <Button onClick={onAddGroup} disabled={!(groupName || '').trim()}>Create Group</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -119,7 +119,7 @@ export function GroupDialogs({
               <Input 
                 id="edit-name" 
                 placeholder="Enter group name" 
-                value={groupName} 
+                value={groupName || ''} 
                 onChange={e => onGroupNameChange(e.target.value)} 
               />
             </div>
@@ -128,14 +128,14 @@ export function GroupDialogs({
               <Input 
                 id="edit-description" 
                 placeholder="Enter description" 
-                value={groupDescription} 
+                value={groupDescription || ''} 
                 onChange={e => onGroupDescriptionChange(e.target.value)} 
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={onEditGroupClose}>Cancel</Button>
-            <Button onClick={onEditGroup} disabled={!groupName.trim()}>Save Changes</Button>
+            <Button onClick={onEditGroup} disabled={!(groupName || '').trim()}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -147,7 +147,7 @@ export function GroupDialogs({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Group</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete the group "{selectedGroupName}"? This will also delete all subgroups within this group. This action cannot be undone.
+                Are you sure you want to delete the group "{selectedGroupName || ''}"? This will also delete all subgroups within this group. This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
@@ -176,7 +176,7 @@ export function GroupDialogs({
                 <Input 
                   id="subgroup-name" 
                   placeholder="Enter subgroup name" 
-                  value={subgroupName} 
+                  value={subgroupName || ''} 
                   onChange={e => onSubgroupNameChange(e.target.value)} 
                 />
               </div>
@@ -185,14 +185,14 @@ export function GroupDialogs({
                 <Input 
                   id="subgroup-description" 
                   placeholder="Enter description" 
-                  value={subgroupDescription} 
+                  value={subgroupDescription || ''} 
                   onChange={e => onSubgroupDescriptionChange(e.target.value)} 
                 />
               </div>
             </div>
             <DialogFooter>
               <Button variant="outline" onClick={onAddSubgroupClose}>Cancel</Button>
-              <Button onClick={onAddSubgroup} disabled={!subgroupName.trim()}>Create Subgroup</Button>
+              <Button onClick={onAddSubgroup} disabled={!(subgroupName || '').trim()}>Create Subgroup</Button>
             </DialogFooter>
           </DialogContent>
         </Dialog>
@@ -213,7 +213,7 @@ export function GroupDialogs({
               <Input 
                 id="edit-subgroup-name" 
                 placeholder="Enter subgroup name" 
-                value={subgroupName} 
+                value={subgroupName || ''} 
                 onChange={e => onSubgroupNameChange(e.target.value)} 
               />
             </div>
@@ -222,14 +222,14 @@ export function GroupDialogs({
               <Input 
                 id="edit-subgroup-description" 
                 placeholder="Enter description" 
-                value={subgroupDescription} 
+                value={subgroupDescription || ''} 
                 onChange={e => onSubgroupDescriptionChange(e.target.value)} 
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={onEditSubgroupClose}>Cancel</Button>
-            <Button onClick={onEditSubgroup} disabled={!subgroupName.trim()}>Save Changes</Button>
+            <Button onClick={onEditSubgroup} disabled={!(subgroupName || '').trim()}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -241,7 +241,7 @@ export function GroupDialogs({
             <AlertDialogHeader>
               <AlertDialogTitle>Delete Subgroup</AlertDialogTitle>
               <AlertDialogDescription>
-                Are you sure you want to delete the subgroup "{selectedSubgroupName}"? This action cannot be undone.
+                Are you sure you want to delete the subgroup "{selectedSubgroupName || ''}"? This action cannot be undone.
               </AlertDialogDescription>
             </AlertDialogHeader>
             <AlertDialogFooter>
