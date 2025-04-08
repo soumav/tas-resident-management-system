@@ -1,4 +1,3 @@
-
 -- ===============================
 -- COMBINED SCHEMA FILE FOR EASY EXECUTION
 -- ===============================
@@ -7,17 +6,17 @@
 -- organization and maintenance.
 
 -- Reset tables if they exist (be careful with this in production)
-drop table if exists messages;
-drop table if exists volunteers;
-drop table if exists staff;
-drop table if exists residents;
-drop table if exists resident_subgroups;
-drop table if exists resident_groups;
-drop table if exists resident_types;
-drop table if exists resident_categories;
-drop table if exists profiles;
-drop table if exists pending_users;
-drop table if exists users;
+drop table if exists messages cascade;
+drop table if exists volunteers cascade;
+drop table if exists staff cascade;
+drop table if exists residents cascade;
+drop table if exists resident_subgroups cascade;
+drop table if exists resident_groups cascade;
+drop table if exists resident_types cascade;
+drop table if exists resident_categories cascade;
+drop table if exists profiles cascade;
+drop table if exists pending_users cascade;
+drop table if exists users cascade;
 
 -- Create users table
 create table users (
