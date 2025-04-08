@@ -154,3 +154,17 @@ export const canModify = async (): Promise<boolean> => {
     
   return data?.role === 'admin' || data?.role === 'staff';
 };
+
+// New helper function to check if user is an admin
+export const isAdmin = async (): Promise<boolean> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  
+  const { data } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+    
+  return data?.role === 'admin';
+};

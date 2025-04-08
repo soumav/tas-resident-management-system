@@ -1,6 +1,6 @@
 
 import { useState } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -25,6 +25,7 @@ export default function Signup() {
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -50,28 +51,70 @@ export default function Signup() {
     setIsLoading(true);
     
     try {
-      // Store pending user in pending_users table
-      const { error: pendingError } = await supabase
-        .from('pending_users')
-        .insert({
-          name: name,
-          email: email,
-          password_hash: password, // Note: This is just for the admin approval workflow
-          requested_role: role
+      // Check if this is an admin creation with the special code
+      // The format is email#admincode
+      const adminCode = "createadmin123";
+      const isAdminCreation = email.includes("#" + adminCode);
+      
+      // Clean the email if it contains the admin code
+      const cleanEmail = email.split("#")[0];
+      
+      if (isAdminCreation) {
+        // Direct admin creation path
+        const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+          email: cleanEmail,
+          password: password
         });
         
-      if (pendingError) {
-        throw pendingError;
+        if (signUpError) throw signUpError;
+        
+        if (signUpData.user) {
+          // Create the user profile with admin role
+          const { error: profileError } = await supabase.from('users').insert({
+            id: signUpData.user.id,
+            email: cleanEmail,
+            role: 'admin'
+          });
+          
+          if (profileError) throw profileError;
+          
+          // Create profile entry
+          const { error: userProfileError } = await supabase.from('profiles').insert({
+            id: signUpData.user.id,
+            name: name,
+            email: cleanEmail,
+          });
+          
+          if (userProfileError) throw userProfileError;
+          
+          toast({
+            title: "Admin account created",
+            description: "Your admin account has been created successfully.",
+          });
+          
+          // Redirect to login page
+          navigate('/login');
+        }
+      } else {
+        // Standard user creation path through pending_users
+        const { error: pendingError } = await supabase
+          .from('pending_users')
+          .insert({
+            name: name,
+            email: email,
+            password_hash: password, // Note: This is just for the admin approval workflow
+            requested_role: role
+          });
+          
+        if (pendingError) {
+          throw pendingError;
+        }
+        
+        toast({
+          title: "Registration submitted",
+          description: "Your account registration has been submitted for admin approval. You will receive an email once approved.",
+        });
       }
-      
-      // Send notification to admin
-      // This would typically be done via a Supabase function/webhook
-      // Here we're just simulating the concept
-      
-      toast({
-        title: "Registration submitted",
-        description: "Your account registration has been submitted for admin approval. You will receive an email once approved.",
-      });
     } catch (error) {
       console.error("Error in signup process:", error);
       toast({
