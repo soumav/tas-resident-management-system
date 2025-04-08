@@ -323,7 +323,12 @@ export default function Dashboard() {
     setIsAddGroupDialogOpen(true);
   };
 
-  const openEditGroupDialog = (group: ResidentGroup) => {
+  const openEditGroupDialog = (group: ResidentGroup | null) => {
+    if (group === null) {
+      openAddGroupDialog();
+      return;
+    }
+    
     setSelectedGroup(group);
     setNewGroupName(group.name);
     setNewGroupDescription(group.description || '');
