@@ -15,6 +15,7 @@ type AuthContextType = {
   signOut: () => Promise<void>;
 };
 
+// Create the context with a default undefined value
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 // The actual context provider component that requires routing
@@ -159,8 +160,18 @@ export function AuthProviderWithRouting({ children }: { children: React.ReactNod
     }
   };
 
+  // Create the value object with all context data
+  const contextValue: AuthContextType = {
+    user,
+    session,
+    isLoading,
+    signIn,
+    signUp,
+    signOut,
+  };
+
   return (
-    <AuthContext.Provider value={{ user, session, isLoading, signIn, signUp, signOut }}>
+    <AuthContext.Provider value={contextValue}>
       {isLoading ? (
         <div className="flex items-center justify-center h-screen">
           <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green" />
