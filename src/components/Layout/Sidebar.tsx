@@ -7,7 +7,7 @@ import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
-import { isAdmin } from '@/lib/supabase';
+import { isAdmin, getUserRole } from '@/lib/supabase';
 
 export default function Sidebar() {
   const {
@@ -16,6 +16,7 @@ export default function Sidebar() {
   } = useAuth();
   const location = useLocation();
   const [isUserAdmin, setIsUserAdmin] = useState(false);
+  const [userRole, setUserRole] = useState<string | null>(null);
   
   const isActive = (path: string) => location.pathname === path;
   
@@ -24,6 +25,10 @@ export default function Sidebar() {
       if (user) {
         const adminStatus = await isAdmin();
         setIsUserAdmin(adminStatus);
+        
+        // Fetch user role
+        const role = await getUserRole();
+        setUserRole(role);
       }
     };
     
@@ -167,7 +172,7 @@ export default function Sidebar() {
             <AvatarFallback>{userInitial}</AvatarFallback>
           </Avatar>
           <div className="flex flex-col">
-            <p className="text-white font-medium">Sanctuary Staff</p>
+            <p className="text-white font-medium">Sanctuary {userRole ? userRole.charAt(0).toUpperCase() + userRole.slice(1) : 'User'}</p>
             <p className="text-xs text-gray-300">Version 1.0</p>
           </div>
         </div>
