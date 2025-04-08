@@ -33,17 +33,19 @@ export default function DashboardLayout() {
           
         {/* Main content area */}
         <SidebarInset>
-          <header className="bg-white border-b border-gray-200 shadow-sm h-16 flex items-center px-6 sticky top-0 z-10">
-            <div className="md:hidden mr-4">
-              <SidebarTrigger />
+          <header className="bg-white border-b border-gray-200 shadow-sm h-16 flex items-center px-4 sm:px-6 sticky top-0 z-10">
+            <div className="flex items-center md:hidden mr-2">
+              <SidebarTrigger>
+                <Menu className="h-5 w-5" />
+              </SidebarTrigger>
             </div>
             
             <div className="flex-1 flex justify-center">
-              <h1 className="text-xl font-semibold tracking-wider text-sanctuary-dark-green">The Alice Sanctuary Resident Directory</h1>
+              <h1 className="text-lg sm:text-xl font-semibold tracking-wider text-sanctuary-dark-green truncate">The Alice Sanctuary Resident Directory</h1>
             </div>
             
-            <div className="flex items-center gap-3">
-              <div className="text-right">
+            <div className="flex items-center gap-2 sm:gap-3">
+              <div className="text-right hidden sm:block">
                 <p className="font-medium">{username}</p>
                 <p className="text-xs text-gray-500">Staff</p>
               </div>
@@ -59,7 +61,7 @@ export default function DashboardLayout() {
           </header>
           
           <div className="flex-1 overflow-auto">
-            <div className="py-4 px-6 min-h-[calc(100vh-4rem)]">
+            <div className="py-4 px-4 sm:px-6 min-h-[calc(100vh-4rem)]">
               <Outlet />
             </div>
             <Footer />

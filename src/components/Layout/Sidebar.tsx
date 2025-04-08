@@ -44,7 +44,7 @@ export default function Sidebar() {
 
   return (
     <ShadcnSidebar collapsible="icon" variant="sidebar" className="bg-sanctuary-dark-green border-r-0">
-      <SidebarRail />
+      <SidebarRail className="bg-sanctuary-dark-green after:bg-sanctuary-light-green/30 hover:after:bg-sanctuary-light-green/50" />
       
       <SidebarHeader className="text-white px-4 py-4">
         <div className="flex flex-col gap-1">
@@ -64,6 +64,7 @@ export default function Sidebar() {
                     asChild 
                     isActive={isActive(link.path)}
                     tooltip={link.name}
+                    className="text-white hover:bg-sanctuary-green/40 data-[active=true]:bg-sanctuary-green/60 hover:text-white"
                   >
                     <Link to={link.path}>
                       <link.icon className="h-5 w-5" />
@@ -86,6 +87,7 @@ export default function Sidebar() {
                     asChild 
                     isActive={isActive(link.path)}
                     tooltip={link.name}
+                    className="text-white hover:bg-sanctuary-green/40 data-[active=true]:bg-sanctuary-green/60 hover:text-white"
                   >
                     <Link to={link.path}>
                       <link.icon className="h-5 w-5" />
@@ -108,6 +110,7 @@ export default function Sidebar() {
                     asChild 
                     isActive={isActive(link.path)}
                     tooltip={link.name}
+                    className="text-white hover:bg-sanctuary-green/40 data-[active=true]:bg-sanctuary-green/60 hover:text-white"
                   >
                     <Link to={link.path}>
                       <link.icon className="h-5 w-5" />
