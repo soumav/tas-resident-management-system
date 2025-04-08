@@ -15,14 +15,14 @@ After creating a user through Supabase Authentication (via sign up), follow thes
 -- Insert into users table with admin role
 INSERT INTO users (id, email, role, created_at)
 VALUES 
-  ('paste-user-uuid-here', 'user-email@example.com', 'admin', NOW())
+  ('paste-user-uuid-here', 'soumav91@gmail.com', 'admin', NOW())
 ON CONFLICT (id) DO UPDATE 
   SET role = 'admin';
 
 -- Insert into profiles table
 INSERT INTO profiles (id, name, email, created_at)
 VALUES 
-  ('paste-user-uuid-here', 'Admin User Name', 'user-email@example.com', NOW())
+  ('paste-user-uuid-here', 'Soumav Das', 'soumav91@gmail.com', NOW())
 ON CONFLICT (id) DO NOTHING;
 ```
 
@@ -42,7 +42,7 @@ To verify the user has been correctly added with admin privileges:
 SELECT u.id, u.email, u.role, p.name
 FROM users u 
 LEFT JOIN profiles p ON u.id = p.id
-WHERE u.email = 'user-email@example.com';
+WHERE u.email = 'soumav91@gmail.com';
 ```
 
 The query should show the user with role 'admin' and entries in both tables.
