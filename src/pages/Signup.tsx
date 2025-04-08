@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { Leaf, User, Mail, Lock } from 'lucide-react';
+import { PiggyBank, User, Mail, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Footer from '@/components/Layout/Footer';
 
@@ -87,8 +87,8 @@ export default function Signup() {
         <div className="w-full max-w-md">
           <div className="mb-6 text-center">
             <div className="flex justify-center mb-4">
-              <div className="sanctuary-logo w-14 h-14 flex items-center justify-center">
-                <Leaf className="h-7 w-7 text-white" />
+              <div className="h-12 w-12 bg-sanctuary-green rounded-full flex items-center justify-center">
+                <PiggyBank className="h-6 w-6 text-white" />
               </div>
             </div>
             <h1 className="text-3xl font-bold text-sanctuary-green">The Alice Sanctuary</h1>
