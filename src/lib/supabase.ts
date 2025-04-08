@@ -22,6 +22,21 @@ export type Tables = {
     role: string;
     created_at: string;
   };
+  profiles: {
+    id: string;
+    name: string;
+    email: string;
+    created_at: string;
+  };
+  pending_users: {
+    id: string;
+    name: string;
+    email: string;
+    password_hash: string;
+    requested_role: string;
+    created_at: string;
+    status: 'pending' | 'approved' | 'rejected';
+  };
   residents: {
     id: string;
     name: string;
@@ -104,3 +119,5 @@ export type ResidentSubgroup = Tables['resident_subgroups'] & {
     name: string;
   }
 };
+
+export type PendingUser = Tables['pending_users'];
