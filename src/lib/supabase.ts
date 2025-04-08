@@ -5,13 +5,45 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = 'https://ghprqwotcdzowmccsfyc.supabase.co';
 const supabaseAnonKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImdocHJxd290Y2R6b3dtY2NzZnljIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDQwNjk4MDUsImV4cCI6MjA1OTY0NTgwNX0.1KVYCVO-t97HNEVXeCVbgunU7me6OxEjRd5xMLpt6-U';
 
-// Create a supabase client
-export const supabase = createClient(supabaseUrl, supabaseAnonKey);
+// Create a supabase client with detailed options and logging
+export const supabase = createClient(supabaseUrl, supabaseAnonKey, {
+  auth: {
+    persistSession: true,
+    detectSessionInUrl: true,
+    autoRefreshToken: true,
+    debug: true, // Enable debug mode
+  },
+});
 
-// Debug function to log supabase operations
+// Enhanced debug function to log supabase operations
 export const logSupabaseOperation = async (operation: string, data: any) => {
-  console.log(`Supabase ${operation} operation:`, data);
+  const timestamp = new Date().toISOString();
+  console.log(`[${timestamp}] Supabase ${operation} operation:`, data);
+  
+  // Log additional diagnostic information
+  if (data.error) {
+    console.error(`[${timestamp}] Supabase ${operation} error:`, data.error);
+  }
+  
   return data;
+};
+
+// Test connection to validate Supabase setup
+export const testSupabaseConnection = async () => {
+  try {
+    const { data, error } = await supabase.from('users').select('count(*)', { count: 'exact' }).limit(0);
+    
+    if (error) {
+      console.error('Supabase connection test failed:', error);
+      return { success: false, error };
+    }
+    
+    console.log('Supabase connection successful:', data);
+    return { success: true, data };
+  } catch (err) {
+    console.error('Unexpected error in Supabase connection test:', err);
+    return { success: false, error: err };
+  }
 };
 
 // Type definitions
@@ -160,11 +192,16 @@ export const isAdmin = async (): Promise<boolean> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return false;
   
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from('users')
     .select('role')
     .eq('id', user.id)
     .single();
+    
+  if (error) {
+    console.error('Error checking admin status:', error);
+    return false;
+  }
     
   return data?.role === 'admin';
 };

@@ -1,9 +1,10 @@
 
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { supabase, logSupabaseOperation } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
+import { useToast } from '@/hooks/use-toast';
 
 type AuthContextType = {
   user: User | null;
@@ -21,13 +22,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      setIsLoading(false);
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error('Error getting session:', error);
+          toast({
+            title: 'Session Error',
+            description: 'Could not retrieve your session. Please try logging in again.',
+            variant: 'destructive',
+          });
+        }
+        
+        setSession(session);
+        setUser(session?.user ?? null);
+        setIsLoading(false);
+      } catch (err) {
+        console.error('Unexpected error during session retrieval:', err);
+        setIsLoading(false);
+      }
     };
     
     getSession();
@@ -42,34 +59,103 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (!error) {
-      navigate('/');
+    try {
+      console.log('Signing in with:', { email, password: '******' });
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      await logSupabaseOperation('sign-in', { success: !error, email });
+      
+      if (error) {
+        console.error('Sign in error:', error);
+        toast({
+          title: 'Authentication Error',
+          description: error.message || 'Failed to sign in. Please check your credentials.',
+          variant: 'destructive',
+        });
+        return { error };
+      }
+      
+      if (data.user) {
+        console.log('Successfully signed in user:', data.user.email);
+        toast({
+          title: 'Welcome back!',
+          description: `Signed in as ${data.user.email}`,
+        });
+        navigate('/');
+      }
+      
+      return { error: null };
+    } catch (err) {
+      console.error('Unexpected error during sign in:', err);
+      toast({
+        title: 'Unexpected Error',
+        description: 'An unexpected error occurred. Please try again later.',
+        variant: 'destructive',
+      });
+      return { error: err };
     }
-    
-    return { error };
   };
 
   const signUp = async (email: string, password: string) => {
-    const { data, error } = await supabase.auth.signUp({
-      email,
-      password,
-    });
-    
-    if (!error) {
-      navigate('/');
+    try {
+      const { data, error } = await supabase.auth.signUp({
+        email,
+        password,
+      });
+      
+      await logSupabaseOperation('sign-up', { success: !error, email });
+      
+      if (error) {
+        console.error('Sign up error:', error);
+        toast({
+          title: 'Registration Error',
+          description: error.message || 'Failed to create account. Please try again.',
+          variant: 'destructive',
+        });
+        return { data: null, error };
+      }
+      
+      toast({
+        title: 'Account Created',
+        description: 'Your account has been created successfully.',
+      });
+      
+      if (!error) {
+        navigate('/');
+      }
+      
+      return { data, error };
+    } catch (err) {
+      console.error('Unexpected error during sign up:', err);
+      toast({
+        title: 'Unexpected Error',
+        description: 'An unexpected error occurred. Please try again later.',
+        variant: 'destructive',
+      });
+      return { data: null, error: err };
     }
-    
-    return { data, error };
   };
 
   const signOut = async () => {
-    await supabase.auth.signOut();
-    navigate('/login');
+    try {
+      await supabase.auth.signOut();
+      toast({
+        title: 'Signed out',
+        description: 'You have been signed out successfully.',
+      });
+      navigate('/login');
+    } catch (err) {
+      console.error('Sign out error:', err);
+      toast({
+        title: 'Sign Out Error',
+        description: 'Failed to sign out. Please try again.',
+        variant: 'destructive',
+      });
+    }
   };
 
   return (
