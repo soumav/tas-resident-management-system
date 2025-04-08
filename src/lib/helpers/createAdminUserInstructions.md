@@ -6,33 +6,54 @@ After creating a user through Supabase Authentication (via sign up), follow thes
 ## Option 1: Using the SQL Editor in Supabase Dashboard
 
 1. Go to your Supabase Dashboard
-2. Navigate to Authentication → Users
-3. Find the user you just created and copy their UUID
-4. Go to the SQL Editor in Supabase
-5. Run the following SQL (replacing the placeholders):
+2. Navigate to the SQL Editor in Supabase
+3. Run the following SQL which automatically generates a UUID:
 
 ```sql
--- Insert into users table with admin role
-INSERT INTO users (id, email, role, created_at)
-VALUES 
-  ('paste-user-uuid-here', 'soumav91@gmail.com', 'admin', NOW())
-ON CONFLICT (id) DO UPDATE 
-  SET role = 'admin';
+-- Generate a UUID and create admin entries in both tables
+DO $$ 
+DECLARE
+    new_user_id UUID := uuid_generate_v4();
+BEGIN
+    -- Insert into users table with admin role
+    INSERT INTO users (id, email, role, created_at)
+    VALUES 
+      (new_user_id, 'soumav91@gmail.com', 'admin', NOW())
+    ON CONFLICT (email) DO UPDATE 
+      SET role = 'admin'
+      RETURNING id INTO new_user_id;
 
--- Insert into profiles table
-INSERT INTO profiles (id, name, email, created_at)
-VALUES 
-  ('paste-user-uuid-here', 'Soumav Das', 'soumav91@gmail.com', NOW())
-ON CONFLICT (id) DO NOTHING;
+    -- Insert into profiles table
+    INSERT INTO profiles (id, name, email, created_at)
+    VALUES 
+      (new_user_id, 'Soumav Das', 'soumav91@gmail.com', NOW())
+    ON CONFLICT (id) DO NOTHING;
+
+    -- Show the created user ID
+    RAISE NOTICE 'Created admin user with ID: %', new_user_id;
+END $$;
 ```
 
-## Option 2: First-Time Setup - Creating an Initial Admin
+## Option 2: Using an Existing Authenticated User
 
-If this is your first time setting up the system and you need an admin user:
+If you've already created a user through authentication and want to make them an admin:
 
-1. Sign up normally through the application
-2. Get the UUID from Supabase Authentication dashboard
-3. Run the SQL above to set the user as admin
+1. Find the user's UUID from the Authentication dashboard
+2. Run this simpler SQL:
+
+```sql
+-- Make existing user an admin
+UPDATE users
+SET role = 'admin'
+WHERE email = 'soumav91@gmail.com';
+
+-- If needed, update or create a profile entry
+INSERT INTO profiles (id, name, email, created_at)
+SELECT id, 'Soumav Das', 'soumav91@gmail.com', NOW()
+FROM users
+WHERE email = 'soumav91@gmail.com'
+ON CONFLICT (id) DO NOTHING;
+```
 
 ## Verification
 
