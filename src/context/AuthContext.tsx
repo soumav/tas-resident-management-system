@@ -106,7 +106,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             toast({
               title: "Account Pending Approval",
               description: "Your account is pending approval by an administrator.",
-              variant: "warning"
+              variant: "default" // Changed from "warning" to "default"
             });
             navigate('/pending-approval');
           } else if (data.role === 'admin') {
