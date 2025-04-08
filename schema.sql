@@ -130,14 +130,14 @@ alter table messages enable row level security;
 -- Everyone can read all users for basic functionality
 create policy "Anyone can read users" on users for select using (true);
 
--- Only admin can delete users
-create policy "Only admin can delete users" on users 
+-- Both staff and admin can delete users
+create policy "Staff and admin can delete users" on users 
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -166,14 +166,14 @@ create policy "Staff and admin can update users" on users
 -- Everyone can read all profiles
 create policy "Anyone can read profiles" on profiles for select using (true);
 
--- Only admin can delete profiles
-create policy "Only admin can delete profiles" on profiles 
+-- Both staff and admin can delete profiles
+create policy "Staff and admin can delete profiles" on profiles 
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -207,14 +207,14 @@ create policy "Users can create pending requests" on pending_users
 create policy "Users can see their own pending requests" on pending_users 
   for select using (email = auth.email());
 
--- Only admin can delete pending users
-create policy "Only admin can delete pending users" on pending_users 
+-- Both staff and admin can delete pending users
+create policy "Staff and admin can delete pending users" on pending_users 
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -248,14 +248,14 @@ create policy "Anyone can read resident categories" on resident_categories for s
 create policy "Anyone can read resident groups" on resident_groups for select using (true);
 create policy "Anyone can read resident subgroups" on resident_subgroups for select using (true);
 
--- Only admin can delete residents
-create policy "Only admin can delete residents" on residents 
+-- Both staff and admin can delete residents
+create policy "Staff and admin can delete residents" on residents 
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -280,14 +280,14 @@ create policy "Staff and admin can update residents" on residents
     )
   );
 
--- Only admin can delete resident types
-create policy "Only admin can delete resident types" on resident_types
+-- Both staff and admin can delete resident types
+create policy "Staff and admin can delete resident types" on resident_types
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -312,14 +312,14 @@ create policy "Staff and admin can update resident types" on resident_types
     )
   );
 
--- Only admin can delete resident categories
-create policy "Only admin can delete resident categories" on resident_categories
+-- Both staff and admin can delete resident categories
+create policy "Staff and admin can delete resident categories" on resident_categories
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -344,14 +344,14 @@ create policy "Staff and admin can update resident categories" on resident_categ
     )
   );
 
--- Only admin can delete resident groups
-create policy "Only admin can delete groups" on resident_groups
+-- Both staff and admin can delete resident groups
+create policy "Staff and admin can delete groups" on resident_groups
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -376,14 +376,14 @@ create policy "Staff and admin can update groups" on resident_groups
     )
   );
 
--- Only admin can delete resident subgroups
-create policy "Only admin can delete subgroups" on resident_subgroups
+-- Both staff and admin can delete resident subgroups
+create policy "Staff and admin can delete subgroups" on resident_subgroups
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -452,14 +452,14 @@ create policy "Staff and admin can update staff" on staff
     )
   );
 
--- Only admin can delete volunteers
-create policy "Only admin can delete volunteers" on volunteers 
+-- Both staff and admin can delete volunteers
+create policy "Staff and admin can delete volunteers" on volunteers 
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -493,14 +493,14 @@ create policy "Anyone can read volunteers" on volunteers
 create policy "Anyone can read messages" on messages 
   for select using (true);
 
--- Only admin can delete messages
-create policy "Only admin can delete messages" on messages 
+-- Both staff and admin can delete messages
+create policy "Staff and admin can delete messages" on messages 
   for delete using (
     auth.role() = 'authenticated' and 
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 
@@ -551,8 +551,8 @@ create policy "Give everyone access to view images"
   on storage.objects for select
   using (bucket_id = 'resident-images');
 
--- Only admin can delete files
-create policy "Only admin can delete files"
+-- Both staff and admin can delete files
+create policy "Staff and admin can delete files"
   on storage.objects for delete
   using (
     bucket_id = 'resident-images' and
@@ -560,7 +560,7 @@ create policy "Only admin can delete files"
     exists (
       select 1 from users 
       where users.id = auth.uid() 
-      and users.role = 'admin'
+      and (users.role = 'staff' or users.role = 'admin')
     )
   );
 

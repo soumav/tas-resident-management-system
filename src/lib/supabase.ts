@@ -123,7 +123,7 @@ export type ResidentSubgroup = Tables['resident_subgroups'] & {
 export type PendingUser = Tables['pending_users'];
 
 // Helper functions for role-based access control
-export const canDelete = async (): Promise<boolean> => {
+export const canDelete = async (table?: string): Promise<boolean> => {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) return false;
   
@@ -133,7 +133,13 @@ export const canDelete = async (): Promise<boolean> => {
     .eq('id', user.id)
     .single();
     
-  return data?.role === 'admin';
+  // Only admin can delete staff records
+  if (table === 'staff') {
+    return data?.role === 'admin';
+  }
+  
+  // Both admin and staff can delete other records
+  return data?.role === 'admin' || data?.role === 'staff';
 };
 
 export const canModify = async (): Promise<boolean> => {
