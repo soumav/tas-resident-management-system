@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
@@ -156,20 +157,29 @@ export default function AddResident() {
   useEffect(() => {
     fetchOptions();
 
-    const createStorageBucket = async () => {
-      const result = await ensureStorageBucket('resident-images', true);
-      if (!result.success) {
-        toast({
-          title: 'Storage Setup Issue',
-          description: result.message,
-          variant: 'destructive',
-        });
-      } else {
-        console.log(result.message);
+    // Improved storage bucket initialization
+    const setupStorage = async () => {
+      console.log("Setting up storage bucket for resident images...");
+      try {
+        const result = await ensureStorageBucket('resident-images', true);
+        
+        if (!result.success) {
+          console.warn(`Storage setup issue: ${result.message}`);
+          // Show warning toast but don't block the form
+          toast({
+            title: 'Storage Setup Warning',
+            description: "Image uploads may not work. " + result.message,
+            variant: 'destructive',
+          });
+        } else {
+          console.log(result.message);
+        }
+      } catch (error) {
+        console.error("Storage setup failed:", error);
       }
     };
     
-    createStorageBucket();
+    setupStorage();
   }, [toast]);
   
   useEffect(() => {
@@ -217,11 +227,11 @@ export default function AddResident() {
         console.log('Uploading image:', image.name);
         
         try {
+          // Try to ensure bucket exists but don't block form submission if it fails
           const bucketResult = await ensureStorageBucket('resident-images', true);
-          if (!bucketResult.success) {
-            throw new Error(bucketResult.message);
-          }
+          console.log('Bucket creation result:', bucketResult);
           
+          // Attempt upload even if bucket creation reported issues
           const fileExt = image.name.split('.').pop();
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
           const filePath = `${fileName}`;
@@ -247,8 +257,8 @@ export default function AddResident() {
           console.error('Upload error:', uploadError);
           
           toast({
-            title: 'Storage Error',
-            description: uploadError.message || 'Failed to upload image',
+            title: 'Image Upload Failed',
+            description: 'The resident will be created without an image. You can add an image later.',
             variant: 'destructive',
           });
           
