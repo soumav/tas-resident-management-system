@@ -34,6 +34,41 @@ export const getUserRole = async (): Promise<string | null> => {
   }
 };
 
+// New function: Promote user to admin
+export const promoteToAdmin = async (userEmail: string): Promise<{ success: boolean; message: string }> => {
+  try {
+    // First, find the user by email
+    const { data: userData, error: userError } = await supabase
+      .from('users')
+      .select('id')
+      .eq('email', userEmail)
+      .single();
+      
+    if (userError) {
+      return { success: false, message: `User not found: ${userError.message}` };
+    }
+    
+    if (!userData) {
+      return { success: false, message: 'User not found with that email' };
+    }
+    
+    // Update the user's role to admin
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({ role: 'admin' })
+      .eq('id', userData.id);
+      
+    if (updateError) {
+      return { success: false, message: `Failed to update user role: ${updateError.message}` };
+    }
+    
+    return { success: true, message: `User ${userEmail} promoted to admin successfully` };
+  } catch (error) {
+    console.error('Error promoting user to admin:', error);
+    return { success: false, message: 'An unexpected error occurred' };
+  }
+};
+
 // Authorization check helpers
 export const isAdmin = async (): Promise<boolean> => {
   const role = await getUserRole();
