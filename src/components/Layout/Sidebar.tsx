@@ -1,7 +1,7 @@
 
 import { Link, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { Home, Users, ListIcon, UserPlus, Settings, InfoIcon, HelpCircle, LogOut, UserSquare, PiggyBank, X } from 'lucide-react';
+import { Home, Users, ListIcon, UserPlus, Settings, InfoIcon, HelpCircle, LogOut, UserSquare, X } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
@@ -61,7 +61,11 @@ export default function Sidebar({ closeSidebar }: SidebarProps) {
     <div className="dashboard-sidebar bg-sanctuary-dark-green w-[280px] flex-shrink-0 flex flex-col h-full">
       <div className="px-4 py-4 flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <PiggyBank className="h-6 w-6 text-white" />
+          <img 
+            src="/lovable-uploads/4b537bbd-178d-476b-af45-3450c5f7eb39.png" 
+            alt="Pig Logo" 
+            className="h-6 w-6 text-white" 
+          />
           <div className="flex flex-col gap-1">
             <h1 className="text-xl font-bold text-white">The Alice Sanctuary</h1>
             <p className="text-sm text-gray-300">Resident Management</p>
