@@ -121,3 +121,30 @@ export type ResidentSubgroup = Tables['resident_subgroups'] & {
 };
 
 export type PendingUser = Tables['pending_users'];
+
+// Helper functions for role-based access control
+export const canDelete = async (): Promise<boolean> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  
+  const { data } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+    
+  return data?.role === 'admin';
+};
+
+export const canModify = async (): Promise<boolean> => {
+  const { data: { user } } = await supabase.auth.getUser();
+  if (!user) return false;
+  
+  const { data } = await supabase
+    .from('users')
+    .select('role')
+    .eq('id', user.id)
+    .single();
+    
+  return data?.role === 'admin' || data?.role === 'staff';
+};
