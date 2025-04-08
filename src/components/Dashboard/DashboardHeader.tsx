@@ -5,10 +5,10 @@ import { Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface DashboardHeaderProps {
-  username?: string;
+  username: string;
 }
 
-export function DashboardHeader({ username = 'User' }: DashboardHeaderProps) {
+export function DashboardHeader({ username }: DashboardHeaderProps) {
   return (
     <div className="mb-8">
       <div className="flex justify-between items-center">
