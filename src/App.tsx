@@ -6,7 +6,7 @@ import { Toaster } from './components/ui/toaster';
 import { Toaster as Sonner } from './components/ui/sonner';
 import { TooltipProvider } from './components/ui/tooltip';
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { AuthProvider } from './context/AuthContext';
+import { AuthProvider, AuthProviderWithRouting } from './context/AuthContext';
 
 // Pages
 import Login from './pages/Login';
@@ -37,10 +37,10 @@ function App() {
   return (
     <QueryClientProvider client={queryClient}>
       <Router>
-        <AuthProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Sonner />
+        <TooltipProvider>
+          <Toaster />
+          <Sonner />
+          <AuthProviderWithRouting>
             <Routes>
               {/* Auth Routes */}
               <Route path="/login" element={<Login />} />
@@ -64,8 +64,8 @@ function App() {
               {/* Catch-all route */}
               <Route path="*" element={<NotFound />} />
             </Routes>
-          </TooltipProvider>
-        </AuthProvider>
+          </AuthProviderWithRouting>
+        </TooltipProvider>
       </Router>
     </QueryClientProvider>
   );

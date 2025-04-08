@@ -17,8 +17,8 @@ type AuthContextType = {
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Create a wrapper component that can safely use router hooks
-function AuthProviderWithRouting({ children }: { children: React.ReactNode }) {
+// The actual context provider component that requires routing
+export function AuthProviderWithRouting({ children }: { children: React.ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [session, setSession] = useState<Session | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -172,9 +172,10 @@ function AuthProviderWithRouting({ children }: { children: React.ReactNode }) {
   );
 }
 
-// Export a provider that doesn't need to be inside Router
+// This is a wrapper component that will be used in App.tsx
+// It must be used inside a Router because AuthProviderWithRouting uses router hooks
 export function AuthProvider({ children }: { children: React.ReactNode }) {
-  return children;
+  return <AuthProviderWithRouting>{children}</AuthProviderWithRouting>;
 }
 
 export function useAuth() {
