@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, AlertCircle } from 'lucide-react';
 import { supabase, getUserRole, forceSetUserRole, checkRLSAccess, Resident, ResidentGroup, ResidentSubgroup, ResidentType } from '@/lib/supabase';
@@ -191,16 +192,15 @@ export default function Dashboard() {
       <DashboardHeader />
       
       <StatCards 
-        totalResidents={residents.length} 
+        residents={residents} 
+        groups={groups}
         residentsByType={residentsByType}
-        totalGroups={groups.length}
       />
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
         <div className="md:col-span-2">
           <ResidentDisplay 
             residents={residents} 
-            isLoading={isLoading} 
             onEdit={handleEditResident}
             onDelete={handleDeleteResident}
           />

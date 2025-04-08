@@ -72,7 +72,7 @@ export default function AdminRoleHelper() {
       </CardHeader>
       <CardContent className="space-y-4">
         {currentRole ? (
-          <Alert variant={currentRole === 'admin' ? "default" : "warning"} className="mb-4">
+          <Alert variant={currentRole === 'admin' ? "default" : "destructive"} className="mb-4">
             {currentRole === 'admin' ? (
               <CheckCircle className="h-4 w-4" />
             ) : (
