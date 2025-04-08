@@ -6,7 +6,7 @@ import { supabase } from '@/lib/supabase';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import { Button } from '@/components/ui/button';
-import { LogOut, Menu } from 'lucide-react';
+import { LogOut, PiggyBank, Menu } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, isLoading, signOut } = useAuth();
@@ -57,11 +57,7 @@ export default function DashboardLayout() {
 
           <div className="flex-1 flex justify-center">
             <div className="flex items-center gap-2">
-              <img 
-                src="https://favicon.io/emoji-favicons/pig/favicon-32x32.png" 
-                alt="Pig" 
-                className="h-6 w-6" 
-              />
+              <PiggyBank className="h-6 w-6 text-sanctuary-green" />
               <h1 className="text-xl font-semibold tracking-wider text-sanctuary-dark-green">The Alice Sanctuary Resident Directory</h1>
             </div>
           </div>
