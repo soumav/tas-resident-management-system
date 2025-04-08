@@ -19,17 +19,83 @@ export const getUserRole = async (): Promise<string | null> => {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return null;
     
+    console.log('Current user:', user);
+    
+    // First check if the role is in the JWT token
+    const jwtRole = (user as any).role;
+    if (jwtRole) {
+      console.log('Role found in JWT token:', jwtRole);
+      return jwtRole;
+    }
+    
+    // If not, try to get it from the users table
     const { data, error } = await supabase
       .from('users')
       .select('role')
       .eq('id', user.id)
       .single();
       
-    if (error) throw error;
+    if (error) {
+      console.error('Error getting user role from database:', error);
+      throw error;
+    }
+    
+    console.log('Role from database:', data?.role);
     return data?.role || null;
   } catch (error) {
     console.error('Error getting user role:', error);
     return null;
+  }
+};
+
+// Force set role for current user (useful for debugging/testing)
+export const forceSetUserRole = async (role: 'admin' | 'staff' | 'user'): Promise<boolean> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return false;
+    
+    // Update the users table
+    const { error } = await supabase
+      .from('users')
+      .update({ role })
+      .eq('id', user.id);
+      
+    if (error) {
+      console.error('Error updating user role:', error);
+      return false;
+    }
+    
+    console.log(`User role successfully set to ${role}`);
+    
+    // Force refresh session to update JWT claims
+    await supabase.auth.refreshSession();
+    
+    return true;
+  } catch (error) {
+    console.error('Error setting user role:', error);
+    return false;
+  }
+};
+
+// Check RLS policy access (useful for debugging)
+export const checkRLSAccess = async (table: string): Promise<boolean> => {
+  try {
+    // Try a simple select to check RLS
+    const { data, error } = await supabase
+      .from(table)
+      .select('*')
+      .limit(1);
+      
+    if (error) {
+      console.error(`RLS check failed for table ${table}:`, error);
+      return false;
+    }
+    
+    console.log(`RLS check passed for table ${table}`);
+    return true;
+  } catch (error) {
+    console.error(`Error checking RLS for table ${table}:`, error);
+    return false;
   }
 };
 
@@ -149,11 +215,13 @@ export const ensureStorageBucket = async (bucketName: string, forceCreate: boole
 // Authorization check helpers
 export const isAdmin = async (): Promise<boolean> => {
   const role = await getUserRole();
+  console.log('Checking if user is admin. Role:', role);
   return role === 'admin';
 };
 
 export const isStaff = async (): Promise<boolean> => {
   const role = await getUserRole();
+  console.log('Checking if user is staff. Role:', role);
   return role === 'staff' || role === 'admin';
 };
 

@@ -1,769 +1,512 @@
-import { useState, useEffect } from 'react';
-import { useAuth } from '@/context/AuthContext';
-import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
-import { supabase, ResidentGroup, ResidentSubgroup, Resident } from '@/lib/supabase';
+import React, { useState, useEffect } from 'react';
+import { Plus, AlertCircle } from 'lucide-react';
+import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
+import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
+import { Button } from '@/components/ui/button';
 
-// Component imports
 import { DashboardHeader } from '@/components/Dashboard/DashboardHeader';
 import { StatCards } from '@/components/Dashboard/StatCards';
 import { GroupsSection } from '@/components/Dashboard/GroupsSection';
+import { GroupDialogs } from '@/components/Dashboard/GroupDialogs';
 import { EditResidentDialog } from '@/components/Dashboard/EditResidentDialog';
 import { DeleteResidentDialog } from '@/components/Dashboard/DeleteResidentDialog';
-import { GroupDialogs } from '@/components/Dashboard/GroupDialogs';
+
+import { Resident, ResidentGroup, ResidentSubgroup, ResidentType } from '@/lib/supabase';
+import RLSDebugPanel from '@/components/Debug/RLSDebugPanel';
 
 export default function Dashboard() {
-  const { user } = useAuth();
-  const [groups, setGroups] = useState<ResidentGroup[]>([]);
-  const [expandedGroups, setExpandedGroups] = useState<number[]>([]);
-  const [residents, setResidents] = useState<Resident[]>([]);
-  const [residentsByType, setResidentsByType] = useState<Record<string, number>>({});
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
-  
   const { toast } = useToast();
-  
-  // Dialog state
-  const [isAddGroupDialogOpen, setIsAddGroupDialogOpen] = useState(false);
-  const [isEditGroupDialogOpen, setIsEditGroupDialogOpen] = useState(false);
-  const [isDeleteGroupDialogOpen, setIsDeleteGroupDialogOpen] = useState(false);
-  const [isAddSubgroupDialogOpen, setIsAddSubgroupDialogOpen] = useState(false);
+  const [residents, setResidents] = useState<Resident[]>([]);
+  const [residentTypes, setResidentTypes] = useState<ResidentType[]>([]);
+  const [groups, setGroups] = useState<ResidentGroup[]>([]);
+  const [subgroups, setSubgroups] = useState<ResidentSubgroup[]>([]);
+  const [expandedGroups, setExpandedGroups] = useState<number[]>([]);
   const [showSubgroupInput, setShowSubgroupInput] = useState<number | null>(null);
-  const [isEditSubgroupDialogOpen, setIsEditSubgroupDialogOpen] = useState(false);
-  const [isDeleteSubgroupDialogOpen, setIsDeleteSubgroupDialogOpen] = useState(false);
-  
-  // Form state
   const [newGroupName, setNewGroupName] = useState('');
   const [newGroupDescription, setNewGroupDescription] = useState('');
-  const [selectedGroupId, setSelectedGroupId] = useState<number | null>(null);
-  const [selectedGroup, setSelectedGroup] = useState<ResidentGroup | null>(null);
   const [newSubgroupName, setNewSubgroupName] = useState('');
   const [newSubgroupDescription, setNewSubgroupDescription] = useState('');
-  const [selectedSubgroupId, setSelectedSubgroupId] = useState<number | null>(null);
-  const [selectedSubgroup, setSelectedSubgroup] = useState<ResidentSubgroup | null>(null);
-  
-  // Resident state
-  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
-  const [isDeleteResidentDialogOpen, setIsDeleteResidentDialogOpen] = useState(false);
+  const [isAddGroupDialogOpen, setIsAddGroupDialogOpen] = useState(false);
+  const [isEditGroupDialogOpen, setIsEditGroupDialogOpen] = useState(false);
+  const [isEditSubgroupDialogOpen, setIsEditSubgroupDialogOpen] = useState(false);
   const [isEditResidentDialogOpen, setIsEditResidentDialogOpen] = useState(false);
-  const [editResidentData, setEditResidentData] = useState({
-    name: '',
-    description: '',
-    image_url: '',
-    arrival_date: null as Date | null,
-    group_id: null as number | null,
-    subgroup_id: null as number | null
-  });
-
-  // This useEffect will run whenever the Dashboard component mounts
-  useEffect(() => {
-    console.log('Dashboard mounted/revisited - fetching fresh data');
-    fetchGroups();
-    fetchResidents();
-    
-    // We don't need a cleanup function since we're not subscribing to anything
-  }, []);
-
-  // Calculate resident types whenever residents change
-  useEffect(() => {
-    if (residents.length) {
-      const typeCount: Record<string, number> = {};
-      residents.forEach(resident => {
-        const typeName = resident.type?.name || 'Unknown';
-        typeCount[typeName] = (typeCount[typeName] || 0) + 1;
-      });
-      setResidentsByType(typeCount);
-    } else {
-      // If there are no residents, make sure residentsByType is empty
-      setResidentsByType({});
-    }
-  }, [residents]);
-
-  const fetchGroups = async () => {
-    try {
-      const {
-        data: groupsData,
-        error: groupsError
-      } = await supabase.from('resident_groups').select('*').order('name');
-      if (groupsError) throw groupsError;
-      
-      const {
-        data: subgroupsData,
-        error: subgroupsError
-      } = await supabase.from('resident_subgroups').select('*').order('name');
-      if (subgroupsError) throw subgroupsError;
-      
-      const groupsWithSubgroups = (groupsData || []).map((group: ResidentGroup) => {
-        const groupSubgroups = (subgroupsData || []).filter((subgroup: ResidentSubgroup) => subgroup.group_id === group.id);
-        return {
-          ...group,
-          subgroups: groupSubgroups
-        };
-      });
-      
-      setGroups(groupsWithSubgroups);
-    } catch (error) {
-      console.error('Error fetching dashboard data:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load groups',
-        variant: 'destructive'
-      });
-    }
-  };
-
+  const [isDeleteResidentDialogOpen, setIsDeleteResidentDialogOpen] = useState(false);
+  const [selectedResident, setSelectedResident] = useState<Resident | null>(null);
+  const [selectedGroup, setSelectedGroup] = useState<ResidentGroup | null>(null);
+  const [selectedSubgroup, setSelectedSubgroup] = useState<ResidentSubgroup | null>(null);
+  const [error, setError] = useState<Error | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [showRLSDebugPanel, setShowRLSDebugPanel] = useState(false);
+  
   const fetchResidents = async () => {
     try {
-      console.log('Fetching residents...');
-      const {
-        data,
-        error
-      } = await supabase.from('residents').select(`
+      setLoading(true);
+      const { data: residentsData, error: residentsError } = await supabase
+        .from('residents')
+        .select(`
           *,
-          type:resident_types(
+          type:resident_types (
             name,
-            category:resident_categories(name)
+            category:resident_categories (
+              name
+            )
           ),
-          group:resident_groups(name, description),
-          subgroup:resident_subgroups(name, description, group:resident_groups(name))
-        `).order('name');
-      
-      if (error) {
-        console.error('Error in fetchResidents:', error);
-        throw error;
-      }
-      
-      console.log('Fetched residents:', data);
-      setResidents(data || []);
-    } catch (error) {
-      console.error('Error fetching residents:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to load residents',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const toggleGroupExpand = (groupId: number) => {
-    setExpandedGroups(prev => {
-      if (prev.includes(groupId)) {
-        return prev.filter(id => id !== groupId);
-      } else {
-        return [...prev, groupId];
-      }
-    });
-  };
-
-  const getResidentsByGroup = (groupId: number) => {
-    return residents.filter(resident => resident.group_id === groupId && !resident.subgroup_id);
-  };
-
-  const getResidentsBySubgroup = (subgroupId: number) => {
-    return residents.filter(resident => resident.subgroup_id === subgroupId);
-  };
-
-  const handleEditResident = (resident: Resident) => {
-    openEditResidentDialog(resident);
-  };
-
-  const openEditResidentDialog = (resident: Resident) => {
-    setSelectedResident(resident);
-    setEditResidentData({
-      name: resident.name,
-      description: resident.description || '',
-      image_url: resident.image_url || '',
-      arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null,
-      group_id: resident.group_id,
-      subgroup_id: resident.subgroup_id
-    });
-    setPreviewUrl(resident.image_url || null);
-    setIsEditResidentDialogOpen(true);
-  };
-
-  const handleEditResidentSubmit = async () => {
-    if (!selectedResident) return;
-    
-    setIsLoading(true);
-    
-    try {
-      let updatedImageUrl = editResidentData.image_url;
-      
-      if (selectedFile) {
-        try {
-          const { data: buckets } = await supabase.storage.listBuckets();
-          const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
-          
-          if (!bucketExists) {
-            console.log('Bucket does not exist. Creating...');
-            const { error: createError } = await supabase.storage.createBucket('resident-images', {
-              public: true
-            });
-            
-            if (createError) {
-              console.error('Error creating bucket:', createError);
-              throw createError;
-            }
-            console.log('Bucket created successfully');
-          }
-          
-          const fileExt = selectedFile.name.split('.').pop();
-          const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
-          const filePath = `${fileName}`;
-          
-          const { error: uploadError } = await supabase.storage
-            .from('resident-images')
-            .upload(filePath, selectedFile);
-            
-          if (uploadError) throw uploadError;
-          
-          const { data: publicUrlData } = supabase.storage
-            .from('resident-images')
-            .getPublicUrl(filePath);
-            
-          updatedImageUrl = publicUrlData.publicUrl;
-          console.log('File uploaded successfully:', updatedImageUrl);
-          
-        } catch (uploadError: any) {
-          console.error('Upload error:', uploadError);
-          toast({
-            title: 'Upload Failed',
-            description: 'Failed to upload image. Please try again.',
-            variant: 'destructive',
-          });
-        }
-      }
-      
-      const residentData = {
-        name: editResidentData.name,
-        description: editResidentData.description,
-        image_url: updatedImageUrl,
-        arrival_date: editResidentData.arrival_date ? editResidentData.arrival_date.toISOString() : null,
-        group_id: editResidentData.group_id,
-        subgroup_id: editResidentData.subgroup_id
-      };
-
-      console.log('Updating resident with data:', residentData);
-      console.log('Selected resident ID:', selectedResident.id);
-      
-      const { error: updateError, data: updatedResident } = await supabase
-        .from('residents')
-        .update(residentData)
-        .eq('id', selectedResident.id)
-        .select();
-      
-      if (updateError) {
-        console.error('Error updating resident in database:', updateError);
-        throw updateError;
-      }
-      
-      console.log('Database update successful:', updatedResident);
-      
-      await fetchResidents();
-      
-      toast({
-        title: 'Resident updated',
-        description: `${editResidentData.name} has been updated successfully`
-      });
-      
-      setIsEditResidentDialogOpen(false);
-      resetFileInput();
-      
+          group:resident_groups (
+            name,
+            description
+          ),
+          subgroup:resident_subgroups (
+            name,
+            description
+          )
+        `);
+      if (residentsError) throw residentsError;
+      setResidents(residentsData || []);
+      setError(null);
     } catch (error: any) {
-      console.error('Error updating resident:', error);
+      console.error("Error fetching residents:", error);
+      setError(error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to update resident',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to load residents",
+        variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
-
-  const openDeleteResidentDialog = (resident: Resident) => {
-    setSelectedResident(resident);
-    setIsDeleteResidentDialogOpen(true);
-  };
-
-  const handleDeleteResident = async () => {
-    if (!selectedResident) return;
-    
+  
+  const fetchResidentTypes = async () => {
     try {
-      const { error } = await supabase
-        .from('residents')
-        .delete()
-        .eq('id', selectedResident.id);
-      
-      if (error) throw error;
-      
-      toast({
-        title: 'Resident deleted',
-        description: `${selectedResident.name} has been removed from the system`
-      });
-      
-      fetchResidents();
-      setIsDeleteResidentDialogOpen(false);
-      
+      const { data: typesData, error: typesError } = await supabase
+        .from('resident_types')
+        .select('*');
+      if (typesError) throw typesError;
+      setResidentTypes(typesData || []);
+      setError(null);
     } catch (error: any) {
-      console.error('Error deleting resident:', error);
+      console.error("Error fetching resident types:", error);
+      setError(error);
       toast({
-        title: 'Error',
-        description: error.message || 'Failed to delete resident',
-        variant: 'destructive'
+        title: "Error",
+        description: "Failed to load resident types",
+        variant: "destructive"
       });
     }
   };
-
+  
+  const fetchGroups = async () => {
+    try {
+      const { data: groupsData, error: groupsError } = await supabase
+        .from('resident_groups')
+        .select(`
+          *,
+          subgroups:resident_subgroups (*)
+        `);
+      if (groupsError) throw groupsError;
+      setGroups(groupsData || []);
+      setError(null);
+    } catch (error: any) {
+      console.error("Error fetching groups:", error);
+      setError(error);
+      toast({
+        title: "Error",
+        description: "Failed to load resident groups",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const fetchSubgroups = async () => {
+    try {
+      const { data: subgroupsData, error: subgroupsError } = await supabase
+        .from('resident_subgroups')
+        .select('*');
+      if (subgroupsError) throw subgroupsError;
+      setSubgroups(subgroupsData || []);
+      setError(null);
+    } catch (error: any) {
+      console.error("Error fetching subgroups:", error);
+      setError(error);
+      toast({
+        title: "Error",
+        description: "Failed to load resident subgroups",
+        variant: "destructive"
+      });
+    }
+  };
+  
+  useEffect(() => {
+    Promise.all([fetchResidents(), fetchResidentTypes(), fetchGroups(), fetchSubgroups()])
+      .then(() => setLoading(false));
+  }, []);
+  
+  const handleToggleGroupExpand = (groupId: number) => {
+    setExpandedGroups(prev =>
+      prev.includes(groupId) ? prev.filter(id => id !== groupId) : [...prev, groupId]
+    );
+  };
+  
   const openAddGroupDialog = () => {
     setNewGroupName('');
     setNewGroupDescription('');
     setIsAddGroupDialogOpen(true);
   };
-
-  const openEditGroupDialog = (group: ResidentGroup | null) => {
-    if (group === null) {
-      openAddGroupDialog();
-      return;
-    }
-    
+  
+  const openEditGroupDialog = (group: ResidentGroup) => {
     setSelectedGroup(group);
     setNewGroupName(group.name);
     setNewGroupDescription(group.description || '');
     setIsEditGroupDialogOpen(true);
   };
-
-  const openDeleteGroupDialog = (group: ResidentGroup) => {
-    setSelectedGroup(group);
-    setIsDeleteGroupDialogOpen(true);
-  };
-
-  const toggleSubgroupInput = (groupId: number) => {
-    if (showSubgroupInput === groupId) {
-      setShowSubgroupInput(null);
-    } else {
-      setShowSubgroupInput(groupId);
-      setNewSubgroupName('');
+  
+  const handleAddGroup = async () => {
+    try {
+      const { data, error } = await supabase
+        .from('resident_groups')
+        .insert([{ name: newGroupName, description: newGroupDescription }]);
+      if (error) throw error;
+      
+      fetchGroups();
+      setIsAddGroupDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Resident group added successfully",
+      });
+    } catch (error: any) {
+      console.error("Error adding group:", error);
+      setError(error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
-
-  const openAddSubgroupDialog = (groupId: number) => {
-    setSelectedGroupId(groupId);
-    setNewSubgroupName('');
-    setNewSubgroupDescription('');
-    setIsAddSubgroupDialogOpen(true);
+  
+  const handleEditGroup = async () => {
+    if (!selectedGroup) return;
+    try {
+      const { data, error } = await supabase
+        .from('resident_groups')
+        .update({ name: newGroupName, description: newGroupDescription })
+        .eq('id', selectedGroup.id);
+      if (error) throw error;
+      
+      fetchGroups();
+      setIsEditGroupDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Resident group updated successfully",
+      });
+    } catch (error: any) {
+      console.error("Error editing group:", error);
+      setError(error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
   };
-
-  const openEditSubgroupDialog = (subgroup: ResidentSubgroup) => {
+  
+  const handleDeleteGroup = async (group: ResidentGroup) => {
+    try {
+      const { error } = await supabase
+        .from('resident_groups')
+        .delete()
+        .eq('id', group.id);
+      if (error) throw error;
+      
+      fetchGroups();
+      toast({
+        title: "Success",
+        description: "Resident group deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting group:", error);
+      setError(error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleToggleSubgroupInput = (groupId: number) => {
+    setShowSubgroupInput(prev => (prev === groupId ? null : groupId));
+    setNewSubgroupName('');
+  };
+  
+  const handleAddSubgroup = async () => {
+    if (!showSubgroupInput) return;
+    try {
+      const { data, error } = await supabase
+        .from('resident_subgroups')
+        .insert([{ 
+          name: newSubgroupName, 
+          description: newSubgroupDescription,
+          group_id: showSubgroupInput 
+        }]);
+      if (error) throw error;
+      
+      fetchGroups();
+      fetchSubgroups();
+      setShowSubgroupInput(null);
+      setNewSubgroupName('');
+      toast({
+        title: "Success",
+        description: "Resident subgroup added successfully",
+      });
+    } catch (error: any) {
+      console.error("Error adding subgroup:", error);
+      setError(error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleEditSubgroup = async (subgroup: ResidentSubgroup) => {
     setSelectedSubgroup(subgroup);
     setNewSubgroupName(subgroup.name);
     setNewSubgroupDescription(subgroup.description || '');
     setIsEditSubgroupDialogOpen(true);
   };
-
-  const openDeleteSubgroupDialog = (subgroup: ResidentSubgroup) => {
-    setSelectedSubgroup(subgroup);
-    setIsDeleteSubgroupDialogOpen(true);
-  };
-
-  const handleAddGroup = async () => {
-    if (!newGroupName.trim()) return;
-    try {
-      const { data, error } = await supabase.from('resident_groups').insert({
-        name: newGroupName.trim(),
-        description: newGroupDescription.trim() || null
-      }).select();
-      
-      if (error) throw error;
-      
-      setGroups(prev => [...prev, {
-        ...data[0],
-        subgroups: []
-      }]);
-      
-      setIsAddGroupDialogOpen(false);
-      toast({
-        title: 'Success',
-        description: `Group "${newGroupName}" has been added`
-      });
-    } catch (error) {
-      console.error('Error adding group:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add group',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const handleEditGroup = async () => {
-    if (!selectedGroup || !newGroupName.trim()) return;
-    try {
-      const { error } = await supabase.from('resident_groups').update({
-        name: newGroupName.trim(),
-        description: newGroupDescription.trim() || null
-      }).eq('id', selectedGroup.id);
-      
-      if (error) throw error;
-      
-      setGroups(prev => prev.map(group => {
-        if (group.id === selectedGroup.id) {
-          return {
-            ...group,
-            name: newGroupName.trim(),
-            description: newGroupDescription.trim() || null
-          };
-        }
-        return group;
-      }));
-      
-      setIsEditGroupDialogOpen(false);
-      toast({
-        title: 'Success',
-        description: `Group "${selectedGroup.name}" has been updated`
-      });
-    } catch (error) {
-      console.error('Error editing group:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update group',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const handleDeleteGroup = async () => {
-    if (!selectedGroup) return;
-    try {
-      const { count: residentCount, error: countError } = await supabase
-        .from('residents')
-        .select('*', {
-          count: 'exact',
-          head: true
-        }).eq('group_id', selectedGroup.id);
-      
-      if (countError) throw countError;
-      
-      if (residentCount && residentCount > 0) {
-        toast({
-          title: 'Error',
-          description: `Cannot delete group "${selectedGroup.name}" because it has residents assigned to it.`,
-          variant: 'destructive'
-        });
-        setIsDeleteGroupDialogOpen(false);
-        return;
-      }
-      
-      const { error: subgroupError } = await supabase
-        .from('resident_subgroups')
-        .delete()
-        .eq('group_id', selectedGroup.id);
-      
-      if (subgroupError) throw subgroupError;
-      
-      const { error: groupError } = await supabase
-        .from('resident_groups')
-        .delete()
-        .eq('id', selectedGroup.id);
-      
-      if (groupError) throw groupError;
-      
-      setGroups(prev => prev.filter(group => group.id !== selectedGroup.id));
-      setIsDeleteGroupDialogOpen(false);
-      toast({
-        title: 'Success',
-        description: `Group "${selectedGroup.name}" and its subgroups have been deleted`
-      });
-    } catch (error) {
-      console.error('Error deleting group:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete group',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const handleAddSubgroup = async () => {
-    if (!selectedGroupId || !newSubgroupName.trim()) return;
-    try {
-      const { data, error } = await supabase.from('resident_subgroups').insert({
-        name: newSubgroupName.trim(),
-        description: newSubgroupDescription.trim() || null,
-        group_id: selectedGroupId
-      }).select();
-      
-      if (error) throw error;
-      
-      setGroups(prev => prev.map(group => {
-        if (group.id === selectedGroupId) {
-          return {
-            ...group,
-            subgroups: [...(group.subgroups || []), data[0]]
-          };
-        }
-        return group;
-      }));
-      
-      setIsAddSubgroupDialogOpen(false);
-      setShowSubgroupInput(null);
-      toast({
-        title: 'Success',
-        description: `Subgroup "${newSubgroupName}" has been added`
-      });
-    } catch (error) {
-      console.error('Error adding subgroup:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add subgroup',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const handleQuickAddSubgroup = async () => {
-    if (!showSubgroupInput || !newSubgroupName.trim()) return;
-    try {
-      const { data, error } = await supabase.from('resident_subgroups').insert({
-        name: newSubgroupName.trim(),
-        group_id: showSubgroupInput
-      }).select();
-      
-      if (error) throw error;
-      
-      setGroups(prev => prev.map(group => {
-        if (group.id === showSubgroupInput) {
-          return {
-            ...group,
-            subgroups: [...(group.subgroups || []), data[0]]
-          };
-        }
-        return group;
-      }));
-      
-      setShowSubgroupInput(null);
-      setNewSubgroupName('');
-      toast({
-        title: 'Success',
-        description: `Subgroup "${newSubgroupName}" has been added`
-      });
-    } catch (error) {
-      console.error('Error adding subgroup:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to add subgroup',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const handleEditSubgroup = async () => {
-    if (!selectedSubgroup || !newSubgroupName.trim()) return;
-    try {
-      const { error } = await supabase.from('resident_subgroups').update({
-        name: newSubgroupName.trim(),
-        description: newSubgroupDescription.trim() || null
-      }).eq('id', selectedSubgroup.id);
-      
-      if (error) throw error;
-      
-      setGroups(prev => prev.map(group => {
-        if (group.subgroups?.some(subgroup => subgroup.id === selectedSubgroup.id)) {
-          return {
-            ...group,
-            subgroups: group.subgroups?.map(subgroup => {
-              if (subgroup.id === selectedSubgroup.id) {
-                return {
-                  ...subgroup,
-                  name: newSubgroupName.trim(),
-                  description: newSubgroupDescription.trim() || null
-                };
-              }
-              return subgroup;
-            })
-          };
-        }
-        return group;
-      }));
-      
-      setIsEditSubgroupDialogOpen(false);
-      toast({
-        title: 'Success',
-        description: `Subgroup "${selectedSubgroup.name}" has been updated`
-      });
-    } catch (error) {
-      console.error('Error editing subgroup:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to update subgroup',
-        variant: 'destructive'
-      });
-    }
-  };
-
-  const handleDeleteSubgroup = async () => {
+  
+  const handleEditSubgroupSave = async () => {
     if (!selectedSubgroup) return;
     try {
-      const { count: residentCount, error: countError } = await supabase
-        .from('residents')
-        .select('*', {
-          count: 'exact',
-          head: true
-        }).eq('subgroup_id', selectedSubgroup.id);
+      const { data, error } = await supabase
+        .from('resident_subgroups')
+        .update({ 
+          name: newSubgroupName, 
+          description: newSubgroupDescription 
+        })
+        .eq('id', selectedSubgroup.id);
+      if (error) throw error;
       
-      if (countError) throw countError;
-      
-      if (residentCount && residentCount > 0) {
-        toast({
-          title: 'Error',
-          description: `Cannot delete subgroup "${selectedSubgroup.name}" because it has residents assigned to it.`,
-          variant: 'destructive'
-        });
-        setIsDeleteSubgroupDialogOpen(false);
-        return;
-      }
-      
+      fetchGroups();
+      fetchSubgroups();
+      setIsEditSubgroupDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Resident subgroup updated successfully",
+      });
+    } catch (error: any) {
+      console.error("Error editing subgroup:", error);
+      setError(error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleDeleteSubgroup = async (subgroup: ResidentSubgroup) => {
+    try {
       const { error } = await supabase
         .from('resident_subgroups')
         .delete()
-        .eq('id', selectedSubgroup.id);
-      
+        .eq('id', subgroup.id);
       if (error) throw error;
       
-      setGroups(prev => prev.map(group => {
-        if (group.subgroups?.some(subgroup => subgroup.id === selectedSubgroup.id)) {
-          return {
-            ...group,
-            subgroups: group.subgroups?.filter(subgroup => subgroup.id !== selectedSubgroup.id)
-          };
-        }
-        return group;
-      }));
+      fetchGroups();
+      fetchSubgroups();
+      toast({
+        title: "Success",
+        description: "Resident subgroup deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting subgroup:", error);
+      setError(error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
+    }
+  };
+  
+  const handleEditResident = async (resident: Resident) => {
+    setSelectedResident(resident);
+    setIsEditResidentDialogOpen(true);
+  };
+  
+  const handleSaveResident = async (residentData: Resident) => {
+    if (!selectedResident) return;
+    try {
+      const { error } = await supabase
+        .from('residents')
+        .update({
+          name: residentData.name,
+          type_id: residentData.type_id,
+          group_id: residentData.group_id,
+          subgroup_id: residentData.subgroup_id,
+          arrival_date: residentData.arrival_date,
+          description: residentData.description,
+          image_url: residentData.image_url,
+          year_arrived: residentData.year_arrived
+        })
+        .eq('id', selectedResident.id);
+      if (error) throw error;
       
-      setIsDeleteSubgroupDialogOpen(false);
+      fetchResidents();
+      setIsEditResidentDialogOpen(false);
       toast({
-        title: 'Success',
-        description: `Subgroup "${selectedSubgroup.name}" has been deleted`
+        title: "Success",
+        description: "Resident updated successfully",
       });
-    } catch (error) {
-      console.error('Error deleting subgroup:', error);
+    } catch (error: any) {
+      console.error("Error updating resident:", error);
+      setError(error);
       toast({
-        title: 'Error',
-        description: 'Failed to delete subgroup',
-        variant: 'destructive'
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
       });
     }
   };
-
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (file) {
-      setSelectedFile(file);
-      const fileUrl = URL.createObjectURL(file);
-      setPreviewUrl(fileUrl);
+  
+  const handleDeleteResident = async (resident: Resident) => {
+    setSelectedResident(resident);
+    setIsDeleteResidentDialogOpen(true);
+  };
+  
+  const handleConfirmDeleteResident = async () => {
+    if (!selectedResident) return;
+    try {
+      const { error } = await supabase
+        .from('residents')
+        .delete()
+        .eq('id', selectedResident.id);
+      if (error) throw error;
+      
+      fetchResidents();
+      setIsDeleteResidentDialogOpen(false);
+      toast({
+        title: "Success",
+        description: "Resident deleted successfully",
+      });
+    } catch (error: any) {
+      console.error("Error deleting resident:", error);
+      setError(error);
+      toast({
+        title: "Error",
+        description: error.message,
+        variant: "destructive"
+      });
     }
   };
-
-  const resetFileInput = () => {
-    setSelectedFile(null);
-    setPreviewUrl(null);
+  
+  const getResidentsByGroup = (groupId: number) => {
+    return residents.filter(resident => resident.group_id === groupId && !resident.subgroup_id);
   };
-
-  const username = user?.email?.split('@')[0] || "User";
-
+  
+  const getResidentsBySubgroup = (subgroupId: number) => {
+    return residents.filter(resident => resident.subgroup_id === subgroupId);
+  };
+  
   return (
-    <div>
-      <DashboardHeader username={username} />
-      
-      <StatCards 
-        residents={residents} 
-        groups={groups} 
-        residentsByType={residentsByType} 
+    <div className="space-y-6">
+      <DashboardHeader
+        title="Sanctuary Dashboard"
+        description="Overview and management of sanctuary residents, groups, and resources."
       />
       
-      <div className="flex justify-between items-center mb-6">
-        <h3 className="text-xl font-bold text-gray-800">Resident Groups</h3>
+      <StatCards residents={residents} />
+      
+      {error && (
+        <Alert variant="destructive" className="mb-4">
+          <AlertCircle className="h-4 w-4" />
+          <AlertTitle>Error</AlertTitle>
+          <AlertDescription className="flex flex-col gap-2">
+            <p>{error.toString()}</p>
+            <Button 
+              variant="outline" 
+              size="sm" 
+              onClick={() => setShowRLSDebugPanel(true)}
+            >
+              Debug Permission Issues
+            </Button>
+          </AlertDescription>
+        </Alert>
+      )}
+      
+      {showRLSDebugPanel && (
+        <RLSDebugPanel onComplete={() => setShowRLSDebugPanel(false)} />
+      )}
+
+      {/* Rest of your dashboard components */}
+      <div className="flex justify-between items-center">
+        <h2 className="text-2xl font-bold">Resident Groups</h2>
         <Button 
-          className="flex items-center gap-2 bg-sanctuary-green hover:bg-sanctuary-light-green" 
+          className="flex items-center gap-2 bg-sanctuary-green hover:bg-sanctuary-light-green"
           onClick={openAddGroupDialog}
         >
           <Plus className="h-4 w-4" />
-          <span>Add New Group</span>
+          <span>Add Group</span>
         </Button>
       </div>
       
-      <GroupsSection 
+      <GroupsSection
         groups={groups}
         expandedGroups={expandedGroups}
         showSubgroupInput={showSubgroupInput}
         residents={residents}
         newSubgroupName={newSubgroupName}
-        onToggleGroupExpand={toggleGroupExpand}
+        onToggleGroupExpand={handleToggleGroupExpand}
         onEditGroup={openEditGroupDialog}
-        onDeleteGroup={openDeleteGroupDialog}
-        onToggleSubgroupInput={toggleSubgroupInput}
+        onDeleteGroup={handleDeleteGroup}
+        onToggleSubgroupInput={handleToggleSubgroupInput}
         onNewSubgroupNameChange={setNewSubgroupName}
-        onQuickAddSubgroup={handleQuickAddSubgroup}
-        onEditSubgroup={openEditSubgroupDialog}
-        onDeleteSubgroup={openDeleteSubgroupDialog}
+        onQuickAddSubgroup={handleAddSubgroup}
+        onEditSubgroup={handleEditSubgroup}
+        onDeleteSubgroup={handleDeleteSubgroup}
         onEditResident={handleEditResident}
-        onDeleteResident={openDeleteResidentDialog}
+        onDeleteResident={handleDeleteResident}
         getResidentsByGroup={getResidentsByGroup}
         getResidentsBySubgroup={getResidentsBySubgroup}
       />
-
+      
+      <GroupDialogs
+        isAddGroupDialogOpen={isAddGroupDialogOpen}
+        isEditGroupDialogOpen={isEditGroupDialogOpen}
+        isEditSubgroupDialogOpen={isEditSubgroupDialogOpen}
+        newGroupName={newGroupName}
+        newGroupDescription={newGroupDescription}
+        newSubgroupName={newSubgroupName}
+        newSubgroupDescription={newSubgroupDescription}
+        onNewGroupNameChange={setNewGroupName}
+        onNewGroupDescriptionChange={setNewGroupDescription}
+        onNewSubgroupNameChange={setNewSubgroupName}
+        onNewSubgroupDescriptionChange={setNewSubgroupDescription}
+        onAddGroup={handleAddGroup}
+        onEditGroup={handleEditGroup}
+        onEditSubgroup={handleEditSubgroupSave}
+        onOpenChange={setIsAddGroupDialogOpen}
+        onEditOpenChange={setIsEditGroupDialogOpen}
+        onEditSubgroupOpenChange={setIsEditSubgroupDialogOpen}
+      />
+      
       <EditResidentDialog 
-        open={isEditResidentDialogOpen}
+        isOpen={isEditResidentDialogOpen}
+        onOpenChange={setIsEditResidentDialogOpen}
+        resident={selectedResident}
+        onSave={handleSaveResident}
+        residentTypes={residentTypes}
         groups={groups}
-        isLoading={isLoading}
-        formData={editResidentData}
-        previewUrl={previewUrl}
-        selectedFile={selectedFile}
-        onClose={() => setIsEditResidentDialogOpen(false)}
-        onSubmit={handleEditResidentSubmit}
-        onFormChange={(data) => setEditResidentData({...editResidentData, ...data})}
-        onFileChange={handleFileChange}
-        resetFileInput={resetFileInput}
+        subgroups={subgroups}
       />
       
       <DeleteResidentDialog 
-        open={isDeleteResidentDialogOpen}
-        residentName={selectedResident?.name || ''}
-        onClose={() => setIsDeleteResidentDialogOpen(false)}
-        onDelete={handleDeleteResident}
-      />
-      
-      <GroupDialogs 
-        isAddOpen={isAddGroupDialogOpen}
-        isEditOpen={isEditGroupDialogOpen}
-        isDeleteOpen={isDeleteGroupDialogOpen}
-        isAddSubgroupOpen={isAddSubgroupDialogOpen}
-        isEditSubgroupOpen={isEditSubgroupDialogOpen}
-        isDeleteSubgroupOpen={isDeleteSubgroupDialogOpen}
-        groupName={newGroupName}
-        groupDescription={newGroupDescription}
-        subgroupName={newSubgroupName}
-        subgroupDescription={newSubgroupDescription}
-        selectedGroupName={selectedGroup?.name || ''}
-        selectedSubgroupName={selectedSubgroup?.name || ''}
-        onAddGroupClose={() => setIsAddGroupDialogOpen(false)}
-        onEditGroupClose={() => setIsEditGroupDialogOpen(false)}
-        onDeleteGroupClose={() => setIsDeleteGroupDialogOpen(false)}
-        onAddSubgroupClose={() => setIsAddSubgroupDialogOpen(false)}
-        onEditSubgroupClose={() => setIsEditSubgroupDialogOpen(false)}
-        onDeleteSubgroupClose={() => setIsDeleteSubgroupDialogOpen(false)}
-        onGroupNameChange={setNewGroupName}
-        onGroupDescriptionChange={setNewGroupDescription}
-        onSubgroupNameChange={setNewSubgroupName}
-        onSubgroupDescriptionChange={setNewSubgroupDescription}
-        onAddGroup={handleAddGroup}
-        onEditGroup={handleEditGroup}
-        onDeleteGroup={handleDeleteGroup}
-        onAddSubgroup={handleAddSubgroup}
-        onEditSubgroup={handleEditSubgroup}
-        onDeleteSubgroup={handleDeleteSubgroup}
+        isOpen={isDeleteResidentDialogOpen}
+        onOpenChange={setIsDeleteResidentDialogOpen}
+        resident={selectedResident}
+        onDelete={handleConfirmDeleteResident}
       />
     </div>
   );
