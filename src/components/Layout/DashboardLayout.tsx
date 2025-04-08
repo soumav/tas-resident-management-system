@@ -1,8 +1,8 @@
 
-import React from 'react';
+import React, { useState, useEffect } from 'react';
 import { Outlet, Navigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
-import { supabase } from '@/lib/supabase';
+import { supabase, getUserRole } from '@/lib/supabase';
 import Sidebar from './Sidebar';
 import Footer from './Footer';
 import { Button } from '@/components/ui/button';
@@ -10,6 +10,7 @@ import { LogOut } from 'lucide-react';
 
 export default function DashboardLayout() {
   const { user, isLoading, signOut } = useAuth();
+  const [userRole, setUserRole] = useState<string | null>('user');
 
   // If still loading, return null
   if (isLoading) return null;
@@ -18,6 +19,17 @@ export default function DashboardLayout() {
   if (!user) {
     return <Navigate to="/login" />;
   }
+
+  useEffect(() => {
+    const fetchUserRole = async () => {
+      if (user) {
+        const role = await getUserRole();
+        setUserRole(role);
+      }
+    };
+    
+    fetchUserRole();
+  }, [user]);
 
   const handleSignOut = async () => {
     await signOut();
@@ -42,7 +54,7 @@ export default function DashboardLayout() {
           <div className="flex items-center gap-3">
             <div className="text-right">
               <p className="font-medium">{username}</p>
-              <p className="text-xs text-gray-500">Staff</p>
+              <p className="text-xs text-gray-500 capitalize">{userRole || 'User'}</p>
             </div>
             <Button 
               variant="ghost" 
