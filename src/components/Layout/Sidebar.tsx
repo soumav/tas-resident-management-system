@@ -1,11 +1,13 @@
 
 import { Link, useLocation } from 'react-router-dom';
+import { useEffect, useState } from 'react';
 import { useAuth } from '@/context/AuthContext';
-import { Home, Users, ListIcon, UserPlus, Settings, InfoIcon, HelpCircle, LogOut, UserSquare } from 'lucide-react';
+import { Home, Users, ListIcon, UserPlus, Settings, InfoIcon, HelpCircle, LogOut, UserSquare, ShieldCheck } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { cn } from '@/lib/utils';
 import { Separator } from '@/components/ui/separator';
 import { Avatar, AvatarFallback } from '@/components/ui/avatar';
+import { isAdmin } from '@/lib/supabase';
 
 export default function Sidebar() {
   const {
@@ -13,7 +15,21 @@ export default function Sidebar() {
     user
   } = useAuth();
   const location = useLocation();
+  const [isUserAdmin, setIsUserAdmin] = useState(false);
+  
   const isActive = (path: string) => location.pathname === path;
+  
+  useEffect(() => {
+    const checkAdminStatus = async () => {
+      if (user) {
+        const adminStatus = await isAdmin();
+        setIsUserAdmin(adminStatus);
+      }
+    };
+    
+    checkAdminStatus();
+  }, [user]);
+  
   const dashboardLinks = [{
     name: 'Overview',
     path: '/',
@@ -27,6 +43,7 @@ export default function Sidebar() {
     path: '/groups',
     icon: ListIcon
   }];
+  
   const managementLinks = [{
     name: 'Add Resident',
     path: '/residents/new',
@@ -40,6 +57,14 @@ export default function Sidebar() {
     path: '/settings',
     icon: Settings
   }];
+
+  // Admin-specific links
+  const adminLinks = [{
+    name: 'User Approval',
+    path: '/admin/approval',
+    icon: ShieldCheck
+  }];
+  
   const helpLinks = [{
     name: 'About',
     path: '/about',
@@ -99,6 +124,25 @@ export default function Sidebar() {
           ))}
         </nav>
       </div>
+      
+      {isUserAdmin && (
+        <div className="mb-6">
+          <div className="px-4 py-2 text-xs font-semibold text-gray-300">ADMIN</div>
+          <nav className="mt-2">
+            {adminLinks.map(link => (
+              <Link 
+                key={link.path} 
+                to={link.path} 
+                className={cn('flex items-center gap-3 px-4 py-2.5 text-gray-300 hover:bg-sanctuary-green/20', 
+                  isActive(link.path) && 'bg-sanctuary-green/20 text-white font-medium')}
+              >
+                <link.icon className="h-5 w-5" />
+                <span>{link.name}</span>
+              </Link>
+            ))}
+          </nav>
+        </div>
+      )}
       
       <div className="mb-6">
         <div className="px-4 py-2 text-xs font-semibold text-gray-300">HELP</div>

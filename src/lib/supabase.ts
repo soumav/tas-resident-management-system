@@ -45,6 +45,11 @@ export const isStaff = async (): Promise<boolean> => {
   return role === 'staff' || role === 'admin';
 };
 
+export const isPendingUser = async (): Promise<boolean> => {
+  const role = await getUserRole();
+  return role === 'pending';
+};
+
 export const canDelete = async (tableName: string, id: string): Promise<boolean> => {
   const role = await getUserRole();
   
@@ -63,7 +68,14 @@ export type Tables = {
     id: string;
     email: string;
     role: string;
+    requested_role?: string;
     created_at: string;
+  };
+  profiles: {
+    id: string;
+    name: string;
+    email: string;
+    created_at?: string;
   };
   residents: {
     id: string;

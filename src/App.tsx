@@ -19,6 +19,7 @@ import Groups from "./pages/Groups";
 import About from "./pages/About";
 import Help from "./pages/Help";
 import Settings from "./pages/Settings";
+import AdminApproval from "./pages/AdminApproval";
 
 // Layouts
 import DashboardLayout from "./components/Layout/DashboardLayout";
@@ -49,6 +50,7 @@ const App = () => (
               <Route path="settings" element={<Settings />} />
               <Route path="about" element={<About />} />
               <Route path="help" element={<Help />} />
+              <Route path="admin/approval" element={<AdminApproval />} />
             </Route>
             
             {/* Catch-all route */}

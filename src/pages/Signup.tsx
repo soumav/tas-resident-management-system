@@ -8,12 +8,14 @@ import { useToast } from '@/components/ui/use-toast';
 import { Leaf, User, Mail, Lock } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import Footer from '@/components/Layout/Footer';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 export default function Signup() {
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [userType, setUserType] = useState('user');
   const [isLoading, setIsLoading] = useState(false);
   const { signUp } = useAuth();
   const { toast } = useToast();
@@ -50,32 +52,44 @@ export default function Signup() {
         description: error.message,
         variant: "destructive"
       });
-    } else {
-      // Add the name to the user metadata
-      try {
-        // If auth signup was successful, store the user name
-        if (data?.user?.id) {
-          await supabase
-            .from('profiles')
-            .insert({
-              id: data.user.id,
-              name: name,
-              email: email
-            });
-        }
+      setIsLoading(false);
+      return;
+    }
+    
+    try {
+      // If auth signup was successful, store the user data with pending status
+      if (data?.user?.id) {
+        await supabase
+          .from('profiles')
+          .insert({
+            id: data.user.id,
+            name: name,
+            email: email
+          });
+          
+        // Create entry in users table with pending status
+        await supabase
+          .from('users')
+          .insert({
+            id: data.user.id,
+            email: email,
+            role: 'pending',
+            requested_role: userType,
+            created_at: new Date().toISOString()
+          });
         
         toast({
-          title: "Account created",
-          description: "Please check your email to confirm your account",
-        });
-      } catch (metadataError) {
-        console.error("Error saving user name:", metadataError);
-        toast({
-          title: "Warning",
-          description: "Account created but we couldn't save your name. You can update it later.",
-          variant: "destructive"
+          title: "Account request submitted",
+          description: "Your account will be activated after admin approval",
         });
       }
+    } catch (metadataError) {
+      console.error("Error saving user data:", metadataError);
+      toast({
+        title: "Warning",
+        description: "Account created but we couldn't save your details. Please contact support.",
+        variant: "destructive"
+      });
     }
     
     setIsLoading(false);
@@ -137,6 +151,21 @@ export default function Signup() {
               </div>
               
               <div>
+                <label htmlFor="userType" className="block text-sm font-medium text-gray-700 mb-1">
+                  Account Type
+                </label>
+                <Select value={userType} onValueChange={setUserType}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select account type" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="user">User (Read Only)</SelectItem>
+                    <SelectItem value="staff">Staff</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+              
+              <div>
                 <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">
                   Password
                 </label>
@@ -177,7 +206,7 @@ export default function Signup() {
                 className="w-full bg-sanctuary-green hover:bg-sanctuary-light-green h-11"
                 disabled={isLoading}
               >
-                {isLoading ? 'Creating Account...' : 'Create Account'}
+                {isLoading ? 'Creating Request...' : 'Request Account'}
               </Button>
             </form>
             
