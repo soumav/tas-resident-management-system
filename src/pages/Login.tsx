@@ -52,7 +52,7 @@ export default function Login() {
           toast({
             title: "Account pending approval",
             description: "Your account is waiting for admin approval",
-            variant: "warning"
+            variant: "destructive" // Changed from "warning" to "destructive"
           });
           await supabase.auth.signOut();
           setIsLoading(false);
