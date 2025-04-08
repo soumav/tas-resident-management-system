@@ -79,7 +79,7 @@ export default function DashboardLayout() {
         </header>
         
         <div className="flex-1 overflow-auto">
-          <div className="py-6 px-8 min-h-[calc(100vh-4rem)]">
+          <div className="py-8 px-10 min-h-[calc(100vh-4rem)]">
             <Outlet />
           </div>
           <Footer />
