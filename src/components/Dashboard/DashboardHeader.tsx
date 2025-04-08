@@ -1,7 +1,7 @@
 
 import React from 'react';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, PiggyBank } from 'lucide-react';
 import { Link } from 'react-router-dom';
 
 interface DashboardHeaderProps {
@@ -13,11 +13,7 @@ export function DashboardHeader({ username }: DashboardHeaderProps) {
     <div className="mb-8">
       <div className="flex justify-between items-center">
         <div className="flex items-center gap-2">
-          <img 
-            src="/lovable-uploads/4b537bbd-178d-476b-af45-3450c5f7eb39.png" 
-            alt="Pig Logo" 
-            className="h-8 w-8 text-sanctuary-green" 
-          />
+          <PiggyBank className="h-8 w-8 text-sanctuary-green" />
           <div>
             <h2 className="text-2xl font-bold text-gray-800">Welcome, {username}!</h2>
             <p className="text-gray-600">Manage your sanctuary residents and groups</p>
