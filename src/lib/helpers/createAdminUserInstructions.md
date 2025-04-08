@@ -3,6 +3,7 @@
 
 After creating a user through Supabase Authentication (via sign up), follow these steps to manually add them to the database tables with admin privileges:
 
+```sql
 -- Insert into users table
 INSERT INTO users (id, email, role, created_at)
 VALUES 
@@ -21,6 +22,7 @@ SELECT u.id, u.email, u.role, p.name
 FROM users u 
 LEFT JOIN profiles p ON u.id = p.id
 WHERE u.id = 'REPLACE_WITH_AUTH_USER_UUID';
+```sql
 
 -- IMPORTANT: Replace 'REPLACE_WITH_AUTH_USER_UUID' with the actual UUID
 -- from the Supabase auth.users table for your admin user
