@@ -70,7 +70,7 @@ export const promoteToAdmin = async (userEmail: string): Promise<{ success: bool
 };
 
 // Create a storage bucket if it doesn't exist
-export const ensureStorageBucket = async (bucketName: string): Promise<{success: boolean; message: string}> => {
+export const ensureStorageBucket = async (bucketName: string, forceCreate: boolean = false): Promise<{success: boolean; message: string}> => {
   try {
     // First check if bucket exists
     const { data: buckets, error: listError } = await supabase.storage.listBuckets();
@@ -87,26 +87,62 @@ export const ensureStorageBucket = async (bucketName: string): Promise<{success:
       return { success: true, message: `Bucket ${bucketName} already exists` };
     }
 
-    // If we need to create the bucket, ensure we have admin rights first
+    // If force create is true, we'll attempt direct bucket creation without checking admin status
+    if (forceCreate) {
+      try {
+        // Try direct creation as a fallback
+        console.log("Force creating bucket directly");
+        const { error: directCreateError } = await supabase.storage.createBucket(bucketName, {
+          public: true
+        });
+        
+        if (directCreateError) {
+          console.error('Error in direct bucket creation:', directCreateError);
+          return { success: false, message: `Failed to create bucket directly: ${directCreateError.message}` };
+        }
+        
+        console.log(`Bucket ${bucketName} created successfully via direct creation`);
+        return { success: true, message: `Bucket ${bucketName} created successfully` };
+      } catch (directError: any) {
+        console.error('Error in direct bucket creation:', directError);
+        return { success: false, message: `Direct bucket creation failed: ${directError.message}` };
+      }
+    }
+
+    // If we're not forcing creation, check admin status first
     const userIsAdmin = await isAdmin();
     if (!userIsAdmin) {
       console.error('Only admins can create storage buckets');
       return { success: false, message: 'Only admins can create storage buckets' };
     }
 
-    // Create the bucket with admin credentials
-    const { error: createError } = await supabase.rpc('create_storage_bucket', { 
-      bucket_id: bucketName,
-      bucket_public: true 
-    });
-    
-    if (createError) {
-      console.error('Error creating bucket:', createError);
-      return { success: false, message: `Failed to create bucket: ${createError.message}` };
+    // Try using the stored procedure first
+    try {
+      console.log("Attempting to create bucket via stored procedure");
+      const { error: createError } = await supabase.rpc('create_storage_bucket', { 
+        bucket_id: bucketName,
+        bucket_public: true 
+      });
+      
+      if (createError) {
+        console.error('Error creating bucket via stored procedure:', createError);
+        // If the stored procedure fails, try direct creation
+        const { error: directCreateError } = await supabase.storage.createBucket(bucketName, {
+          public: true
+        });
+        
+        if (directCreateError) {
+          console.error('Error in direct bucket creation:', directCreateError);
+          return { success: false, message: `Failed to create bucket: ${directCreateError.message}` };
+        }
+      }
+      
+      console.log(`Bucket ${bucketName} created successfully`);
+      return { success: true, message: `Bucket ${bucketName} created successfully` };
+    } catch (error: any) {
+      console.error('Error in bucket creation:', error);
+      return { success: false, message: `Bucket creation failed: ${error.message}` };
     }
-    
-    console.log(`Bucket ${bucketName} created successfully`);
-    return { success: true, message: `Bucket ${bucketName} created successfully` };
     
   } catch (error: any) {
     console.error('Error in ensureStorageBucket:', error);

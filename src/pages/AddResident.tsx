@@ -156,9 +156,8 @@ export default function AddResident() {
   useEffect(() => {
     fetchOptions();
 
-    // Ensure the bucket exists when the component mounts
     const createStorageBucket = async () => {
-      const result = await ensureStorageBucket('resident-images');
+      const result = await ensureStorageBucket('resident-images', true);
       if (!result.success) {
         toast({
           title: 'Storage Setup Issue',
@@ -218,13 +217,11 @@ export default function AddResident() {
         console.log('Uploading image:', image.name);
         
         try {
-          // Ensure bucket exists
-          const bucketResult = await ensureStorageBucket('resident-images');
+          const bucketResult = await ensureStorageBucket('resident-images', true);
           if (!bucketResult.success) {
             throw new Error(bucketResult.message);
           }
           
-          // Now upload the file
           const fileExt = image.name.split('.').pop();
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
           const filePath = `${fileName}`;
@@ -255,7 +252,6 @@ export default function AddResident() {
             variant: 'destructive',
           });
           
-          // We'll continue without the image
           console.log('Continuing without image');
         }
       }
