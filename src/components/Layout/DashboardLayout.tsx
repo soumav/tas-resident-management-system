@@ -7,7 +7,6 @@ import Footer from './Footer';
 import { Button } from '@/components/ui/button';
 import { LogOut, Menu } from 'lucide-react';
 import { SidebarProvider, SidebarTrigger, SidebarInset } from '@/components/ui/sidebar';
-import { DashboardHeader } from '@/components/Dashboard/DashboardHeader';
 
 export default function DashboardLayout() {
   const { user, isLoading, signOut } = useAuth();
@@ -61,7 +60,6 @@ export default function DashboardLayout() {
           
           <div className="flex-1 overflow-auto">
             <div className="py-4 px-6 min-h-[calc(100vh-4rem)]">
-              <DashboardHeader username={username} />
               <Outlet />
             </div>
             <Footer />
