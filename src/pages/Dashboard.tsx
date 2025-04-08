@@ -1,9 +1,11 @@
+
 import React, { useState, useEffect } from 'react';
 import { Plus, AlertCircle } from 'lucide-react';
 import { supabase, getUserRole, forceSetUserRole, checkRLSAccess } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import { Button } from '@/components/ui/button';
+import { useAuth } from '@/context/AuthContext'; // Add this import
 
 import { DashboardHeader } from '@/components/Dashboard/DashboardHeader';
 import { StatCards } from '@/components/Dashboard/StatCards';
@@ -17,6 +19,7 @@ import RLSDebugPanel from '@/components/Debug/RLSDebugPanel';
 
 export default function Dashboard() {
   const { toast } = useToast();
+  const { user } = useAuth(); // Get user from AuthContext
   const [residents, setResidents] = useState<Resident[]>([]);
   const [residentTypes, setResidentTypes] = useState<ResidentType[]>([]);
   const [groups, setGroups] = useState<ResidentGroup[]>([]);
