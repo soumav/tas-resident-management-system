@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Using hardcoded values for demonstration
@@ -21,10 +22,10 @@ export const getUserRole = async (): Promise<string | null> => {
     
     console.log('Current user:', user);
     
-    // First check if the role is in the JWT token
-    const jwtRole = (user as any).role;
-    if (jwtRole) {
-      console.log('Role found in JWT token:', jwtRole);
+    // First check if the role is in the JWT token claims or app metadata
+    const jwtRole = user.app_metadata?.role || user.role;
+    if (jwtRole && jwtRole !== 'authenticated') {
+      console.log('Role found in JWT token/app_metadata:', jwtRole);
       return jwtRole;
     }
     
@@ -69,6 +70,21 @@ export const forceSetUserRole = async (role: 'admin' | 'staff' | 'user'): Promis
     
     // Force refresh session to update JWT claims
     await supabase.auth.refreshSession();
+    
+    // Also try to update app_metadata if we have permission
+    try {
+      const { error: metaError } = await supabase.rpc('set_claim', {
+        uid: user.id,
+        claim: 'role',
+        value: role
+      });
+      
+      if (!metaError) {
+        console.log('Updated user claim in auth.users');
+      }
+    } catch (metaError) {
+      console.log('Could not update auth claim - this may require admin privileges');
+    }
     
     return true;
   } catch (error) {
@@ -127,10 +143,42 @@ export const promoteToAdmin = async (userEmail: string): Promise<{ success: bool
       return { success: false, message: `Failed to update user role: ${updateError.message}` };
     }
     
+    // Try to update the auth.users metadata as well using RPC function
+    try {
+      await supabase.rpc('set_claim', {
+        uid: userData.id,
+        claim: 'role',
+        value: 'admin'
+      });
+    } catch (err) {
+      console.log('Could not update auth claims - this is normal without admin privileges');
+    }
+    
     return { success: true, message: `User ${userEmail} promoted to admin successfully` };
   } catch (error) {
     console.error('Error promoting user to admin:', error);
     return { success: false, message: 'An unexpected error occurred' };
+  }
+};
+
+// New function to create RPC function for setting claims in auth.users
+export const createSetClaimFunction = async (): Promise<{ success: boolean; message: string }> => {
+  try {
+    const { error } = await supabase.rpc('create_set_claim_function');
+    
+    if (error) {
+      return { 
+        success: false, 
+        message: `Failed to create set_claim function: ${error.message}. You may need admin privileges.` 
+      };
+    }
+    
+    return { success: true, message: 'Created set_claim function successfully' };
+  } catch (error: any) {
+    return { 
+      success: false, 
+      message: `Error creating function: ${error.message}` 
+    };
   }
 };
 
