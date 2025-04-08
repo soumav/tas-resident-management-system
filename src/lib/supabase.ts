@@ -14,6 +14,49 @@ export const logSupabaseOperation = async (operation: string, data: any) => {
   return data;
 };
 
+// Role-based authentication helpers
+export const getUserRole = async (): Promise<string | null> => {
+  try {
+    const { data: { user } } = await supabase.auth.getUser();
+    if (!user) return null;
+    
+    const { data, error } = await supabase
+      .from('users')
+      .select('role')
+      .eq('id', user.id)
+      .single();
+      
+    if (error) throw error;
+    return data?.role || null;
+  } catch (error) {
+    console.error('Error getting user role:', error);
+    return null;
+  }
+};
+
+// Authorization check helpers
+export const isAdmin = async (): Promise<boolean> => {
+  const role = await getUserRole();
+  return role === 'admin';
+};
+
+export const isStaff = async (): Promise<boolean> => {
+  const role = await getUserRole();
+  return role === 'staff' || role === 'admin';
+};
+
+export const canDelete = async (tableName: string, id: string): Promise<boolean> => {
+  const role = await getUserRole();
+  
+  // Only admins can delete staff
+  if (tableName === 'staff' && role !== 'admin') {
+    return false;
+  }
+  
+  // Staff and admins can delete other resources
+  return role === 'staff' || role === 'admin';
+};
+
 // Type definitions
 export type Tables = {
   users: {
