@@ -27,7 +27,8 @@ BEGIN
     INSERT INTO profiles (id, name, email, created_at)
     VALUES 
       (new_user_id, 'Soumav Das', 'soumav91@gmail.com', NOW())
-    ON CONFLICT (id) DO NOTHING;
+    ON CONFLICT (id) DO UPDATE
+      SET name = 'Soumav Das', email = 'soumav91@gmail.com';
 
     -- Show the created user ID
     RAISE NOTICE 'Created admin user with ID: %', new_user_id;
@@ -52,7 +53,8 @@ INSERT INTO profiles (id, name, email, created_at)
 SELECT id, 'Soumav Das', 'soumav91@gmail.com', NOW()
 FROM users
 WHERE email = 'soumav91@gmail.com'
-ON CONFLICT (id) DO NOTHING;
+ON CONFLICT (id) DO UPDATE
+SET name = 'Soumav Das', email = 'soumav91@gmail.com';
 ```
 
 ## Verification

@@ -1,5 +1,5 @@
 
--- SQL script to automatically create an admin user entry in both tables
+-- SQL script to create an admin user entry in both tables
 -- This script generates a UUID automatically during insertion
 
 -- Generate a UUID for the new admin user
@@ -19,7 +19,8 @@ BEGIN
     INSERT INTO profiles (id, name, email, created_at)
     VALUES 
       (new_user_id, 'Soumav Das', 'soumav91@gmail.com', NOW())
-    ON CONFLICT (id) DO NOTHING;
+    ON CONFLICT (id) DO UPDATE
+      SET name = 'Soumav Das', email = 'soumav91@gmail.com';
 
     -- Verify that both entries were created successfully
     RAISE NOTICE 'Created admin user with ID: %', new_user_id;
@@ -30,4 +31,3 @@ END $$;
 -- FROM users u 
 -- LEFT JOIN profiles p ON u.id = p.id
 -- WHERE u.email = 'soumav91@gmail.com';
-
