@@ -83,7 +83,7 @@ export function GroupDialogs({
               <Input 
                 id="name" 
                 placeholder="Enter group name" 
-                value={groupName || ''} 
+                value={groupName} 
                 onChange={e => onGroupNameChange(e.target.value)} 
               />
             </div>
@@ -92,14 +92,14 @@ export function GroupDialogs({
               <Input 
                 id="description" 
                 placeholder="Enter description" 
-                value={groupDescription || ''} 
+                value={groupDescription} 
                 onChange={e => onGroupDescriptionChange(e.target.value)} 
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={onAddGroupClose}>Cancel</Button>
-            <Button onClick={onAddGroup} disabled={!(groupName || '').trim()}>Create Group</Button>
+            <Button onClick={onAddGroup} disabled={!groupName.trim()}>Create Group</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
@@ -119,7 +119,7 @@ export function GroupDialogs({
               <Input 
                 id="edit-name" 
                 placeholder="Enter group name" 
-                value={groupName || ''} 
+                value={groupName} 
                 onChange={e => onGroupNameChange(e.target.value)} 
               />
             </div>
@@ -128,75 +128,71 @@ export function GroupDialogs({
               <Input 
                 id="edit-description" 
                 placeholder="Enter description" 
-                value={groupDescription || ''} 
+                value={groupDescription} 
                 onChange={e => onGroupDescriptionChange(e.target.value)} 
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={onEditGroupClose}>Cancel</Button>
-            <Button onClick={onEditGroup} disabled={!(groupName || '').trim()}>Save Changes</Button>
+            <Button onClick={onEditGroup} disabled={!groupName.trim()}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Group Dialog */}
-      {isDeleteOpen && (
-        <AlertDialog open={isDeleteOpen} onOpenChange={onDeleteGroupClose}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Group</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete the group "{selectedGroupName || ''}"? This will also delete all subgroups within this group. This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={onDeleteGroup} className="bg-red-600 hover:bg-red-700">
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <AlertDialog open={isDeleteOpen} onOpenChange={onDeleteGroupClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Group</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the group "{selectedGroupName}"? This will also delete all subgroups within this group. This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onDeleteGroup} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Add Subgroup Dialog */}
-      {isAddSubgroupOpen && (
-        <Dialog open={isAddSubgroupOpen} onOpenChange={onAddSubgroupClose}>
-          <DialogContent>
-            <DialogHeader>
-              <DialogTitle>Add Subgroup</DialogTitle>
-              <DialogDescription>
-                Create a new subgroup for further organizing residents.
-              </DialogDescription>
-            </DialogHeader>
-            <div className="grid gap-4 py-4">
-              <div className="grid gap-2">
-                <label htmlFor="subgroup-name">Subgroup Name</label>
-                <Input 
-                  id="subgroup-name" 
-                  placeholder="Enter subgroup name" 
-                  value={subgroupName || ''} 
-                  onChange={e => onSubgroupNameChange(e.target.value)} 
-                />
-              </div>
-              <div className="grid gap-2">
-                <label htmlFor="subgroup-description">Description (Optional)</label>
-                <Input 
-                  id="subgroup-description" 
-                  placeholder="Enter description" 
-                  value={subgroupDescription || ''} 
-                  onChange={e => onSubgroupDescriptionChange(e.target.value)} 
-                />
-              </div>
+      <Dialog open={isAddSubgroupOpen} onOpenChange={onAddSubgroupClose}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Add Subgroup</DialogTitle>
+            <DialogDescription>
+              Create a new subgroup for further organizing residents.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="grid gap-4 py-4">
+            <div className="grid gap-2">
+              <label htmlFor="subgroup-name">Subgroup Name</label>
+              <Input 
+                id="subgroup-name" 
+                placeholder="Enter subgroup name" 
+                value={subgroupName} 
+                onChange={e => onSubgroupNameChange(e.target.value)} 
+              />
             </div>
-            <DialogFooter>
-              <Button variant="outline" onClick={onAddSubgroupClose}>Cancel</Button>
-              <Button onClick={onAddSubgroup} disabled={!(subgroupName || '').trim()}>Create Subgroup</Button>
-            </DialogFooter>
-          </DialogContent>
-        </Dialog>
-      )}
+            <div className="grid gap-2">
+              <label htmlFor="subgroup-description">Description (Optional)</label>
+              <Input 
+                id="subgroup-description" 
+                placeholder="Enter description" 
+                value={subgroupDescription} 
+                onChange={e => onSubgroupDescriptionChange(e.target.value)} 
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={onAddSubgroupClose}>Cancel</Button>
+            <Button onClick={onAddSubgroup} disabled={!subgroupName.trim()}>Create Subgroup</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
 
       {/* Edit Subgroup Dialog */}
       <Dialog open={isEditSubgroupOpen} onOpenChange={onEditSubgroupClose}>
@@ -213,7 +209,7 @@ export function GroupDialogs({
               <Input 
                 id="edit-subgroup-name" 
                 placeholder="Enter subgroup name" 
-                value={subgroupName || ''} 
+                value={subgroupName} 
                 onChange={e => onSubgroupNameChange(e.target.value)} 
               />
             </div>
@@ -222,37 +218,35 @@ export function GroupDialogs({
               <Input 
                 id="edit-subgroup-description" 
                 placeholder="Enter description" 
-                value={subgroupDescription || ''} 
+                value={subgroupDescription} 
                 onChange={e => onSubgroupDescriptionChange(e.target.value)} 
               />
             </div>
           </div>
           <DialogFooter>
             <Button variant="outline" onClick={onEditSubgroupClose}>Cancel</Button>
-            <Button onClick={onEditSubgroup} disabled={!(subgroupName || '').trim()}>Save Changes</Button>
+            <Button onClick={onEditSubgroup} disabled={!subgroupName.trim()}>Save Changes</Button>
           </DialogFooter>
         </DialogContent>
       </Dialog>
 
       {/* Delete Subgroup Dialog */}
-      {isDeleteSubgroupOpen && (
-        <AlertDialog open={isDeleteSubgroupOpen} onOpenChange={onDeleteSubgroupClose}>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Delete Subgroup</AlertDialogTitle>
-              <AlertDialogDescription>
-                Are you sure you want to delete the subgroup "{selectedSubgroupName || ''}"? This action cannot be undone.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancel</AlertDialogCancel>
-              <AlertDialogAction onClick={onDeleteSubgroup} className="bg-red-600 hover:bg-red-700">
-                Delete
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
-      )}
+      <AlertDialog open={isDeleteSubgroupOpen} onOpenChange={onDeleteSubgroupClose}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Delete Subgroup</AlertDialogTitle>
+            <AlertDialogDescription>
+              Are you sure you want to delete the subgroup "{selectedSubgroupName}"? This action cannot be undone.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancel</AlertDialogCancel>
+            <AlertDialogAction onClick={onDeleteSubgroup} className="bg-red-600 hover:bg-red-700">
+              Delete
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </>
   );
 }

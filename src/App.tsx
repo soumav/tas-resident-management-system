@@ -3,7 +3,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { AuthProvider } from "@/context/AuthContext";
 
 // Pages
@@ -19,7 +19,6 @@ import Groups from "./pages/Groups";
 import About from "./pages/About";
 import Help from "./pages/Help";
 import Settings from "./pages/Settings";
-import AdminApproval from "./pages/AdminApproval";
 
 // Layouts
 import DashboardLayout from "./components/Layout/DashboardLayout";
@@ -28,7 +27,7 @@ const queryClient = new QueryClient();
 
 const App = () => (
   <QueryClientProvider client={queryClient}>
-    <Router>
+    <BrowserRouter>
       <AuthProvider>
         <TooltipProvider>
           <Toaster />
@@ -50,7 +49,6 @@ const App = () => (
               <Route path="settings" element={<Settings />} />
               <Route path="about" element={<About />} />
               <Route path="help" element={<Help />} />
-              <Route path="admin/approval" element={<AdminApproval />} />
             </Route>
             
             {/* Catch-all route */}
@@ -58,7 +56,7 @@ const App = () => (
           </Routes>
         </TooltipProvider>
       </AuthProvider>
-    </Router>
+    </BrowserRouter>
   </QueryClientProvider>
 );
 

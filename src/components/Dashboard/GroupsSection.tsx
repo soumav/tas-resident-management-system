@@ -15,7 +15,7 @@ interface GroupsSectionProps {
   residents: Resident[];
   newSubgroupName: string;
   onToggleGroupExpand: (groupId: number) => void;
-  onEditGroup: (group: ResidentGroup | null) => void;
+  onEditGroup: (group: ResidentGroup) => void;
   onDeleteGroup: (group: ResidentGroup) => void;
   onToggleSubgroupInput: (groupId: number) => void;
   onNewSubgroupNameChange: (name: string) => void;
@@ -176,7 +176,7 @@ export function GroupsSection({
         <div className="bg-white rounded-lg p-8 text-center border">
           <p className="text-gray-500 mb-4">No resident groups yet</p>
           <Button 
-            onClick={() => onEditGroup(null)} 
+            onClick={() => onEditGroup(null as any)} 
             className="flex items-center gap-2 bg-sanctuary-green hover:bg-sanctuary-light-green"
           >
             <Plus className="h-4 w-4" />

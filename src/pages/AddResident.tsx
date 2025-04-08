@@ -18,7 +18,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { format } from 'date-fns';
 import { Calendar as CalendarIcon, Upload, RefreshCw } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
-import { supabase, ensureStorageBucket } from '@/lib/supabase';
+import { supabase } from '@/lib/supabase';
 
 type ResidentType = {
   id: number;
@@ -157,29 +157,38 @@ export default function AddResident() {
   useEffect(() => {
     fetchOptions();
 
-    // Improved storage bucket initialization
-    const setupStorage = async () => {
-      console.log("Setting up storage bucket for resident images...");
+    // Ensure the bucket exists when the component mounts
+    const createBucketIfNotExists = async () => {
       try {
-        const result = await ensureStorageBucket('resident-images', true);
+        // First check if the bucket exists
+        const { data: buckets } = await supabase.storage.listBuckets();
+        const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
         
-        if (!result.success) {
-          console.warn(`Storage setup issue: ${result.message}`);
-          // Show warning toast but don't block the form
-          toast({
-            title: 'Storage Setup Warning',
-            description: "Image uploads may not work. " + result.message,
-            variant: 'destructive',
+        if (!bucketExists) {
+          console.log('Creating resident-images bucket...');
+          const { error } = await supabase.storage.createBucket('resident-images', {
+            public: true
           });
+          
+          if (error) {
+            console.error('Error creating bucket:', error);
+            toast({
+              title: 'Error',
+              description: 'Failed to create storage bucket. Please try again.',
+              variant: 'destructive',
+            });
+          } else {
+            console.log('Bucket created successfully');
+          }
         } else {
-          console.log(result.message);
+          console.log('Bucket already exists');
         }
       } catch (error) {
-        console.error("Storage setup failed:", error);
+        console.error('Error checking/creating bucket:', error);
       }
     };
     
-    setupStorage();
+    createBucketIfNotExists();
   }, [toast]);
   
   useEffect(() => {
@@ -227,11 +236,24 @@ export default function AddResident() {
         console.log('Uploading image:', image.name);
         
         try {
-          // Try to ensure bucket exists but don't block form submission if it fails
-          const bucketResult = await ensureStorageBucket('resident-images', true);
-          console.log('Bucket creation result:', bucketResult);
+          // Check if bucket exists and create it if it doesn't
+          const { data: buckets } = await supabase.storage.listBuckets();
+          const bucketExists = buckets?.some(bucket => bucket.name === 'resident-images');
           
-          // Attempt upload even if bucket creation reported issues
+          if (!bucketExists) {
+            console.log('Bucket does not exist. Creating...');
+            const { error: createError } = await supabase.storage.createBucket('resident-images', {
+              public: true
+            });
+            
+            if (createError) {
+              console.error('Error creating bucket:', createError);
+              throw createError;
+            }
+            console.log('Bucket created successfully');
+          }
+          
+          // Now upload the file
           const fileExt = image.name.split('.').pop();
           const fileName = `${Math.random().toString(36).substring(2)}.${fileExt}`;
           const filePath = `${fileName}`;
@@ -256,12 +278,18 @@ export default function AddResident() {
         } catch (uploadError: any) {
           console.error('Upload error:', uploadError);
           
-          toast({
-            title: 'Image Upload Failed',
-            description: 'The resident will be created without an image. You can add an image later.',
-            variant: 'destructive',
-          });
+          // More specific error message
+          if (uploadError.message && uploadError.message.includes('bucket not found')) {
+            toast({
+              title: 'Storage Error',
+              description: 'The storage system is not properly set up. Please contact an administrator.',
+              variant: 'destructive',
+            });
+          } else {
+            throw uploadError;
+          }
           
+          // We'll continue without the image
           console.log('Continuing without image');
         }
       }

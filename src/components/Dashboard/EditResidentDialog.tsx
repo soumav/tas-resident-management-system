@@ -1,5 +1,5 @@
 
-import React, { useState, useEffect } from 'react';
+import React from 'react';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '@/components/ui/dialog';
@@ -8,7 +8,7 @@ import { Popover, PopoverContent, PopoverTrigger } from '@/components/ui/popover
 import { CalendarIcon, Upload } from 'lucide-react';
 import { format } from 'date-fns';
 import { cn } from '@/lib/utils';
-import { Resident, ResidentGroup, ResidentSubgroup, ResidentType } from '@/lib/supabase';
+import { ResidentGroup } from '@/lib/supabase';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 
 interface EditResidentFormData {
@@ -22,83 +22,31 @@ interface EditResidentFormData {
 
 interface EditResidentDialogProps {
   open: boolean;
-  resident: Resident;
-  residentTypes: ResidentType[];
   groups: ResidentGroup[];
-  subgroups: ResidentSubgroup[];
-  onSave: (updatedResident: any) => void;
-  onOpenChange: (open: boolean) => void;
+  isLoading: boolean;
+  formData: EditResidentFormData;
+  previewUrl: string | null;
+  selectedFile: File | null;
+  onClose: () => void;
+  onSubmit: () => void;
+  onFormChange: (data: Partial<EditResidentFormData>) => void;
+  onFileChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+  resetFileInput: () => void;
 }
 
 export function EditResidentDialog({
   open,
-  resident,
-  residentTypes,
   groups,
-  subgroups,
-  onSave,
-  onOpenChange
+  isLoading,
+  formData,
+  previewUrl,
+  selectedFile,
+  onClose,
+  onSubmit,
+  onFormChange,
+  onFileChange,
+  resetFileInput
 }: EditResidentDialogProps) {
-  const [isLoading, setIsLoading] = useState(false);
-  const [formData, setFormData] = useState<EditResidentFormData>({
-    name: resident?.name || '',
-    description: resident?.description || '',
-    image_url: resident?.image_url || '',
-    arrival_date: resident?.arrival_date ? new Date(resident.arrival_date) : null,
-    group_id: resident?.group_id || null,
-    subgroup_id: resident?.subgroup_id || null
-  });
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
-  const [previewUrl, setPreviewUrl] = useState<string | null>(resident?.image_url || null);
-  
-  useEffect(() => {
-    if (resident) {
-      setFormData({
-        name: resident.name || '',
-        description: resident.description || '',
-        image_url: resident.image_url || '',
-        arrival_date: resident.arrival_date ? new Date(resident.arrival_date) : null,
-        group_id: resident.group_id || null,
-        subgroup_id: resident.subgroup_id || null
-      });
-      setPreviewUrl(resident.image_url || null);
-    }
-  }, [resident]);
-  
-  const handleFormChange = (data: Partial<EditResidentFormData>) => {
-    setFormData(prev => ({ ...prev, ...data }));
-  };
-  
-  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-    
-    setSelectedFile(file);
-    
-    const fileReader = new FileReader();
-    fileReader.onload = () => {
-      setPreviewUrl(fileReader.result as string);
-    };
-    fileReader.readAsDataURL(file);
-  };
-  
-  const resetFileInput = () => {
-    setSelectedFile(null);
-    setPreviewUrl(resident?.image_url || null);
-  };
-  
-  const handleSubmit = () => {
-    setIsLoading(true);
-    // In a real implementation, we would upload the file and update the resident
-    // For now, just simulate a delay and call onSave
-    setTimeout(() => {
-      onSave({
-        ...resident,
-        ...formData
-      });
-      setIsLoading(false);
-    }, 500);
-  };
   
   const selectedGroup = formData.group_id 
     ? groups.find(g => g.id === formData.group_id) 
@@ -107,7 +55,7 @@ export function EditResidentDialog({
   const hasSubgroups = selectedGroup?.subgroups && selectedGroup.subgroups.length > 0;
   
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
+    <Dialog open={open} onOpenChange={onClose}>
       <DialogContent className="max-w-md">
         <DialogHeader>
           <DialogTitle>Edit Resident</DialogTitle>
@@ -122,7 +70,7 @@ export function EditResidentDialog({
               id="resident-name" 
               placeholder="Enter name" 
               value={formData.name} 
-              onChange={e => handleFormChange({ name: e.target.value })}
+              onChange={e => onFormChange({ name: e.target.value })}
             />
           </div>
           <div className="grid gap-2">
@@ -131,7 +79,7 @@ export function EditResidentDialog({
               id="resident-description" 
               placeholder="Enter description" 
               value={formData.description} 
-              onChange={e => handleFormChange({ description: e.target.value })}
+              onChange={e => onFormChange({ description: e.target.value })}
             />
           </div>
           
@@ -154,7 +102,7 @@ export function EditResidentDialog({
                 <Calendar
                   mode="single"
                   selected={formData.arrival_date || undefined}
-                  onSelect={(date) => handleFormChange({ arrival_date: date })}
+                  onSelect={(date) => onFormChange({ arrival_date: date })}
                   initialFocus
                 />
               </PopoverContent>
@@ -169,7 +117,7 @@ export function EditResidentDialog({
                     src={previewUrl} 
                     alt="Preview" 
                     className="h-full w-full object-cover"
-                    key={`preview-${new Date().getTime()}`}
+                    key={`preview-${new Date().getTime()}`} // Add key to force re-render
                   />
                 </div>
               )}
@@ -177,7 +125,7 @@ export function EditResidentDialog({
                 <div className="relative">
                   <Input
                     type="file"
-                    onChange={handleFileChange}
+                    onChange={onFileChange}
                     className="hidden"
                     id="image-upload"
                     accept="image/*"
@@ -198,7 +146,11 @@ export function EditResidentDialog({
                     variant="outline"
                     size="sm"
                     className="mt-2"
-                    onClick={resetFileInput}
+                    onClick={() => {
+                      resetFileInput();
+                      // Make sure to set the image_url to null in the form data
+                      onFormChange({ image_url: '' });
+                    }}
                   >
                     Remove
                   </Button>
@@ -213,13 +165,13 @@ export function EditResidentDialog({
               value={formData.group_id ? formData.group_id.toString() : ""}
               onValueChange={(value) => {
                 if (value === "placeholder" || value === "") {
-                  handleFormChange({
+                  onFormChange({
                     group_id: null,
                     subgroup_id: null
                   });
                 } else {
                   const groupId = parseInt(value, 10);
-                  handleFormChange({
+                  onFormChange({
                     group_id: groupId,
                     subgroup_id: null // Reset subgroup when group changes
                   });
@@ -247,12 +199,12 @@ export function EditResidentDialog({
                 value={formData.subgroup_id ? formData.subgroup_id.toString() : ""}
                 onValueChange={(value) => {
                   if (value === "placeholder" || value === "") {
-                    handleFormChange({
+                    onFormChange({
                       subgroup_id: null
                     });
                   } else {
                     const subgroupId = parseInt(value, 10);
-                    handleFormChange({
+                    onFormChange({
                       subgroup_id: subgroupId
                     });
                   }
@@ -274,8 +226,8 @@ export function EditResidentDialog({
           )}
         </div>
         <DialogFooter>
-          <Button variant="outline" onClick={() => onOpenChange(false)}>Cancel</Button>
-          <Button onClick={handleSubmit} disabled={!formData.name.trim() || isLoading}>
+          <Button variant="outline" onClick={onClose}>Cancel</Button>
+          <Button onClick={onSubmit} disabled={!formData.name.trim() || isLoading}>
             {isLoading ? 'Updating...' : 'Save Changes'}
           </Button>
         </DialogFooter>

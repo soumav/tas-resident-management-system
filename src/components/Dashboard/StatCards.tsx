@@ -12,8 +12,6 @@ interface StatCardsProps {
 
 export function StatCards({ residents, groups, residentsByType }: StatCardsProps) {
   const getGroupsCount = () => {
-    if (!groups) return { groups: 0, subgroups: 0 };
-    
     return {
       groups: groups.length,
       subgroups: groups.reduce((total, group) => total + (group.subgroups?.length || 0), 0)
@@ -21,7 +19,6 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
   };
 
   const getTopResidentTypes = () => {
-    if (!residentsByType) return [];
     return Object.entries(residentsByType).sort(([, countA], [, countB]) => countB - countA);
   };
 
@@ -45,8 +42,8 @@ export function StatCards({ residents, groups, residentsByType }: StatCardsProps
     return '🐾'; // Default is now a paw emoji
   };
 
-  // Calculate the resident count safely
-  const residentCount = residents?.length || 0;
+  // Calculate the resident count directly from the current props
+  const residentCount = residents.length;
 
   return (
     <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
