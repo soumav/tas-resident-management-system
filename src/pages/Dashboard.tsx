@@ -467,20 +467,21 @@ export default function Dashboard() {
     if (!selectedGroup) return;
     try {
       console.log('Checking for residents in group with admin privileges:', selectedGroup.id);
-      const { count: residentCount, error: countError } = await bypassRLS(
+      const { data, error: countError } = await bypassRLS(
         () => supabase
           .from('residents')
           .select('*', {
             count: 'exact',
             head: true
           }).eq('group_id', selectedGroup.id),
-        { count: 0 },
+        { count: 0 } as unknown as { count: number },
         'check_residents_in_group'
       );
       
       if (countError) throw countError;
       
-      if (residentCount && residentCount > 0) {
+      const residentCount = data?.count || 0;
+      if (residentCount > 0) {
         toast({
           title: 'Error',
           description: `Cannot delete group "${selectedGroup.name}" because it has residents assigned to it.`,
@@ -666,20 +667,21 @@ export default function Dashboard() {
     if (!selectedSubgroup) return;
     try {
       console.log('Checking residents in subgroup with admin privileges:', selectedSubgroup.id);
-      const { count: residentCount, error: countError } = await bypassRLS(
+      const { data, error: countError } = await bypassRLS(
         () => supabase
           .from('residents')
           .select('*', {
             count: 'exact',
             head: true
           }).eq('subgroup_id', selectedSubgroup.id),
-        { count: 0 },
+        { count: 0 } as unknown as { count: number },
         'check_residents_in_subgroup'
       );
       
       if (countError) throw countError;
       
-      if (residentCount && residentCount > 0) {
+      const residentCount = data?.count || 0;
+      if (residentCount > 0) {
         toast({
           title: 'Error',
           description: `Cannot delete subgroup "${selectedSubgroup.name}" because it has residents assigned to it.`,

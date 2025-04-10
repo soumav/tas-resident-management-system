@@ -33,7 +33,7 @@ export const bypassRLS = async <T>(
     // Handle count property for queries with count option
     if (count !== undefined) {
       console.log(`Operation ${operationName} succeeded with count:`, count);
-      return { data: { count }, error: null };
+      return { data: { count } as unknown as T, error: null };
     }
     
     console.log(`Operation ${operationName} succeeded:`, data);
