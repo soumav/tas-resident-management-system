@@ -32,6 +32,7 @@ export const bypassRLS = async <T>(
     // Handle count property for queries with count option
     if (count !== undefined) {
       console.log(`Operation ${operationName} succeeded with count:`, count);
+      // Use type assertion to ensure TypeScript is happy with this approach
       return { data: { count } as unknown as T, error: null };
     }
     
@@ -43,20 +44,22 @@ export const bypassRLS = async <T>(
   }
 };
 
+// Cache for user data to prevent repeated queries
+const userCache: Record<string, any> = {};
+
 // Function to ensure a user exists in the users table
 export const ensureUserExists = async (userId: string, email: string) => {
-  // Add a guard against recursion or repeated calls
-  const cacheKey = `ensureUserExists_${userId}`;
-  if ((window as any)[cacheKey]) {
-    console.log("Preventing duplicate ensureUserExists call for:", userId);
-    return (window as any)[cacheKey];
+  // Check the cache first to prevent redundant database calls
+  if (userCache[userId]) {
+    console.log("Using cached user data for:", userId);
+    return userCache[userId];
   }
 
   try {
     console.log("Checking if user exists:", userId, email);
     
     // First check if user exists
-    let { data: existingUser, error: fetchError } = await supabase
+    const { data: existingUser, error: fetchError } = await supabase
       .from('users')
       .select('*')
       .eq('id', userId)
@@ -69,16 +72,16 @@ export const ensureUserExists = async (userId: string, email: string) => {
       const defaultRole = isAdminEmail ? 'admin' : 'pending';
       const defaultUser = { id: userId, email: email, role: defaultRole };
       
-      // Cache the response to prevent infinite loops
-      (window as any)[cacheKey] = defaultUser;
+      // Cache the user to prevent future queries
+      userCache[userId] = defaultUser;
       return defaultUser;
     }
 
     // If user exists, return it
     if (existingUser) {
       console.log("Found existing user:", existingUser);
-      // Cache the response to prevent infinite loops
-      (window as any)[cacheKey] = existingUser;
+      // Cache the user to prevent future queries
+      userCache[userId] = existingUser;
       return existingUser;
     }
 
@@ -101,19 +104,9 @@ export const ensureUserExists = async (userId: string, email: string) => {
       if (insertError) {
         console.error("Error creating user record:", insertError);
         
-        // Check if this is an RLS error
-        if (insertError.code === '42501' && insertError.message.includes('row-level security')) {
-          console.log("RLS error detected. Returning default user object");
-          // Return a default user object when RLS prevents insertion
-          const defaultUser = { id: userId, email: email, role: defaultRole };
-          // Cache the response to prevent infinite loops
-          (window as any)[cacheKey] = defaultUser;
-          return defaultUser;
-        }
-        
+        // Return a default user object when insertion fails
         const defaultUser = { id: userId, email: email, role: defaultRole };
-        // Cache the response to prevent infinite loops
-        (window as any)[cacheKey] = defaultUser;
+        userCache[userId] = defaultUser;
         return defaultUser;
       }
 
@@ -121,31 +114,24 @@ export const ensureUserExists = async (userId: string, email: string) => {
       
       // Also make sure the profile exists
       try {
-        const { error: profileError } = await supabase
+        await supabase
           .from('profiles')
           .insert([
             { id: userId, email: email }
           ]);
-          
-        if (profileError) {
-          console.error("Error creating profile:", profileError);
-          // Don't throw here, still allow login to proceed
-        }
       } catch (profileErr) {
         console.error("Profile creation error:", profileErr);
         // Don't throw here, still allow login to proceed
       }
 
       const returnUser = newUser?.[0] || { id: userId, email: email, role: defaultRole };
-      // Cache the response to prevent infinite loops
-      (window as any)[cacheKey] = returnUser;
+      userCache[userId] = returnUser;
       return returnUser;
     } catch (insertErr) {
       console.error("Insert operation failed:", insertErr);
       // Return a default user so authentication can continue
       const defaultUser = { id: userId, email: email, role: defaultRole };
-      // Cache the response to prevent infinite loops
-      (window as any)[cacheKey] = defaultUser;
+      userCache[userId] = defaultUser;
       return defaultUser;
     }
   } catch (error) {
@@ -155,8 +141,7 @@ export const ensureUserExists = async (userId: string, email: string) => {
     const defaultRole = isAdminEmail ? 'admin' : 'pending';
     // Return a default user so authentication can continue
     const defaultUser = { id: userId, email: email, role: defaultRole };
-    // Cache the response to prevent infinite loops
-    (window as any)[cacheKey] = defaultUser;
+    userCache[userId] = defaultUser;
     return defaultUser;
   }
 };

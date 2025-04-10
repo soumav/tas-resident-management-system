@@ -30,11 +30,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isInitialized = useRef(false);
+  const initializationInProgress = useRef(false);
 
   useEffect(() => {
     // Prevent multiple initialization
-    if (isInitialized.current) return;
-    isInitialized.current = true;
+    if (isInitialized.current || initializationInProgress.current) return;
+    
+    initializationInProgress.current = true;
+    console.log("Initializing auth context");
     
     const getSession = async () => {
       try {
@@ -44,6 +47,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         
         if (session?.user) {
           try {
+            console.log("User session found, fetching role...");
             // Use our utility function to ensure user exists and get role
             const userData = await ensureUserExists(session.user.id, session.user.email || '');
             console.log("User data from ensureUserExists:", userData);
@@ -62,17 +66,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         console.error('Session fetch error:', error);
       } finally {
         setIsLoading(false);
+        isInitialized.current = true;
+        initializationInProgress.current = false;
       }
     };
     
     getSession();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      console.log("Auth state change detected");
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         try {
+          console.log("Auth state change - fetching user data");
           // Use our utility function
           const userData = await ensureUserExists(session.user.id, session.user.email || '');
           console.log("Auth state change - user data:", userData);
@@ -95,7 +103,6 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
     return () => {
       subscription.unsubscribe();
-      isInitialized.current = false;
     };
   }, [navigate]);
 

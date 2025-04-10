@@ -40,7 +40,14 @@ const Index = () => {
       setRedirectAttempted(true);
       navigate('/login');
     }
-  }, [user, isLoading, navigate, hasSupabaseError, redirectAttempted]);
+
+    // When user is authenticated with a valid role, redirect to dashboard
+    if (!isLoading && user && userRole && userRole !== 'pending' && !redirectAttempted && !hasSupabaseError) {
+      console.log("User authenticated, redirecting to dashboard");
+      setRedirectAttempted(true);
+      navigate('/');
+    }
+  }, [user, isLoading, navigate, hasSupabaseError, redirectAttempted, userRole]);
 
   // Show Supabase connection error
   if (hasSupabaseError) {
@@ -77,8 +84,12 @@ const Index = () => {
     );
   }
 
-  // This will be replaced by the dashboard layout in routes
-  return null;
+  // This will be shown if logged in but waiting for dashboard component to load
+  return (
+    <div className="min-h-screen flex items-center justify-center bg-gray-50">
+      <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green" />
+    </div>
+  );
 };
 
 export default Index;
