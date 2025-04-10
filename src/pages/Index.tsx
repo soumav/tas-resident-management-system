@@ -89,3 +89,6 @@ const Index = () => {
   // If user is authenticated and we're at the root, return null to let the router handle it
   // This allows the Dashboard to render properly instead of showing a loading screen
   return null;
+};
+
+export default Index;
