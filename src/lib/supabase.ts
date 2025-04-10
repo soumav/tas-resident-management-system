@@ -16,17 +16,24 @@ export const logSupabaseOperation = async (operation: string, data: any) => {
 
 // Special function to handle operations with RLS policies
 export const bypassRLS = async <T>(
-  operation: () => Promise<{ data: T | null; error: any }>,
+  operation: () => any,
   fallbackData: T | null = null,
   operationName: string = 'unknown'
 ): Promise<{ data: T | null; error: any | null }> => {
   try {
     console.log(`Attempting operation: ${operationName}`);
-    const { data, error } = await operation();
+    const result = await operation();
+    const { data, error, count } = result;
     
     if (error) {
       console.error(`Error in operation ${operationName}:`, error);
       return { data: fallbackData, error };
+    }
+    
+    // Handle count property for queries with count option
+    if (count !== undefined) {
+      console.log(`Operation ${operationName} succeeded with count:`, count);
+      return { data: { count }, error: null };
     }
     
     console.log(`Operation ${operationName} succeeded:`, data);
