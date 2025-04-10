@@ -42,7 +42,9 @@ const Index = () => {
         console.log("User is pending approval, redirecting to pending page");
         navigate('/pending-approval');
       } else {
-        console.log("User authenticated with role:", userRole);
+        console.log("User authenticated with role:", userRole, "- staying on dashboard");
+        // User is authenticated and allowed to access dashboard
+        // No need to redirect - we're already on the dashboard route
       }
     }
   }, [user, isLoading, navigate, hasSupabaseError, redirectAttempted, userRole]);
@@ -74,18 +76,36 @@ const Index = () => {
   }
 
   // Show loading indicator while checking auth status
-  if (isLoading || !redirectAttempted) {
+  if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green" />
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green mb-4" />
+          <p className="text-gray-600">Checking authentication...</p>
+        </div>
       </div>
     );
   }
 
-  // This will be shown if logged in and waiting for dashboard component to load
+  // User is authenticated but content is still loading
+  if (user && !isLoading && userRole !== 'pending') {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gray-50">
+        <div className="flex flex-col items-center">
+          <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green mb-4" />
+          <p className="text-gray-600">Loading dashboard...</p>
+        </div>
+      </div>
+    );
+  }
+
+  // This should rarely be seen, as the useEffect should have redirected already
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green" />
+      <div className="flex flex-col items-center">
+        <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green mb-4" />
+        <p className="text-gray-600">Preparing application...</p>
+      </div>
     </div>
   );
 };

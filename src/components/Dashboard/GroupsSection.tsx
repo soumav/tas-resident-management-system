@@ -48,9 +48,11 @@ export function GroupsSection({
   getResidentsBySubgroup
 }: GroupsSectionProps) {
   
+  console.log('GroupsSection rendering with groups:', groups);
+  
   return (
     <div className="space-y-4 mb-8">
-      {groups.length > 0 ? groups.map(group => (
+      {groups && groups.length > 0 ? groups.map(group => (
         <Collapsible 
           key={group.id} 
           open={expandedGroups.includes(group.id)} 
@@ -142,17 +144,24 @@ export function GroupsSection({
                 ))}
                 
                 {showSubgroupInput === group.id ? (
-                  <div className="mt-6 subgroup-input">
+                  <div className="mt-6 subgroup-input flex items-center gap-2">
                     <Input 
                       placeholder="Subgroup name" 
                       value={newSubgroupName} 
                       onChange={e => onNewSubgroupNameChange(e.target.value)} 
                       className="max-w-xs" 
                     />
-                    <Button onClick={onQuickAddSubgroup} disabled={!newSubgroupName.trim()}>
+                    <Button 
+                      onClick={onQuickAddSubgroup} 
+                      disabled={!newSubgroupName.trim()}
+                      className="bg-sanctuary-green hover:bg-sanctuary-light-green"
+                    >
                       Add
                     </Button>
-                    <Button variant="outline" onClick={() => onToggleSubgroupInput(group.id)}>
+                    <Button 
+                      variant="outline" 
+                      onClick={() => onToggleSubgroupInput(group.id)}
+                    >
                       Cancel
                     </Button>
                   </div>
@@ -176,7 +185,7 @@ export function GroupsSection({
         <div className="bg-white rounded-lg p-8 text-center border">
           <p className="text-gray-500 mb-4">No resident groups yet</p>
           <Button 
-            onClick={() => onEditGroup(null as any)} 
+            onClick={() => onEditGroup({} as ResidentGroup)} 
             className="flex items-center gap-2 bg-sanctuary-green hover:bg-sanctuary-light-green"
           >
             <Plus className="h-4 w-4" />

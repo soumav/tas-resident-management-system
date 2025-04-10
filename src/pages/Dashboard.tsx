@@ -1,7 +1,8 @@
+
 import { useState, useEffect } from 'react';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import { supabase, ResidentGroup, ResidentSubgroup, Resident, bypassRLS } from '@/lib/supabase';
 import { useToast } from '@/components/ui/use-toast';
 
@@ -21,7 +22,8 @@ export default function Dashboard() {
   const [residentsByType, setResidentsByType] = useState<Record<string, number>>({});
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isDataFetched, setIsDataFetched] = useState(false);
   
   const { toast } = useToast();
   
@@ -60,8 +62,27 @@ export default function Dashboard() {
   // This useEffect will run whenever the Dashboard component mounts
   useEffect(() => {
     console.log('Dashboard mounted/revisited - fetching fresh data');
-    fetchGroups();
-    fetchResidents();
+    setIsLoading(true);
+    
+    // Fetch data in sequence to ensure we have all the data we need
+    const fetchData = async () => {
+      try {
+        await fetchGroups();
+        await fetchResidents();
+        setIsDataFetched(true);
+      } catch (error) {
+        console.error('Error fetching dashboard data:', error);
+        toast({
+          title: 'Error',
+          description: 'Failed to load dashboard data. Please try refreshing the page.',
+          variant: 'destructive'
+        });
+      } finally {
+        setIsLoading(false);
+      }
+    };
+    
+    fetchData();
     
     // We don't need a cleanup function since we're not subscribing to anything
   }, []);
@@ -96,6 +117,8 @@ export default function Dashboard() {
         throw groupsError;
       }
       
+      console.log('Groups fetched successfully, raw data:', groupsData);
+      
       const { data: subgroupsData, error: subgroupsError } = await bypassRLS(
         () => supabase.from('resident_subgroups').select('*').order('name'),
         [],
@@ -107,6 +130,8 @@ export default function Dashboard() {
         throw subgroupsError;
       }
       
+      console.log('Subgroups fetched successfully, raw data:', subgroupsData);
+      
       const groupsWithSubgroups = (groupsData || []).map((group: ResidentGroup) => {
         const groupSubgroups = (subgroupsData || []).filter((subgroup: ResidentSubgroup) => subgroup.group_id === group.id);
         return {
@@ -116,7 +141,7 @@ export default function Dashboard() {
       });
       
       setGroups(groupsWithSubgroups);
-      console.log('Groups fetched successfully:', groupsWithSubgroups);
+      console.log('Groups with subgroups:', groupsWithSubgroups);
     } catch (error) {
       console.error('Error fetching dashboard data:', error);
       toast({
@@ -740,6 +765,15 @@ export default function Dashboard() {
 
   const username = user?.email?.split('@')[0] || "User";
 
+  if (isLoading) {
+    return (
+      <div className="flex flex-col items-center justify-center min-h-[60vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green mb-4" />
+        <p className="text-gray-600">Loading dashboard data...</p>
+      </div>
+    );
+  }
+
   return (
     <div>
       <DashboardHeader username={username} />
@@ -761,25 +795,27 @@ export default function Dashboard() {
         </Button>
       </div>
       
-      <GroupsSection 
-        groups={groups}
-        expandedGroups={expandedGroups}
-        showSubgroupInput={showSubgroupInput}
-        residents={residents}
-        newSubgroupName={newSubgroupName}
-        onToggleGroupExpand={toggleGroupExpand}
-        onEditGroup={openEditGroupDialog}
-        onDeleteGroup={openDeleteGroupDialog}
-        onToggleSubgroupInput={toggleSubgroupInput}
-        onNewSubgroupNameChange={setNewSubgroupName}
-        onQuickAddSubgroup={handleQuickAddSubgroup}
-        onEditSubgroup={openEditSubgroupDialog}
-        onDeleteSubgroup={openDeleteSubgroupDialog}
-        onEditResident={handleEditResident}
-        onDeleteResident={openDeleteResidentDialog}
-        getResidentsByGroup={getResidentsByGroup}
-        getResidentsBySubgroup={getResidentsBySubgroup}
-      />
+      {isDataFetched && (
+        <GroupsSection 
+          groups={groups}
+          expandedGroups={expandedGroups}
+          showSubgroupInput={showSubgroupInput}
+          residents={residents}
+          newSubgroupName={newSubgroupName}
+          onToggleGroupExpand={toggleGroupExpand}
+          onEditGroup={openEditGroupDialog}
+          onDeleteGroup={openDeleteGroupDialog}
+          onToggleSubgroupInput={toggleSubgroupInput}
+          onNewSubgroupNameChange={setNewSubgroupName}
+          onQuickAddSubgroup={handleQuickAddSubgroup}
+          onEditSubgroup={openEditSubgroupDialog}
+          onDeleteSubgroup={openDeleteSubgroupDialog}
+          onEditResident={handleEditResident}
+          onDeleteResident={openDeleteResidentDialog}
+          getResidentsByGroup={getResidentsByGroup}
+          getResidentsBySubgroup={getResidentsBySubgroup}
+        />
+      )}
 
       <EditResidentDialog 
         open={isEditResidentDialogOpen}
