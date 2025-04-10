@@ -5,7 +5,7 @@ import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
-import { PiggyBank, AlertCircle } from 'lucide-react';
+import { PiggyBank, AlertCircle, Loader2 } from 'lucide-react';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 import Footer from '@/components/Layout/Footer';
 
@@ -45,17 +45,26 @@ export default function Login() {
     
     setIsLoading(true);
     
-    const { error } = await signIn(email, password);
-    
-    if (error) {
+    try {
+      const { error } = await signIn(email, password);
+      
+      if (error) {
+        toast({
+          title: "Authentication error",
+          description: error.message,
+          variant: "destructive"
+        });
+      }
+    } catch (err) {
+      console.error("Login error:", err);
       toast({
         title: "Authentication error",
-        description: error.message,
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
+    } finally {
+      setIsLoading(false);
     }
-    
-    setIsLoading(false);
   };
 
   return (
@@ -101,6 +110,7 @@ export default function Login() {
                   onChange={(e) => setEmail(e.target.value)}
                   required
                   className="w-full"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -121,6 +131,7 @@ export default function Login() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="w-full"
+                  disabled={isLoading}
                 />
               </div>
               
@@ -129,7 +140,14 @@ export default function Login() {
                 className="w-full bg-sanctuary-green hover:bg-sanctuary-light-green"
                 disabled={isLoading || hasSupabaseError}
               >
-                {isLoading ? 'Signing in...' : 'Sign In'}
+                {isLoading ? (
+                  <div className="flex items-center justify-center gap-2">
+                    <Loader2 className="h-4 w-4 animate-spin" />
+                    <span>Signing in...</span>
+                  </div>
+                ) : (
+                  'Sign In'
+                )}
               </Button>
             </form>
             

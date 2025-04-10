@@ -16,48 +16,58 @@ export const logSupabaseOperation = async (operation: string, data: any) => {
 
 // Function to ensure a user exists in the users table
 export const ensureUserExists = async (userId: string, email: string) => {
-  // First check if user exists
-  let { data: existingUser, error: fetchError } = await supabase
-    .from('users')
-    .select('*')
-    .eq('id', userId)
-    .maybeSingle();
-
-  if (fetchError) {
-    console.error("Error checking if user exists:", fetchError);
-  }
-
-  // If user doesn't exist, create them with pending role
-  if (!existingUser) {
-    console.log("User doesn't exist in users table, creating...");
-    const { data: newUser, error: insertError } = await supabase
-      .from('users')
-      .insert([
-        { id: userId, email: email, role: 'pending' }
-      ])
-      .select();
-
-    if (insertError) {
-      console.error("Error creating user record:", insertError);
-    } else {
-      console.log("Created new user record:", newUser);
-    }
+  try {
+    console.log("Checking if user exists:", userId, email);
     
-    // Also make sure the profile exists
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .insert([
-        { id: userId, email: email }
-      ]);
-      
-    if (profileError) {
-      console.error("Error creating profile:", profileError);
+    // First check if user exists
+    let { data: existingUser, error: fetchError } = await supabase
+      .from('users')
+      .select('*')
+      .eq('id', userId)
+      .maybeSingle();
+
+    if (fetchError) {
+      console.error("Error checking if user exists:", fetchError);
+      throw fetchError;
     }
 
-    return { role: 'pending' };
-  }
+    // If user doesn't exist, create them with pending role
+    if (!existingUser) {
+      console.log("User doesn't exist in users table, creating...");
+      const { data: newUser, error: insertError } = await supabase
+        .from('users')
+        .insert([
+          { id: userId, email: email, role: 'pending' }
+        ])
+        .select();
 
-  return existingUser;
+      if (insertError) {
+        console.error("Error creating user record:", insertError);
+        throw insertError;
+      }
+
+      console.log("Created new user record:", newUser);
+      
+      // Also make sure the profile exists
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .insert([
+          { id: userId, email: email }
+        ]);
+        
+      if (profileError) {
+        console.error("Error creating profile:", profileError);
+        throw profileError;
+      }
+
+      return { role: 'pending' };
+    }
+
+    return existingUser;
+  } catch (error) {
+    console.error("Error in ensureUserExists:", error);
+    throw error;
+  }
 };
 
 // Type definitions
