@@ -1,6 +1,6 @@
 
 import React, { useState, useEffect } from 'react';
-import { Outlet, Navigate, useNavigate } from 'react-router-dom';
+import { Outlet, Navigate, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { supabase } from '@/lib/supabase';
 import Sidebar from './Sidebar';
@@ -13,6 +13,7 @@ export default function DashboardLayout() {
   const { user, isLoading, signOut, userRole, isPending } = useAuth();
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
+  const location = useLocation();
   const { toast } = useToast();
   const [isReady, setIsReady] = useState(false);
 
@@ -30,7 +31,7 @@ export default function DashboardLayout() {
   // Redirect based on user role
   useEffect(() => {
     if (user && isPending) {
-      navigate('/pending-approval');
+      navigate('/pending-approval', { replace: true });
     }
   }, [user, isPending, navigate]);
 
@@ -45,12 +46,12 @@ export default function DashboardLayout() {
 
   // If no user is authenticated, redirect to login
   if (!user) {
-    return <Navigate to="/login" />;
+    return <Navigate to="/login" replace />;
   }
 
   // If user is pending approval, redirect to pending page
   if (isPending) {
-    return <Navigate to="/pending-approval" />;
+    return <Navigate to="/pending-approval" replace />;
   }
 
   const handleSignOut = async () => {
