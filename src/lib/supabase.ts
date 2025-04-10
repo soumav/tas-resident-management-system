@@ -14,6 +14,29 @@ export const logSupabaseOperation = async (operation: string, data: any) => {
   return data;
 };
 
+// Special function to handle operations with RLS policies
+export const bypassRLS = async <T>(
+  operation: () => Promise<{ data: T | null; error: any }>,
+  fallbackData: T | null = null,
+  operationName: string = 'unknown'
+): Promise<{ data: T | null; error: any | null }> => {
+  try {
+    console.log(`Attempting operation: ${operationName}`);
+    const { data, error } = await operation();
+    
+    if (error) {
+      console.error(`Error in operation ${operationName}:`, error);
+      return { data: fallbackData, error };
+    }
+    
+    console.log(`Operation ${operationName} succeeded:`, data);
+    return { data, error: null };
+  } catch (err) {
+    console.error(`Exception in operation ${operationName}:`, err);
+    return { data: fallbackData, error: err };
+  }
+};
+
 // Function to ensure a user exists in the users table
 export const ensureUserExists = async (userId: string, email: string) => {
   try {
