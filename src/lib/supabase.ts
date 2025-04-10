@@ -31,9 +31,16 @@ export const ensureUserExists = async (userId: string, email: string) => {
       throw fetchError;
     }
 
-    // If user doesn't exist, create them with pending role
-    if (!existingUser) {
-      console.log("User doesn't exist in users table, creating...");
+    // If user exists, return it
+    if (existingUser) {
+      return existingUser;
+    }
+
+    // If we're here, it means the user doesn't exist
+    console.log("User doesn't exist in users table, creating...");
+    
+    try {
+      // Try to create the user, but this might fail due to RLS
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert([
@@ -43,30 +50,46 @@ export const ensureUserExists = async (userId: string, email: string) => {
 
       if (insertError) {
         console.error("Error creating user record:", insertError);
+        
+        // Check if this is an RLS error
+        if (insertError.code === '42501' && insertError.message.includes('row-level security')) {
+          console.log("RLS error detected. Returning default user object");
+          // Return a default user object when RLS prevents insertion
+          return { id: userId, email: email, role: 'pending' };
+        }
+        
         throw insertError;
       }
 
       console.log("Created new user record:", newUser);
       
       // Also make sure the profile exists
-      const { error: profileError } = await supabase
-        .from('profiles')
-        .insert([
-          { id: userId, email: email }
-        ]);
-        
-      if (profileError) {
-        console.error("Error creating profile:", profileError);
-        throw profileError;
+      try {
+        const { error: profileError } = await supabase
+          .from('profiles')
+          .insert([
+            { id: userId, email: email }
+          ]);
+          
+        if (profileError) {
+          console.error("Error creating profile:", profileError);
+          // Don't throw here, still allow login to proceed
+        }
+      } catch (profileErr) {
+        console.error("Profile creation error:", profileErr);
+        // Don't throw here, still allow login to proceed
       }
 
-      return { role: 'pending' };
+      return newUser?.[0] || { id: userId, email: email, role: 'pending' };
+    } catch (insertErr) {
+      console.error("Insert operation failed:", insertErr);
+      // Return a default user so authentication can continue
+      return { id: userId, email: email, role: 'pending' };
     }
-
-    return existingUser;
   } catch (error) {
     console.error("Error in ensureUserExists:", error);
-    throw error;
+    // Return a default user so authentication can continue
+    return { id: userId, email: email, role: 'pending' };
   }
 };
 

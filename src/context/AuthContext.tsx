@@ -31,22 +31,26 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     const getSession = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
-      setUser(session?.user ?? null);
-      
-      if (session?.user) {
-        try {
-          // Use our new utility function to ensure user exists and get role
-          const userData = await ensureUserExists(session.user.id, session.user.email || '');
-          setUserRole(userData?.role || null);
-        } catch (error) {
-          console.error('Error fetching/creating user role:', error);
-          setUserRole(null);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
+        setUser(session?.user ?? null);
+        
+        if (session?.user) {
+          try {
+            // Use our utility function to ensure user exists and get role
+            const userData = await ensureUserExists(session.user.id, session.user.email || '');
+            setUserRole(userData?.role || null);
+          } catch (error) {
+            console.error('Error fetching/creating user role:', error);
+            setUserRole('pending'); // Default to pending if there's an error
+          }
         }
+      } catch (error) {
+        console.error('Session fetch error:', error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
     
     getSession();
@@ -57,12 +61,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       
       if (session?.user) {
         try {
-          // Use our new utility function
+          // Use our utility function
           const userData = await ensureUserExists(session.user.id, session.user.email || '');
-          setUserRole(userData?.role || null);
+          setUserRole(userData?.role || 'pending');
         } catch (error) {
           console.error('Error fetching/creating user role:', error);
-          setUserRole(null);
+          setUserRole('pending'); // Default to pending if there's an error
         }
       } else {
         setUserRole(null);
@@ -75,44 +79,56 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   }, []);
 
   const signIn = async (email: string, password: string) => {
-    const { error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    
-    if (!error) {
+    try {
+      const { error } = await supabase.auth.signInWithPassword({
+        email,
+        password,
+      });
+      
+      if (error) {
+        return { error };
+      }
+      
       // Fetch the user's role after sign in
       const { data: authUser } = await supabase.auth.getUser();
       
       if (authUser?.user) {
         try {
-          // Use our new utility function
+          // Use our utility function
           const userData = await ensureUserExists(authUser.user.id, authUser.user.email || '');
           
-          if (userData) {
-            setUserRole(userData.role);
-            
-            // Redirect based on role
-            if (userData.role === 'pending') {
-              toast({
-                title: "Account Pending Approval",
-                description: "Your account is pending approval by an administrator.",
-                variant: "default"
-              });
-              navigate('/pending-approval');
-            } else if (userData.role === 'admin') {
-              navigate('/');
-            } else if (userData.role === 'user' || userData.role === 'staff') {
-              navigate('/');
-            }
+          const role = userData?.role || 'pending';
+          setUserRole(role);
+          
+          // Redirect based on role
+          if (role === 'pending') {
+            toast({
+              title: "Account Pending Approval",
+              description: "Your account is pending approval by an administrator.",
+              variant: "default"
+            });
+            navigate('/pending-approval');
+          } else if (role === 'admin' || role === 'user' || role === 'staff') {
+            navigate('/');
           }
         } catch (error) {
           console.error('Error fetching/creating user role:', error);
+          // Handle as pending user
+          setUserRole('pending');
+          toast({
+            title: "Account Status",
+            description: "Proceeding with limited access while account status is determined.",
+            variant: "default"
+          });
+          navigate('/pending-approval');
         }
       }
+      
+      return { error: null };
+    } catch (error) {
+      console.error("Sign in error:", error);
+      return { error };
     }
-    
-    return { error };
   };
 
   const signUp = async (email: string, password: string, requestedRole: string, name: string) => {

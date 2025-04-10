@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -46,24 +45,35 @@ export default function Login() {
     setIsLoading(true);
     
     try {
+      const timeoutId = setTimeout(() => {
+        setIsLoading(false);
+        toast({
+          title: "Login timeout",
+          description: "Login is taking too long. Please try again.",
+          variant: "destructive"
+        });
+      }, 10000); // 10 seconds timeout
+      
       const { error } = await signIn(email, password);
       
+      clearTimeout(timeoutId);
+      
       if (error) {
+        setIsLoading(false);
         toast({
           title: "Authentication error",
           description: error.message,
           variant: "destructive"
         });
       }
-    } catch (err) {
+    } catch (err: any) {
       console.error("Login error:", err);
+      setIsLoading(false);
       toast({
         title: "Authentication error",
-        description: "An unexpected error occurred. Please try again.",
+        description: err?.message || "An unexpected error occurred. Please try again.",
         variant: "destructive"
       });
-    } finally {
-      setIsLoading(false);
     }
   };
 
