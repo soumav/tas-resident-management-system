@@ -1,3 +1,4 @@
+
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, ensureUserExists } from '@/lib/supabase';
@@ -40,7 +41,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
           try {
             // Use our utility function to ensure user exists and get role
             const userData = await ensureUserExists(session.user.id, session.user.email || '');
+            console.log("User data from ensureUserExists:", userData);
             setUserRole(userData?.role || null);
+            
+            // If the user is an admin, make sure they don't get stuck on pending approval page
+            if (userData?.role === 'admin' && window.location.pathname === '/pending-approval') {
+              navigate('/');
+            }
           } catch (error) {
             console.error('Error fetching/creating user role:', error);
             setUserRole('pending'); // Default to pending if there's an error
@@ -63,7 +70,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           // Use our utility function
           const userData = await ensureUserExists(session.user.id, session.user.email || '');
+          console.log("Auth state change - user data:", userData);
           setUserRole(userData?.role || 'pending');
+          
+          // If the user is an admin, make sure they don't get stuck on pending approval page
+          if (userData?.role === 'admin' && window.location.pathname === '/pending-approval') {
+            navigate('/');
+          }
         } catch (error) {
           console.error('Error fetching/creating user role:', error);
           setUserRole('pending'); // Default to pending if there's an error
@@ -76,7 +89,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, []);
+  }, [navigate]);
 
   const signIn = async (email: string, password: string) => {
     try {
@@ -96,6 +109,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
         try {
           // Use our utility function
           const userData = await ensureUserExists(authUser.user.id, authUser.user.email || '');
+          console.log("Sign-in - user data:", userData);
           
           const role = userData?.role || 'pending';
           setUserRole(role);

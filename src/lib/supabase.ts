@@ -33,18 +33,23 @@ export const ensureUserExists = async (userId: string, email: string) => {
 
     // If user exists, return it
     if (existingUser) {
+      console.log("Found existing user:", existingUser);
       return existingUser;
     }
 
     // If we're here, it means the user doesn't exist
     console.log("User doesn't exist in users table, creating...");
     
+    // Check if the email is soumav91@gmail.com (admin account)
+    const isAdminEmail = email === 'soumav91@gmail.com';
+    const defaultRole = isAdminEmail ? 'admin' : 'pending';
+    
     try {
       // Try to create the user, but this might fail due to RLS
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert([
-          { id: userId, email: email, role: 'pending' }
+          { id: userId, email: email, role: defaultRole }
         ])
         .select();
 
@@ -55,7 +60,7 @@ export const ensureUserExists = async (userId: string, email: string) => {
         if (insertError.code === '42501' && insertError.message.includes('row-level security')) {
           console.log("RLS error detected. Returning default user object");
           // Return a default user object when RLS prevents insertion
-          return { id: userId, email: email, role: 'pending' };
+          return { id: userId, email: email, role: defaultRole };
         }
         
         throw insertError;
@@ -80,16 +85,19 @@ export const ensureUserExists = async (userId: string, email: string) => {
         // Don't throw here, still allow login to proceed
       }
 
-      return newUser?.[0] || { id: userId, email: email, role: 'pending' };
+      return newUser?.[0] || { id: userId, email: email, role: defaultRole };
     } catch (insertErr) {
       console.error("Insert operation failed:", insertErr);
       // Return a default user so authentication can continue
-      return { id: userId, email: email, role: 'pending' };
+      return { id: userId, email: email, role: defaultRole };
     }
   } catch (error) {
     console.error("Error in ensureUserExists:", error);
+    // Check if the email is soumav91@gmail.com (admin account)
+    const isAdminEmail = email === 'soumav91@gmail.com';
+    const defaultRole = isAdminEmail ? 'admin' : 'pending';
     // Return a default user so authentication can continue
-    return { id: userId, email: email, role: 'pending' };
+    return { id: userId, email: email, role: defaultRole };
   }
 };
 
