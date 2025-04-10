@@ -1,4 +1,3 @@
-
 import { createClient } from '@supabase/supabase-js';
 
 // Using hardcoded values for demonstration
@@ -49,6 +48,12 @@ const userCache: Record<string, any> = {};
 
 // Function to ensure a user exists in the users table
 export const ensureUserExists = async (userId: string, email: string) => {
+  // Safety check to prevent calls with empty userId
+  if (!userId) {
+    console.error("Empty userId passed to ensureUserExists");
+    return { id: '', email: email, role: 'pending' };
+  }
+
   // Check the cache first to prevent redundant database calls
   if (userCache[userId]) {
     console.log("Using cached user data for:", userId);
@@ -86,47 +91,39 @@ export const ensureUserExists = async (userId: string, email: string) => {
     // If we're here, it means the user doesn't exist
     console.log("User doesn't exist in users table, creating...");
     
-    try {
-      // Try to create the user
-      const { data: newUser, error: insertError } = await supabase
-        .from('users')
-        .insert([
-          { id: userId, email: email, role: defaultRole }
-        ])
-        .select();
+    // Try to create the user
+    const { data: newUser, error: insertError } = await supabase
+      .from('users')
+      .insert([
+        { id: userId, email: email, role: defaultRole }
+      ])
+      .select();
 
-      if (insertError) {
-        console.error("Error creating user record:", insertError);
-        const defaultUser = { id: userId, email: email, role: defaultRole };
-        userCache[userId] = defaultUser;
-        return defaultUser;
-      }
-
-      console.log("Created new user record:", newUser);
-      
-      // Also make sure the profile exists
-      try {
-        await supabase
-          .from('profiles')
-          .insert([
-            { id: userId, email: email }
-          ])
-          .select();
-      } catch (profileErr) {
-        console.error("Profile creation error:", profileErr);
-        // Don't throw here, still allow login to proceed
-      }
-
-      const returnUser = newUser?.[0] || { id: userId, email: email, role: defaultRole };
-      userCache[userId] = returnUser;
-      return returnUser;
-    } catch (insertErr) {
-      console.error("Insert operation failed:", insertErr);
-      // Return a default user so authentication can continue
+    if (insertError) {
+      console.error("Error creating user record:", insertError);
       const defaultUser = { id: userId, email: email, role: defaultRole };
       userCache[userId] = defaultUser;
       return defaultUser;
     }
+
+    console.log("Created new user record:", newUser);
+    
+    // Also make sure the profile exists
+    try {
+      await supabase
+        .from('profiles')
+        .insert([
+          { id: userId, email: email }
+        ])
+        .select();
+    } catch (profileErr) {
+      console.error("Profile creation error:", profileErr);
+      // Don't throw here, still allow login to proceed
+    }
+
+    const returnUser = newUser?.[0] || { id: userId, email: email, role: defaultRole };
+    userCache[userId] = returnUser;
+    return returnUser;
   } catch (error) {
     console.error("Error in ensureUserExists:", error);
     // Return a default user so authentication can continue

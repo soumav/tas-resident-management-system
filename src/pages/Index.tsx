@@ -10,13 +10,13 @@ const Index = () => {
   const { user, isLoading, userRole } = useAuth();
   const navigate = useNavigate();
   const [hasSupabaseError, setHasSupabaseError] = useState(false);
-  const [redirecting, setRedirecting] = useState(false);
+  const [redirectAttempted, setRedirectAttempted] = useState(false);
   
   // Check for Supabase connection errors
   useEffect(() => {
     const originalConsoleError = console.error;
     console.error = (...args) => {
-      if (args[0]?.toString()?.includes?.('Supabase credentials')) {
+      if (typeof args[0] === 'string' && args[0].includes('Supabase credentials')) {
         setHasSupabaseError(true);
       }
       originalConsoleError(...args);
@@ -29,12 +29,11 @@ const Index = () => {
 
   // Handle navigation based on auth state
   useEffect(() => {
-    if (redirecting) return; // Prevent multiple redirects
-    
-    if (hasSupabaseError) return; // Don't redirect if there's a Supabase error
+    if (redirectAttempted || hasSupabaseError) return;
     
     if (!isLoading) {
-      setRedirecting(true);
+      console.log("Auth check complete. User:", !!user, "Role:", userRole);
+      setRedirectAttempted(true);
       
       if (!user) {
         console.log("No user found, redirecting to login");
@@ -42,9 +41,11 @@ const Index = () => {
       } else if (userRole === 'pending') {
         console.log("User is pending approval, redirecting to pending page");
         navigate('/pending-approval');
+      } else {
+        console.log("User authenticated with role:", userRole);
       }
     }
-  }, [user, isLoading, navigate, hasSupabaseError, redirecting, userRole]);
+  }, [user, isLoading, navigate, hasSupabaseError, redirectAttempted, userRole]);
 
   // Show Supabase connection error
   if (hasSupabaseError) {
@@ -73,7 +74,7 @@ const Index = () => {
   }
 
   // Show loading indicator while checking auth status
-  if (isLoading) {
+  if (isLoading || !redirectAttempted) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gray-50">
         <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green" />
@@ -81,7 +82,7 @@ const Index = () => {
     );
   }
 
-  // This will be shown if logged in but waiting for dashboard component to load
+  // This will be shown if logged in and waiting for dashboard component to load
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green" />

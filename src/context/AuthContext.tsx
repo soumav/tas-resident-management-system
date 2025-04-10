@@ -1,4 +1,3 @@
-
 import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, ensureUserExists } from '@/lib/supabase';
@@ -40,26 +39,33 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     const getSession = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // Force refresh the session to ensure we have the latest data
+        const { data, error } = await supabase.auth.getSession();
+        
+        if (error) {
+          console.error("Session fetch error:", error);
+          setIsLoading(false);
+          return;
+        }
+        
+        const { session } = data;
         setSession(session);
         setUser(session?.user ?? null);
         
         if (session?.user) {
           try {
             console.log("User session found, fetching role...");
-            // Use our utility function to ensure user exists and get role
+            // Get user data and role
             const userData = await ensureUserExists(session.user.id, session.user.email || '');
             console.log("User data from ensureUserExists:", userData);
             setUserRole(userData?.role || 'pending');
-            
-            // If the user is an admin, make sure they don't get stuck on pending approval page
-            if (userData?.role === 'admin' && window.location.pathname === '/pending-approval') {
-              navigate('/');
-            }
           } catch (error) {
             console.error('Error fetching/creating user role:', error);
-            setUserRole('pending'); // Default to pending if there's an error
+            setUserRole('pending');
           }
+        } else {
+          // No session found, make sure we're not loading
+          console.log("No session found");
         }
         
         setIsLoading(false);
@@ -71,26 +77,27 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     
     getSession();
 
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
-      console.log("Auth state change detected");
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log("Auth state change detected:", event);
+      
+      if (event === 'INITIAL_SESSION' && !session) {
+        // No initial session, just finish loading
+        setIsLoading(false);
+        return;
+      }
+      
       setSession(session);
       setUser(session?.user ?? null);
       
       if (session?.user) {
         try {
           console.log("Auth state change - fetching user data");
-          // Use our utility function
           const userData = await ensureUserExists(session.user.id, session.user.email || '');
           console.log("Auth state change - user data:", userData);
           setUserRole(userData?.role || 'pending');
-          
-          // If the user is an admin, make sure they don't get stuck on pending approval page
-          if (userData?.role === 'admin' && window.location.pathname === '/pending-approval') {
-            navigate('/');
-          }
         } catch (error) {
           console.error('Error fetching/creating user role:', error);
-          setUserRole('pending'); // Default to pending if there's an error
+          setUserRole('pending');
         }
       } else {
         setUserRole(null);
@@ -106,22 +113,28 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const signIn = async (email: string, password: string) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      setIsLoading(true);
+      
+      const { data, error } = await supabase.auth.signInWithPassword({
         email,
         password,
       });
       
       if (error) {
+        console.error("Sign in error:", error);
+        setIsLoading(false);
         return { error };
       }
       
-      // Fetch the user's role after sign in
-      const { data: authUser } = await supabase.auth.getUser();
+      console.log("Sign in success, session:", data.session);
       
-      if (authUser?.user) {
+      // Set the user and session immediately on successful login
+      setUser(data.session?.user ?? null);
+      setSession(data.session);
+      
+      if (data.session?.user) {
         try {
-          // Use our utility function
-          const userData = await ensureUserExists(authUser.user.id, authUser.user.email || '');
+          const userData = await ensureUserExists(data.session.user.id, data.session.user.email || '');
           console.log("Sign-in - user data:", userData);
           
           const role = userData?.role || 'pending';
@@ -135,25 +148,21 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               variant: "default"
             });
             navigate('/pending-approval');
-          } else if (role === 'admin' || role === 'user' || role === 'staff') {
+          } else {
             navigate('/');
           }
         } catch (error) {
           console.error('Error fetching/creating user role:', error);
-          // Handle as pending user
           setUserRole('pending');
-          toast({
-            title: "Account Status",
-            description: "Proceeding with limited access while account status is determined.",
-            variant: "default"
-          });
           navigate('/pending-approval');
         }
       }
       
+      setIsLoading(false);
       return { error: null };
     } catch (error) {
-      console.error("Sign in error:", error);
+      console.error("Sign in exception:", error);
+      setIsLoading(false);
       return { error };
     }
   };
@@ -231,13 +240,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       isUser,
       isStaff
     }}>
-      {isLoading ? (
-        <div className="flex items-center justify-center h-screen">
-          <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green" />
-        </div>
-      ) : (
-        children
-      )}
+      {children}
     </AuthContext.Provider>
   );
 }

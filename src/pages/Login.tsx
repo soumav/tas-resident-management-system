@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
@@ -12,14 +12,22 @@ export default function Login() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [loginAttempted, setLoginAttempted] = useState(false);
   const [hasSupabaseError, setHasSupabaseError] = useState(false);
-  const { signIn } = useAuth();
+  const { signIn, user } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    if (user && loginAttempted) {
+      navigate('/');
+    }
+  }, [user, navigate, loginAttempted]);
 
   useEffect(() => {
     const originalConsoleError = console.error;
     console.error = (...args) => {
-      if (args[0]?.includes?.('Supabase credentials')) {
+      if (args[0] && typeof args[0] === 'string' && args[0].includes('Supabase credentials')) {
         setHasSupabaseError(true);
       }
       originalConsoleError(...args);
@@ -43,31 +51,23 @@ export default function Login() {
     }
     
     setIsLoading(true);
+    setLoginAttempted(true);
     
     try {
-      const timeoutId = setTimeout(() => {
-        setIsLoading(false);
-        toast({
-          title: "Login timeout",
-          description: "Login is taking too long. Please try again.",
-          variant: "destructive"
-        });
-      }, 10000); // 10 seconds timeout
-      
+      console.log("Attempting login with:", email);
       const { error } = await signIn(email, password);
       
-      clearTimeout(timeoutId);
-      
       if (error) {
+        console.error("Login error:", error);
         setIsLoading(false);
         toast({
           title: "Authentication error",
-          description: error.message,
+          description: error.message || "Invalid email or password. Please try again.",
           variant: "destructive"
         });
       }
     } catch (err: any) {
-      console.error("Login error:", err);
+      console.error("Login exception:", err);
       setIsLoading(false);
       toast({
         title: "Authentication error",
