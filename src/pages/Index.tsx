@@ -1,3 +1,4 @@
+
 import { useEffect, useState } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
@@ -28,26 +29,24 @@ const Index = () => {
 
   // Handle navigation based on auth state
   useEffect(() => {
-    if (hasSupabaseError || navigationProcessed) return;
+    if (hasSupabaseError) return;
     
     if (!isLoading) {
       console.log("Auth check complete. User:", !!user, "Role:", userRole);
       
       if (!user) {
         console.log("No user found, redirecting to login");
-        navigate('/login');
+        navigate('/login', { replace: true });
       } else if (userRole === 'pending') {
         console.log("User is pending approval, redirecting to pending page");
-        navigate('/pending-approval');
+        navigate('/pending-approval', { replace: true });
       } else {
-        console.log("User authenticated with role:", userRole, "- staying on current route");
-        // If we're on the root path, render the Dashboard (already handled by router)
-        // Otherwise the router will handle navigation to the specific route
+        console.log("User authenticated with role:", userRole, "- proceeding to dashboard");
+        // When at the root path, don't navigate away - dashboard will be rendered automatically
+        setNavigationProcessed(true);
       }
-      
-      setNavigationProcessed(true);
     }
-  }, [user, isLoading, navigate, hasSupabaseError, navigationProcessed, userRole]);
+  }, [user, isLoading, navigate, hasSupabaseError, userRole]);
 
   // Show Supabase connection error
   if (hasSupabaseError) {
@@ -87,15 +86,6 @@ const Index = () => {
     );
   }
 
-  // Display loading screen as Dashboard is being loaded
-  return (
-    <div className="min-h-screen flex items-center justify-center bg-gray-50">
-      <div className="flex flex-col items-center">
-        <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green mb-4" />
-        <p className="text-gray-600">Loading dashboard...</p>
-      </div>
-    </div>
-  );
-};
-
-export default Index;
+  // If user is authenticated and we're at the root, return null to let the router handle it
+  // This allows the Dashboard to render properly instead of showing a loading screen
+  return null;

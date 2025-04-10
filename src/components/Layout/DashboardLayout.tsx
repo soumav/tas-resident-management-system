@@ -17,14 +17,10 @@ export default function DashboardLayout() {
   const { toast } = useToast();
   const [isReady, setIsReady] = useState(false);
 
-  // Add a small delay to ensure all auth checks are complete
+  // Set ready state once authentication is complete
   useEffect(() => {
     if (!isLoading) {
-      // Small timeout to ensure all context values are fully resolved
-      const timer = setTimeout(() => {
-        setIsReady(true);
-      }, 100);
-      return () => clearTimeout(timer);
+      setIsReady(true);
     }
   }, [isLoading]);
 
@@ -35,8 +31,8 @@ export default function DashboardLayout() {
     }
   }, [user, isPending, navigate]);
 
-  // If still loading or not ready, return loading state
-  if (isLoading || !isReady) {
+  // Show loading state while auth is being checked
+  if (isLoading) {
     return (
       <div className="flex items-center justify-center h-screen">
         <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sanctuary-green"></div>
@@ -60,6 +56,7 @@ export default function DashboardLayout() {
   
   const username = user?.email?.split('@')[0] || "User";
   
+  // If we're here, user is authenticated and allowed to access the dashboard
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">
       {/* Mobile sidebar backdrop */}
