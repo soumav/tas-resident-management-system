@@ -1,5 +1,5 @@
 
-import React, { createContext, useContext, useEffect, useState } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
 import { Session, User } from '@supabase/supabase-js';
 import { supabase, ensureUserExists } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
@@ -29,8 +29,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const [userRole, setUserRole] = useState<string | null>(null);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const isInitialized = useRef(false);
 
   useEffect(() => {
+    // Prevent multiple initialization
+    if (isInitialized.current) return;
+    isInitialized.current = true;
+    
     const getSession = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
@@ -88,7 +93,10 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setIsLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+      isInitialized.current = false;
+    };
   }, [navigate]);
 
   const signIn = async (email: string, password: string) => {

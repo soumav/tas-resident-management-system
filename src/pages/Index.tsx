@@ -7,9 +7,10 @@ import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Index = () => {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, userRole } = useAuth();
   const navigate = useNavigate();
   const [hasSupabaseError, setHasSupabaseError] = useState(false);
+  const [redirectAttempted, setRedirectAttempted] = useState(false);
 
   useEffect(() => {
     // Check if there are Supabase credential errors
@@ -29,13 +30,17 @@ const Index = () => {
     
     const cleanup = checkForSupabaseErrors();
     
-    // If authentication status is determined and user is not logged in, redirect to login
-    if (!isLoading && !user && !hasSupabaseError) {
+    return cleanup;
+  }, []);
+
+  useEffect(() => {
+    // Add a protection against repeated redirects
+    if (!isLoading && !user && !redirectAttempted && !hasSupabaseError) {
+      console.log("No user found, redirecting to login");
+      setRedirectAttempted(true);
       navigate('/login');
     }
-    
-    return cleanup;
-  }, [user, isLoading, navigate, hasSupabaseError]);
+  }, [user, isLoading, navigate, hasSupabaseError, redirectAttempted]);
 
   // Show Supabase connection error
   if (hasSupabaseError) {
