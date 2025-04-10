@@ -1,7 +1,6 @@
-
 import React, { createContext, useContext, useEffect, useState } from 'react';
 import { Session, User } from '@supabase/supabase-js';
-import { supabase } from '@/lib/supabase';
+import { supabase, ensureUserExists } from '@/lib/supabase';
 import { useNavigate } from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 import { useToast } from '@/components/ui/use-toast';
@@ -37,17 +36,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Fetch the user's role
-        const { data, error } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (data && !error) {
-          setUserRole(data.role);
-        } else {
-          console.error('Error fetching user role:', error);
+        try {
+          // Use our new utility function to ensure user exists and get role
+          const userData = await ensureUserExists(session.user.id, session.user.email || '');
+          setUserRole(userData?.role || null);
+        } catch (error) {
+          console.error('Error fetching/creating user role:', error);
+          setUserRole(null);
         }
       }
       
@@ -61,15 +56,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       setUser(session?.user ?? null);
       
       if (session?.user) {
-        // Fetch the user's role
-        const { data, error } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', session.user.id)
-          .single();
-        
-        if (data && !error) {
-          setUserRole(data.role);
+        try {
+          // Use our new utility function
+          const userData = await ensureUserExists(session.user.id, session.user.email || '');
+          setUserRole(userData?.role || null);
+        } catch (error) {
+          console.error('Error fetching/creating user role:', error);
+          setUserRole(null);
         }
       } else {
         setUserRole(null);
@@ -92,28 +85,29 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       const { data: authUser } = await supabase.auth.getUser();
       
       if (authUser?.user) {
-        const { data, error: roleError } = await supabase
-          .from('users')
-          .select('role')
-          .eq('id', authUser.user.id)
-          .single();
-        
-        if (data && !roleError) {
-          setUserRole(data.role);
+        try {
+          // Use our new utility function
+          const userData = await ensureUserExists(authUser.user.id, authUser.user.email || '');
           
-          // Redirect based on role
-          if (data.role === 'pending') {
-            toast({
-              title: "Account Pending Approval",
-              description: "Your account is pending approval by an administrator.",
-              variant: "default" // Changed from "warning" to "default"
-            });
-            navigate('/pending-approval');
-          } else if (data.role === 'admin') {
-            navigate('/');
-          } else if (data.role === 'user' || data.role === 'staff') {
-            navigate('/');
+          if (userData) {
+            setUserRole(userData.role);
+            
+            // Redirect based on role
+            if (userData.role === 'pending') {
+              toast({
+                title: "Account Pending Approval",
+                description: "Your account is pending approval by an administrator.",
+                variant: "default"
+              });
+              navigate('/pending-approval');
+            } else if (userData.role === 'admin') {
+              navigate('/');
+            } else if (userData.role === 'user' || userData.role === 'staff') {
+              navigate('/');
+            }
           }
+        } catch (error) {
+          console.error('Error fetching/creating user role:', error);
         }
       }
     }
