@@ -14,6 +14,18 @@ export default function DashboardLayout() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isReady, setIsReady] = useState(false);
+
+  // Add a small delay to ensure all auth checks are complete
+  useEffect(() => {
+    if (!isLoading) {
+      // Small timeout to ensure all context values are fully resolved
+      const timer = setTimeout(() => {
+        setIsReady(true);
+      }, 100);
+      return () => clearTimeout(timer);
+    }
+  }, [isLoading]);
 
   // Redirect based on user role
   useEffect(() => {
@@ -22,8 +34,14 @@ export default function DashboardLayout() {
     }
   }, [user, isPending, navigate]);
 
-  // If still loading, return null
-  if (isLoading) return null;
+  // If still loading or not ready, return loading state
+  if (isLoading || !isReady) {
+    return (
+      <div className="flex items-center justify-center h-screen">
+        <div className="animate-spin rounded-full h-12 w-12 border-t-2 border-b-2 border-sanctuary-green"></div>
+      </div>
+    );
+  }
 
   // If no user is authenticated, redirect to login
   if (!user) {
@@ -39,7 +57,7 @@ export default function DashboardLayout() {
     await signOut();
   };
   
-  const username = user?.email?.split('@')[0] || 'User';
+  const username = user?.email?.split('@')[0] || "User";
   
   return (
     <div className="flex h-screen overflow-hidden bg-gray-50">

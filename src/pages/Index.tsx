@@ -3,14 +3,12 @@ import { useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '@/context/AuthContext';
 import { Loader2, AlertCircle } from 'lucide-react';
-import { Button } from '@/components/ui/button';
 import { Alert, AlertDescription, AlertTitle } from '@/components/ui/alert';
 
 const Index = () => {
   const { user, isLoading, userRole } = useAuth();
   const navigate = useNavigate();
   const [hasSupabaseError, setHasSupabaseError] = useState(false);
-  const [redirectAttempted, setRedirectAttempted] = useState(false);
   
   // Check for Supabase connection errors
   useEffect(() => {
@@ -29,11 +27,10 @@ const Index = () => {
 
   // Handle navigation based on auth state
   useEffect(() => {
-    if (redirectAttempted || hasSupabaseError) return;
+    if (hasSupabaseError) return;
     
     if (!isLoading) {
       console.log("Auth check complete. User:", !!user, "Role:", userRole);
-      setRedirectAttempted(true);
       
       if (!user) {
         console.log("No user found, redirecting to login");
@@ -42,12 +39,11 @@ const Index = () => {
         console.log("User is pending approval, redirecting to pending page");
         navigate('/pending-approval');
       } else {
-        console.log("User authenticated with role:", userRole, "- staying on dashboard");
-        // User is authenticated and allowed to access dashboard
-        // No need to redirect - we're already on the dashboard route
+        console.log("User authenticated with role:", userRole, "- redirecting to dashboard");
+        // This is intentionally blank as we're already on the root route which renders Dashboard via the router config
       }
     }
-  }, [user, isLoading, navigate, hasSupabaseError, redirectAttempted, userRole]);
+  }, [user, isLoading, navigate, hasSupabaseError, userRole]);
 
   // Show Supabase connection error
   if (hasSupabaseError) {
@@ -87,24 +83,12 @@ const Index = () => {
     );
   }
 
-  // User is authenticated but content is still loading
-  if (user && !isLoading && userRole !== 'pending') {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-gray-50">
-        <div className="flex flex-col items-center">
-          <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green mb-4" />
-          <p className="text-gray-600">Loading dashboard...</p>
-        </div>
-      </div>
-    );
-  }
-
-  // This should rarely be seen, as the useEffect should have redirected already
+  // Instead of showing another loading screen, let's render a basic content that will be replaced by Dashboard
   return (
     <div className="min-h-screen flex items-center justify-center bg-gray-50">
       <div className="flex flex-col items-center">
         <Loader2 className="h-8 w-8 animate-spin text-sanctuary-green mb-4" />
-        <p className="text-gray-600">Preparing application...</p>
+        <p className="text-gray-600">Loading dashboard...</p>
       </div>
     </div>
   );
