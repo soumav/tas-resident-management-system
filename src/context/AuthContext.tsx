@@ -30,13 +30,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const { toast } = useToast();
   const isInitialized = useRef(false);
-  const initializationInProgress = useRef(false);
 
   useEffect(() => {
     // Prevent multiple initialization
-    if (isInitialized.current || initializationInProgress.current) return;
+    if (isInitialized.current) return;
+    isInitialized.current = true;
     
-    initializationInProgress.current = true;
     console.log("Initializing auth context");
     
     const getSession = async () => {
@@ -51,7 +50,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             // Use our utility function to ensure user exists and get role
             const userData = await ensureUserExists(session.user.id, session.user.email || '');
             console.log("User data from ensureUserExists:", userData);
-            setUserRole(userData?.role || null);
+            setUserRole(userData?.role || 'pending');
             
             // If the user is an admin, make sure they don't get stuck on pending approval page
             if (userData?.role === 'admin' && window.location.pathname === '/pending-approval') {
@@ -62,12 +61,11 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             setUserRole('pending'); // Default to pending if there's an error
           }
         }
+        
+        setIsLoading(false);
       } catch (error) {
         console.error('Session fetch error:', error);
-      } finally {
         setIsLoading(false);
-        isInitialized.current = true;
-        initializationInProgress.current = false;
       }
     };
     

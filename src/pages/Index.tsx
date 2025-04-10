@@ -10,44 +10,41 @@ const Index = () => {
   const { user, isLoading, userRole } = useAuth();
   const navigate = useNavigate();
   const [hasSupabaseError, setHasSupabaseError] = useState(false);
-  const [redirectAttempted, setRedirectAttempted] = useState(false);
-
+  const [redirecting, setRedirecting] = useState(false);
+  
+  // Check for Supabase connection errors
   useEffect(() => {
-    // Check if there are Supabase credential errors
-    const checkForSupabaseErrors = () => {
-      const consoleErrors = console.error;
-      console.error = (...args) => {
-        if (args[0]?.includes?.('Supabase credentials')) {
-          setHasSupabaseError(true);
-        }
-        consoleErrors(...args);
-      };
-      
-      return () => {
-        console.error = consoleErrors;
-      };
+    const originalConsoleError = console.error;
+    console.error = (...args) => {
+      if (args[0]?.toString()?.includes?.('Supabase credentials')) {
+        setHasSupabaseError(true);
+      }
+      originalConsoleError(...args);
     };
     
-    const cleanup = checkForSupabaseErrors();
-    
-    return cleanup;
+    return () => {
+      console.error = originalConsoleError;
+    };
   }, []);
 
+  // Handle navigation based on auth state
   useEffect(() => {
-    // Add a protection against repeated redirects
-    if (!isLoading && !user && !redirectAttempted && !hasSupabaseError) {
-      console.log("No user found, redirecting to login");
-      setRedirectAttempted(true);
-      navigate('/login');
+    if (redirecting) return; // Prevent multiple redirects
+    
+    if (hasSupabaseError) return; // Don't redirect if there's a Supabase error
+    
+    if (!isLoading) {
+      setRedirecting(true);
+      
+      if (!user) {
+        console.log("No user found, redirecting to login");
+        navigate('/login');
+      } else if (userRole === 'pending') {
+        console.log("User is pending approval, redirecting to pending page");
+        navigate('/pending-approval');
+      }
     }
-
-    // When user is authenticated with a valid role, redirect to dashboard
-    if (!isLoading && user && userRole && userRole !== 'pending' && !redirectAttempted && !hasSupabaseError) {
-      console.log("User authenticated, redirecting to dashboard");
-      setRedirectAttempted(true);
-      navigate('/');
-    }
-  }, [user, isLoading, navigate, hasSupabaseError, redirectAttempted, userRole]);
+  }, [user, isLoading, navigate, hasSupabaseError, redirecting, userRole]);
 
   // Show Supabase connection error
   if (hasSupabaseError) {

@@ -467,7 +467,7 @@ export default function Dashboard() {
     if (!selectedGroup) return;
     try {
       console.log('Checking for residents in group with admin privileges:', selectedGroup.id);
-      const { data, error: countError } = await bypassRLS(
+      const result = await bypassRLS(
         () => supabase
           .from('residents')
           .select('*', {
@@ -478,9 +478,7 @@ export default function Dashboard() {
         'check_residents_in_group'
       );
       
-      if (countError) throw countError;
-      
-      const residentCount = data?.count || 0;
+      const residentCount = result.data?.count || 0;
       if (residentCount > 0) {
         toast({
           title: 'Error',
@@ -667,7 +665,7 @@ export default function Dashboard() {
     if (!selectedSubgroup) return;
     try {
       console.log('Checking residents in subgroup with admin privileges:', selectedSubgroup.id);
-      const { data, error: countError } = await bypassRLS(
+      const result = await bypassRLS(
         () => supabase
           .from('residents')
           .select('*', {
@@ -678,9 +676,7 @@ export default function Dashboard() {
         'check_residents_in_subgroup'
       );
       
-      if (countError) throw countError;
-      
-      const residentCount = data?.count || 0;
+      const residentCount = result.data?.count || 0;
       if (residentCount > 0) {
         toast({
           title: 'Error',

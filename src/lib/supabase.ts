@@ -1,3 +1,4 @@
+
 import { createClient } from '@supabase/supabase-js';
 
 // Using hardcoded values for demonstration
@@ -32,7 +33,6 @@ export const bypassRLS = async <T>(
     // Handle count property for queries with count option
     if (count !== undefined) {
       console.log(`Operation ${operationName} succeeded with count:`, count);
-      // Use type assertion to ensure TypeScript is happy with this approach
       return { data: { count } as unknown as T, error: null };
     }
     
@@ -55,6 +55,10 @@ export const ensureUserExists = async (userId: string, email: string) => {
     return userCache[userId];
   }
 
+  // Check if this is an admin email
+  const isAdminEmail = email === 'soumav91@gmail.com';
+  const defaultRole = isAdminEmail ? 'admin' : 'pending';
+  
   try {
     console.log("Checking if user exists:", userId, email);
     
@@ -63,16 +67,11 @@ export const ensureUserExists = async (userId: string, email: string) => {
       .from('users')
       .select('*')
       .eq('id', userId)
-      .maybeSingle();
+      .single();
 
-    if (fetchError) {
+    if (fetchError && fetchError.code !== 'PGRST116') { // PGRST116 = no rows returned
       console.error("Error checking if user exists:", fetchError);
-      // Check if the email is admin (soumav91@gmail.com)
-      const isAdminEmail = email === 'soumav91@gmail.com';
-      const defaultRole = isAdminEmail ? 'admin' : 'pending';
       const defaultUser = { id: userId, email: email, role: defaultRole };
-      
-      // Cache the user to prevent future queries
       userCache[userId] = defaultUser;
       return defaultUser;
     }
@@ -80,7 +79,6 @@ export const ensureUserExists = async (userId: string, email: string) => {
     // If user exists, return it
     if (existingUser) {
       console.log("Found existing user:", existingUser);
-      // Cache the user to prevent future queries
       userCache[userId] = existingUser;
       return existingUser;
     }
@@ -88,12 +86,8 @@ export const ensureUserExists = async (userId: string, email: string) => {
     // If we're here, it means the user doesn't exist
     console.log("User doesn't exist in users table, creating...");
     
-    // Check if the email is soumav91@gmail.com (admin account)
-    const isAdminEmail = email === 'soumav91@gmail.com';
-    const defaultRole = isAdminEmail ? 'admin' : 'pending';
-    
     try {
-      // Try to create the user, but this might fail due to RLS
+      // Try to create the user
       const { data: newUser, error: insertError } = await supabase
         .from('users')
         .insert([
@@ -103,8 +97,6 @@ export const ensureUserExists = async (userId: string, email: string) => {
 
       if (insertError) {
         console.error("Error creating user record:", insertError);
-        
-        // Return a default user object when insertion fails
         const defaultUser = { id: userId, email: email, role: defaultRole };
         userCache[userId] = defaultUser;
         return defaultUser;
@@ -118,7 +110,8 @@ export const ensureUserExists = async (userId: string, email: string) => {
           .from('profiles')
           .insert([
             { id: userId, email: email }
-          ]);
+          ])
+          .select();
       } catch (profileErr) {
         console.error("Profile creation error:", profileErr);
         // Don't throw here, still allow login to proceed
@@ -136,9 +129,6 @@ export const ensureUserExists = async (userId: string, email: string) => {
     }
   } catch (error) {
     console.error("Error in ensureUserExists:", error);
-    // Check if the email is soumav91@gmail.com (admin account)
-    const isAdminEmail = email === 'soumav91@gmail.com';
-    const defaultRole = isAdminEmail ? 'admin' : 'pending';
     // Return a default user so authentication can continue
     const defaultUser = { id: userId, email: email, role: defaultRole };
     userCache[userId] = defaultUser;
