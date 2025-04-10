@@ -124,3 +124,32 @@ alter table volunteers enable row level security;
 alter table messages enable row level security;
 
 -- Note: RLS policies need to be created manually as requested by the user
+
+-- =============================================
+-- INSTRUCTIONS FOR MANUALLY CREATING ADMIN USER
+-- =============================================
+
+/*
+To create your first admin user, follow these steps:
+
+1. First, create a user through Supabase Authentication:
+   - Go to Authentication → Users → "Add User"
+   - Enter email and password
+
+2. Get the UUID of the created user from the Authentication panel
+
+3. Run the following SQL queries, replacing:
+   - 'admin-user-uuid' with the actual UUID from step 2
+   - 'admin@example.com' with your admin email
+   - 'Admin User' with your admin name
+
+-- Create the admin user in the users table
+INSERT INTO users (id, email, role, created_at)
+VALUES ('admin-user-uuid', 'admin@example.com', 'admin', now());
+
+-- Create the admin profile in the profiles table
+INSERT INTO profiles (id, name, email, created_at)
+VALUES ('admin-user-uuid', 'Admin User', 'admin@example.com', now());
+
+This admin user will now be able to approve or deny new user registrations.
+*/
